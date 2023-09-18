@@ -1,0 +1,24 @@
+[package]
+name = "graphviz"
+version = "0.1.0"
+edition = "2021"
+readme = "../README.md"
+description = "Graphviz bindings for Typst"
+license = "MIT"
+repository = "https://github.com/Robotechnic/graphviz-typst.git"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+graphviz-rust = "0.6.6"
+wasm-minimal-protocol = { path = "../wasm_minimal_protocol/" }
+
+[profile.release]
+lto = true          # Enable link-time optimization
+strip = true        # Strip symbols from binary*
+opt-level = 'z'     # Optimize for size
+codegen-units = 1   # Reduce number of codegen units to increase optimizations
+panic = 'abort'     # Abort on panic
