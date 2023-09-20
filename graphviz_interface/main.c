@@ -9,6 +9,12 @@
 PROTOCOL_FUNCTION void wasm_minimal_protocol_send_result_to_host(const uint8_t *ptr, size_t len);
 PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
 
+/**
+ * @brief Render a graphviz graph to svg from a dot string
+ * 
+ * @param arg1_len the length of the buffer containing the dot string
+ * @return int 0 on success, 1 on failure
+ */
 EMSCRIPTEN_KEEPALIVE
 int render(size_t arg1_len) {
     uint8_t *arg1 = malloc(arg1_len);
@@ -17,21 +23,18 @@ int render(size_t arg1_len) {
     }
     wasm_minimal_protocol_write_args_to_buffer(arg1);
     
-    char errbuf[4096];
+    char errbuf[4096] = "error: ";
+    setbuf(stderr, errbuf + 7);
     GVC_t *gvc = gvContext();
     graph_t *g = agmemread((char *)arg1);
+    free(arg1);
     if (!g) {
-        char *err = malloc(strlen(errbuf) + 7);
-        err = strcat(err, "error: ");
-        err = strcat(err, errbuf);
-        wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)errbuf, strlen(errbuf));
         return 1;
     }
 
     if (gvLayout(gvc, g, "dot")) {
-        char *err = malloc(strlen(errbuf) + 7);
-        err = strcat(err, "error: ");
-        err = strcat(err, errbuf);
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)errbuf, strlen(errbuf));
 		return 1;
 	}
 
@@ -51,6 +54,5 @@ int render(size_t arg1_len) {
 
 
     wasm_minimal_protocol_send_result_to_host((uint8_t *)data, length);
-    free(arg1);
     return 0;
 }
