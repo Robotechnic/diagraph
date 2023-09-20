@@ -7,4 +7,4 @@ license = "MIT"
 repository = "https://github.com/Robotechnic/graphviz-typst.git"
 description = "Graphviz bindings for typst"
 compiler="0.8.0"
-exclude=["graphviz/*", "wasm_minimal_protocol/*", "examples/*"]
+exclude=["graphviz_interface/*", "wasm_minimal_protocol/*", "examples/*"]
