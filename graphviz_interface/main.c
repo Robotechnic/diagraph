@@ -50,8 +50,7 @@ int render(size_t arg1_len) {
     agclose(g);
 
 
-    // wasm_minimal_protocol_send_result_to_host((uint8_t *)result, length);
-    wasm_minimal_protocol_send_result_to_host(arg1, arg1_len);
+    wasm_minimal_protocol_send_result_to_host((uint8_t *)data, length);
     free(arg1);
     return 0;
 }
