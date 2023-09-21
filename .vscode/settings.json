@@ -1,3 +1,10 @@
 {
-	"sonarlint.pathToCompileCommands": "${workspaceFolder}/graphviz_interface/compile_commands.json"
+	"sonarlint.pathToCompileCommands": "${workspaceFolder}/graphviz_interface/compile_commands.json",
+	"files.associations": {
+		"*.ejs": "html",
+		"array": "c",
+		"string": "c",
+		"string_view": "c",
+		"span": "c"
+	}
 }
