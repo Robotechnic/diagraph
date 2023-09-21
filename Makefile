@@ -11,6 +11,5 @@ link :
 
 clean :
 	cd graphviz_interface; \
-	cargo clean
-	rm -f graphviz.wasm
+	make clean
 	rm -rf ~/.cache/typst/packages/preview/graphviz

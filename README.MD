@@ -70,6 +70,16 @@ I plan to add more utilities to this plugin:
 - A way to render an automata with graphviz
 - A way to render a syntax tree
 
+## Build
+
+This project was built with emscripten `3.1.45`. Apart from that, you just need to run `make wasm` to build the wasm file. All libraries are downloaded and built automatically to get the right version that works.
+
+There are also some other make commands:
+
+- `make clean`: Clean the build folder
+- `make link`: Link the project to the typst plugin folder
+- `make compile_database`: Generate the compile_commands.json file
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
