@@ -5,16 +5,18 @@ CONFIGURE=emconfigure
 EMMAKE=emmake
 SOURCES=main.c
 INSTALLDIR=$(shell pwd)/install
-SRCDIR=graphiz-src
-EPSRCDIR=expat-src
+SRCDIR=$(shell pwd)/graphiz-src
+EPSRCDIR=$(shell pwd)/expat-src
 CFLAGS = -Oz --closure=0 --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1
 INCLUDE_FLAGS = -I"$(INSTALLDIR)/include" -I"$(INSTALLDIR)/include/graphviz" -L"$(INSTALLDIR)/lib" -L"$(INSTALLDIR)/lib/graphviz" -lgvplugin_dot_layout -lgvplugin_neato_layout -lgvplugin_core -lgvc -lpathplan -lcgraph -lxdot -lcdt -lexpat
+GRAPHVIZ_INFO_INCLUDE=-include "$(SRCDIR)/graphviz_version.h"
+INCLUDE_FLAGS += $(GRAPHVIZ_INFO_INCLUDE)
 
 all: build
 
 build: $(SOURCES) | $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz
 	$(CC) $(CFLAGS) $(SOURCES) -o graphviz.wasm $(INCLUDE_FLAGS)
-	wasi-stub ./graphviz.wasm -o ./graphviz.wasm
+	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./graphviz.wasm
 	mv ./"graphviz - stubbed.wasm" ../graphviz.wasm
 
 clean:
