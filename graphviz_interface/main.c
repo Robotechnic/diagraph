@@ -1,6 +1,7 @@
 #include "emscripten.h"
 
 #include <string.h>
+#include <stdlib.h>
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin.h>
 
@@ -53,33 +54,41 @@ int render(size_t dot_len, size_t engine_len) {
         return 1;
     }
     wasm_minimal_protocol_write_args_to_buffer(buffer);
-    // to make sure the buffer is null terminated
-    buffer[dot_len + engine_len] = '\0';
 
-    char const* dot = (char *)buffer;
-    char const* engine = (char *)buffer + dot_len;
+    // this copy is needed because the buffer
+    // is not null terminated and because
+    // the buffer doesn't reset properly when
+    // watch mode is enabled
+    char* dot = malloc(dot_len + 1);
+    char* engine = malloc(engine_len + 1);
+    memcpy(dot, buffer, dot_len);
+    dot[dot_len] = '\0';
+    memcpy(engine, buffer + dot_len, engine_len);
+    engine[engine_len] = '\0';
+    free(buffer);
 
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, true);
     graph_t *g = agmemread(dot);
+    free(dot);
     char* data = NULL;
     unsigned int length;
 
     if (!g) {
+        free(engine);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
-        free(buffer);
         return 0;
     }
 
     if (gvLayout(gvc, g, engine) == -1) {
+        free(engine);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
-        free(buffer);
 		return 0;
 	}
 
     int result = gvRenderData(gvc, g, "svg", &data, &length);
+    free(engine);
     if (result == -1) {
         gvFreeRenderData(data);
-        free(buffer);
         char* err = "error: failed to render graph to svg\0";
         wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
         return 1;
@@ -91,7 +100,6 @@ int render(size_t dot_len, size_t engine_len) {
     agclose(g);
 	gvFinalize(gvc);
     gvFreeContext(gvc);
-    free(buffer);
     return 0;
 }
 
