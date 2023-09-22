@@ -1,6 +1,6 @@
 #let plugin = plugin("graphviz.wasm")
 
-#let render(text, engine: "dot", width: auto, height: auto, fit: "cover") = {
+#let render(text, engine: "dot", width: auto, height: auto, fit: "contain") = {
 	if text.len() != bytes(text).len() {
 		return raw("error: text must be utf-8 encoded")
 	}
@@ -27,8 +27,27 @@
 	}
 }
 
-#show raw.where(lang: "dotrender"): it => {
-	let text = it.text()
-	return render(text)
+#let rawRender(engine: "dot", width: auto, height: auto, fit: "contain", raw) = {
+	if (not raw.has("text")) {
+		panic("This function requires a `text` field")
+	}
+	let text = raw.text
+	return render(text, engine: engine, width: width, height: height, fit: fit)
+}
+
+#let gaphRender(
+		engine: "dot",
+		width: auto, 
+		height: auto, 
+		fit: "contain",
+		doc
+	) = {
+	
+	show raw.where(lang: "dotrender"): it => {
+		let text = it.text
+		return render(text, engine: engine, width: width, height: height, fit: fit)
+	}
+
+	doc
 }
 

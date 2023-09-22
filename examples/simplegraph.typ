@@ -1,9 +1,6 @@
 #import "@preview/typst-graphviz:0.1.0": *
 
-#show raw.where(lang: "dotrender"): it => {
-	let text = it.text
-	return render(text, height: 20em, fit:"contain")
-}
+#show: gaphRender.with(height: 15em)
 
 = Graph 1: Test
 ```dot
@@ -45,7 +42,7 @@ digraph {
     eat -> survive
 }
 ```
-```dotrender
+#rawRender(height:20em)[```dot
 digraph {
     orange -> fruit
     apple -> fruit
@@ -55,7 +52,7 @@ digraph {
     food -> eat
     eat -> survive
 }
-```
+```]
 
 = Graph 3: FFT
 ```dot

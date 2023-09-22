@@ -10,7 +10,7 @@ This plugin is quite simple to use, you just need to import it:
 #import "@preview/typst-graphviz:0.1.0": *
 ```
 
-For now, the only function available is `render`, which takes a graphviz dot string and returns a svg string.
+It allows you to render a graphviz dot string to a svg image:
 
 ```typ
 #render("digraph { a -> b }")
@@ -19,10 +19,7 @@ For now, the only function available is `render`, which takes a graphviz dot str
 For a simpler usage, you can setup a simple show rule:
 
 ```typ
-#show raw.where(lang: "dotrender"): it => {
-    let text = it.text
-    return render(text)
-}
+#show: gaphRender
 ```
 
 This allow you to draw a graphviz graph like this:
@@ -43,6 +40,8 @@ For more information about the graphviz dot language, you can check the [officia
 
 ### render
 
+This function allow you to render a graphviz dot string to a svg image.
+
 ```typ
 render(
     dot: string,
@@ -59,9 +58,55 @@ render(
 | engine | The graphviz engine to use | dot |
 | width | The width of the svg | auto |
 | height | The height of the svg | auto |
-| fit | The fit mode of the svg | cover |
+| fit | The fit mode of the svg | contain |
 
 All the optional parameters are the same as the one of images, you can check the [documentation](https://typst.app/docs/reference/visualize/image/) for more details.
+
+### rawRender
+
+This function is a show rule that allow you to use raw to render a graphviz dot string.
+
+```typ
+rawRender(
+    engine: string,
+    width: auto relative,
+    height: auto relative,
+    fit: string,
+    raw
+)
+```
+
+| Parameter | Description | Default value |
+| :-------: | :---------: | :-----------: |
+| engine | The graphviz engine to use | dot |
+| width | The width of the svg | auto |
+| height | The height of the svg | auto |
+| fit | The fit mode of the svg | contain |
+| raw | The dot string to render | Required |
+
+This function will panic if the provided content is not a `raw`.
+
+### graphRender
+
+This function is a show rule that allow you to use raw to render a graphviz dot string.
+
+```typ
+gaphRender(
+    engine: string,
+    width: auto relative,
+    height: auto relative,
+    fit: string,
+    doc
+)
+```
+
+| Parameter | Description | Default value |
+| :-------: | :---------: | :-----------: |
+| engine | The graphviz engine to use | dot |
+| width | The width of the svg | auto |
+| height | The height of the svg | auto |
+| fit | The fit mode of the image | contain |
+| doc | The document | Required |
 
 ## Future work
 
@@ -79,6 +124,7 @@ There are also some other make commands:
 - `make clean`: Clean the build folder
 - `make link`: Link the project to the typst plugin folder
 - `make compile_database`: Generate the compile_commands.json file
+- `make module`: It copy the files needed to run the plugin in a folder called `graphviz-typst` in the current directory
 
 ## License
 
