@@ -1,6 +1,6 @@
 #import "@preview/typst-graphviz:0.1.0": *
 
-#show: gaphRender.with(height: 15em)
+#show: gaph-render.with(height: 15em)
 
 = Graph 1: Test
 ```dot
@@ -42,7 +42,7 @@ digraph {
     eat -> survive
 }
 ```
-#rawRender(height:20em)[```dot
+#raw-render(height:20em)[```dot
 digraph {
     orange -> fruit
     apple -> fruit

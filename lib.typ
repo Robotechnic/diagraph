@@ -27,7 +27,7 @@
 	}
 }
 
-#let rawRender(engine: "dot", width: auto, height: auto, fit: "contain", raw) = {
+#let raw-render(engine: "dot", width: auto, height: auto, fit: "contain", raw) = {
 	if (not raw.has("text")) {
 		panic("This function requires a `text` field")
 	}
@@ -35,7 +35,7 @@
 	return render(text, engine: engine, width: width, height: height, fit: fit)
 }
 
-#let gaphRender(
+#let gaph-render(
 		engine: "dot",
 		width: auto, 
 		height: auto, 
