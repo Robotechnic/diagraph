@@ -1,4 +1,4 @@
-# typst-graphviz
+# diagraph
 
 A simple graphviz binding for typst using the new webassembly plugin system
 
@@ -7,7 +7,7 @@ A simple graphviz binding for typst using the new webassembly plugin system
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/typst-graphviz:0.1.0": *
+#import "@preview/diagraph:0.1.0": *
 ```
 
 It allows you to render a graphviz dot string to a svg image:
@@ -32,7 +32,7 @@ digraph {
 `` `
 ```
 
-You can see an example of this in the [example](https://github.com/Robotechnic/graphviz/tree/main/examples) folder.
+You can see an example of this in the [example](https://github.com/Robotechnic/diagraph/tree/main/examples) folder.
 
 For more information about the graphviz dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 
