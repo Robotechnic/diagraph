@@ -15,9 +15,9 @@ INCLUDE_FLAGS += $(GRAPHVIZ_INFO_INCLUDE)
 all: build
 
 build: $(SOURCES) | $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz
-	$(CC) $(CFLAGS) $(SOURCES) -o graphviz.wasm $(INCLUDE_FLAGS)
-	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./graphviz.wasm
-	mv ./"graphviz - stubbed.wasm" ../graphviz.wasm
+	$(CC) $(CFLAGS) $(SOURCES) -o diagraph.wasm $(INCLUDE_FLAGS)
+	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./diagraph.wasm
+	mv ./"diagraph - stubbed.wasm" ../diagraph.wasm
 
 clean:
 	rm -rf $(SRCDIR)

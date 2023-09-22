@@ -6,18 +6,18 @@ compile_database:
 	bear --output ./graphviz_interface/compile_commands.json -- make wasm
 
 link :
-	mkdir -p ~/.cache/typst/packages/preview/typst-graphviz
-	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/typst-graphviz/0.1.0
+	mkdir -p ~/.cache/typst/packages/preview/diagraph
+	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.1.0
 
 module :
-	mkdir -p ./graphviz
-	cp ./graphviz.wasm ./graphviz/graphviz.wasm
-	cp ./lib.typ ./graphviz/lib.typ
-	cp ./README.MD ./graphviz/README.MD
-	cp ./typst.toml ./graphviz/typst.toml
-	cp ./LICENSE ./graphviz/LICENSE
+	mkdir -p ./diagraph
+	cp ./diagraph.wasm ./diagraph/diagraph.wasm
+	cp ./lib.typ ./diagraph/lib.typ
+	cp ./README.MD ./diagraph/README.MD
+	cp ./typst.toml ./diagraph/typst.toml
+	cp ./LICENSE ./diagraph/LICENSE
 
 clean :
 	cd graphviz_interface; \
 	make clean
-	rm -rf ~/.cache/typst/packages/preview/graphviz
+	rm -rf ~/.cache/typst/packages/preview/diagraph

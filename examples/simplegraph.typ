@@ -1,4 +1,4 @@
-#import "@preview/typst-graphviz:0.1.0": *
+#import "@preview/diagraph:0.1.0": *
 
 #show: gaph-render.with(height: 15em)
 

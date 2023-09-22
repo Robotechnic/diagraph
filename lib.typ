@@ -1,4 +1,4 @@
-#let plugin = plugin("graphviz.wasm")
+#let plugin = plugin("diagraph.wasm")
 
 #let render(text, engine: "dot", width: auto, height: auto, fit: "contain") = {
 	if text.len() != bytes(text).len() {
