@@ -124,7 +124,7 @@ There are also some other make commands:
 - `make clean`: Clean the build folder
 - `make link`: Link the project to the typst plugin folder
 - `make compile_database`: Generate the compile_commands.json file
-- `make module`: It copy the files needed to run the plugin in a folder called `graphviz-typst` in the current directory
+- `make module`: It copy the files needed to run the plugin in a folder called `graphviz` in the current directory
 
 ## License
 
