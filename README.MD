@@ -129,3 +129,9 @@ There are also some other make commands:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+## Changelog
+
+### 0.1.0
+
+Initial working version
