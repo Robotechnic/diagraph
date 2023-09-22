@@ -60,3 +60,4 @@ graphviz_interface/*.wasm
 graphviz_interface/compile_commands.json
 
 graphviz-typst/*
+autosubmit.sh
