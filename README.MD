@@ -108,13 +108,6 @@ gaph-render(
 | fit | The fit mode of the image | contain |
 | doc | The document | Required |
 
-## Future work
-
-I plan to add more utilities to this plugin:
-
-- A way to render an automata with graphviz
-- A way to render a syntax tree
-
 ## Build
 
 This project was built with emscripten `3.1.45`. Apart from that, you just need to run `make wasm` to build the wasm file. All libraries are downloaded and built automatically to get the right version that works.
