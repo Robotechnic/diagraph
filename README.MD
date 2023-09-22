@@ -19,7 +19,7 @@ It allows you to render a graphviz dot string to a svg image:
 For a simpler usage, you can setup a simple show rule:
 
 ```typ
-#show: gaphRender
+#show: gaph-render
 ```
 
 This allow you to draw a graphviz graph like this:
@@ -62,12 +62,12 @@ render(
 
 All the optional parameters are the same as the one of images, you can check the [documentation](https://typst.app/docs/reference/visualize/image/) for more details.
 
-### rawRender
+### raw-render
 
 This function is a show rule that allow you to use raw to render a graphviz dot string.
 
 ```typ
-rawRender(
+raw-render(
     engine: string,
     width: auto relative,
     height: auto relative,
@@ -91,7 +91,7 @@ This function will panic if the provided content is not a `raw`.
 This function is a show rule that allow you to use raw to render a graphviz dot string.
 
 ```typ
-gaphRender(
+gaph-render(
     engine: string,
     width: auto relative,
     height: auto relative,
