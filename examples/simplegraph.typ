@@ -1,6 +1,6 @@
 #import "@preview/diagraph:0.1.0": *
 
-#show: gaph-render.with(height: 15em)
+#show: raw-dotrender-rule.with(height: 15em)
 
 = Graph 1: Test
 ```dot
