@@ -76,6 +76,9 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     if (strlen(background) > 0) {
         agattr(g, AGRAPH, "bgcolor", background);
     }
+
+    agattr(g, AGRAPH, "center", "true");
+
     free(background);
     free(dot);
     char* data = NULL;

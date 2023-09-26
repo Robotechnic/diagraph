@@ -6,5 +6,12 @@
 		"string": "c",
 		"string_view": "c",
 		"span": "c"
-	}
+	},
+	"cSpell.words": [
+		"agattr",
+		"AGRAPH",
+		"emscripten",
+		"gvplugin",
+		"webassembly"
+	]
 }
