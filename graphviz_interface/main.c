@@ -42,13 +42,13 @@ int vizErrorf(char *str) {
  * @return int 0 on success, 1 on failure
  */
 EMSCRIPTEN_KEEPALIVE
-int render(size_t dot_len, size_t engine_len) {
+int render(size_t dot_len, size_t engine_len, size_t background_len) {
     // set error report to custom function
     // it allow us to get the error message from graphviz
     agseterr(AGERR);
     agseterrf(vizErrorf);
 
-    uint8_t *buffer = malloc(dot_len + engine_len + 1);
+    uint8_t *buffer = malloc(dot_len + engine_len + background_len);
 
     if (!buffer) {
         return 1;
@@ -61,14 +61,22 @@ int render(size_t dot_len, size_t engine_len) {
     // watch mode is enabled
     char* dot = malloc(dot_len + 1);
     char* engine = malloc(engine_len + 1);
+    char *background = malloc(background_len + 1);
     memcpy(dot, buffer, dot_len);
     dot[dot_len] = '\0';
     memcpy(engine, buffer + dot_len, engine_len);
     engine[engine_len] = '\0';
+    memcpy(background, buffer + dot_len + engine_len, background_len);
+    background[background_len] = '\0';
     free(buffer);
 
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, true);
     graph_t *g = agmemread(dot);
+
+    if (strlen(background) > 0) {
+        agattr(g, AGRAPH, "bgcolor", background);
+    }
+    free(background);
     free(dot);
     char* data = NULL;
     unsigned int length;

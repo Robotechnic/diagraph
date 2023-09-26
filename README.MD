@@ -59,6 +59,7 @@ render(
 | width | The width of the svg | auto |
 | height | The height of the svg | auto |
 | fit | The fit mode of the svg | contain |
+| background | The background color of the svg | transparent |
 
 All the optional parameters are the same as the one of images, you can check the [documentation](https://typst.app/docs/reference/visualize/image/) for more details.
 
@@ -82,6 +83,7 @@ raw-render(
 | width | The width of the svg | auto |
 | height | The height of the svg | auto |
 | fit | The fit mode of the svg | contain |
+| background | The background color of the svg | transparent |
 | raw | The dot string to render | Required |
 
 This function will panic if the provided content is not a `raw`.
@@ -106,6 +108,7 @@ raw-dotrender-rule(
 | width | The width of the svg | auto |
 | height | The height of the svg | auto |
 | fit | The fit mode of the image | contain |
+| background | The background color of the svg | transparent |
 | doc | The document | Required |
 
 ## Build
@@ -118,6 +121,20 @@ There are also some other make commands:
 - `make link`: Link the project to the typst plugin folder
 - `make compile_database`: Generate the compile_commands.json file
 - `make module`: It copy the files needed to run the plugin in a folder called `graphviz` in the current directory
+
+## Notes
+
+Background color is just a shortcut for the `bgcolor` attribute of the graphviz `digraph` so:
+
+```typ
+#render("digraph { bgcolor = red; a -> b }")
+```
+
+is strictly equivalent to:
+
+```typ
+#render("digraph { a -> b }", background: "red")
+```
 
 ## License
 

@@ -1,16 +1,17 @@
 #let plugin = plugin("diagraph.wasm")
 
-#let render(text, engine: "dot", width: auto, height: auto, fit: "contain") = {
+#let render(text, engine: "dot", width: auto, height: auto, fit: "contain", background: "transparent") = {
 	if text.len() != bytes(text).len() {
 		return raw("error: text must be utf-8 encoded")
 	}
 
 	// add null terminator
-	let encodedText = bytes(text) + bytes((0,))
-	let encodedEngine = bytes(engine) + bytes((0,))
+	let encodedText = bytes(text)
+	let encodedEngine = bytes(engine)
+	let encodedBackground = bytes(background)
 
 	let render = str(
-		plugin.render(encodedText, encodedEngine)
+		plugin.render(encodedText, encodedEngine, encodedBackground)
 	)
 
 
@@ -27,12 +28,12 @@
 	}
 }
 
-#let raw-render(engine: "dot", width: auto, height: auto, fit: "contain", raw) = {
+#let raw-render(engine: "dot", width: auto, height: auto, fit: "contain", background: "transparent", raw) = {
 	if (not raw.has("text")) {
 		panic("This function requires a `text` field")
 	}
 	let text = raw.text
-	return render(text, engine: engine, width: width, height: height, fit: fit)
+	return render(text, engine: engine, width: width, height: height, fit: fit, background: background)
 }
 
 #let raw-dotrender-rule(
@@ -40,13 +41,18 @@
 		width: auto, 
 		height: auto, 
 		fit: "contain",
+		background: "transparent",
 		doc
 	) = {
 	
-	show raw.where(lang: "dotrender"): it => {
-		let text = it.text
-		return render(text, engine: engine, width: width, height: height, fit: fit)
-	}
+	show raw.where(lang: "dotrender"): it => raw-render(
+		engine: engine,
+		width: width,
+		height: height,
+		fit: fit,
+		background: background,
+		it
+	)
 
 	doc
 }
