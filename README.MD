@@ -10,12 +10,27 @@ This plugin is quite simple to use, you just need to import it:
 #import "@preview/diagraph:0.1.0": *
 ```
 
-It allows you to render a graphviz dot string to a svg image:
+It allows you to render a graphviz dot string to a svg image in three different ways:
+
+## Render function
 
 ```typ
 #render("digraph { a -> b }")
 ```
 
+## Raw render function
+
+```typ
+#raw-render[
+    ```dot
+    digraph {
+        a -> b
+    }
+    `` `
+]
+```
+
+## Show rule
 For a simpler usage, you can setup a simple show rule:
 
 ```typ
@@ -31,6 +46,7 @@ digraph {
 }
 `` `
 ```
+
 
 You can see an example of this in the [example](https://github.com/Robotechnic/diagraph/tree/main/examples) folder.
 
@@ -48,7 +64,8 @@ render(
     engine: string,
     width: auto relative,
     height: auto relative,
-    fit: string
+    fit: string,
+    background: string
 )
 ```
 
@@ -73,6 +90,7 @@ raw-render(
     width: auto relative,
     height: auto relative,
     fit: string,
+    background: string,
     raw
 )
 ```
@@ -98,6 +116,7 @@ raw-dotrender-rule(
     width: auto relative,
     height: auto relative,
     fit: string,
+    background: string,
     doc
 )
 ```
