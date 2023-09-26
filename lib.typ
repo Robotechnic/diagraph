@@ -35,25 +35,3 @@
 	let text = raw.text
 	return render(text, engine: engine, width: width, height: height, fit: fit, background: background)
 }
-
-#let raw-dotrender-rule(
-		engine: "dot",
-		width: auto, 
-		height: auto, 
-		fit: "contain",
-		background: "transparent",
-		doc
-	) = {
-	
-	show raw.where(lang: "dotrender"): it => raw-render(
-		engine: engine,
-		width: width,
-		height: height,
-		fit: fit,
-		background: background,
-		it
-	)
-
-	doc
-}
-
