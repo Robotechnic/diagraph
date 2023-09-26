@@ -7,7 +7,7 @@ compile_database:
 
 link :
 	mkdir -p ~/.cache/typst/packages/preview/diagraph
-	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.1.0
+	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.1.1
 
 module :
 	mkdir -p ./diagraph
