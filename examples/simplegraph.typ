@@ -1,4 +1,4 @@
-#import "@preview/diagraph:0.1.0": *
+#import "@preview/diagraph:0.1.1": *
 
 
 = Graph 1: Test
