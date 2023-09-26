@@ -30,7 +30,6 @@ It allows you to render a graphviz dot string to a svg image in three different 
 ]
 ````
 
-
 You can see an example of this in the [example](https://github.com/Robotechnic/diagraph/tree/main/examples) folder.
 
 For more information about the graphviz dot language, you can check the [official documentation](https://graphviz.org/documentation/).
@@ -123,7 +122,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 0.1.1
 
 - Remove the `raw-render-rule` show rule because it doesn't allow to use custom font and the `render` / `raw-render` functions are more flexible
-- Add the `background` parameter to the `render` function
+- Add the `background` parameter to the `render` and `raw-render` typst functions
+- Add center attribute to draw graph in the center of the svg in the `render` c function
 
 ### 0.1.0
 
