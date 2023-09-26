@@ -1,34 +1,33 @@
 #import "@preview/diagraph:0.1.0": *
 
-#show: raw-dotrender-rule.with(height: 15em)
 
 = Graph 1: Test
 ```dot
 digraph {
 	rankdir=LR;
-	A -> B
-	B -> A
+	f -> B
+	B -> f
 	C -> D
 	D -> B
 	E -> F
-	A -> E
+	f -> E
 	B -> F
 	F -> G
 }
 ```
-```dotrender
+#raw-render(height:20em)[```dot
 digraph {
 	rankdir=LR;
-	A -> B
-	B -> A
+	f -> B
+	B -> f
 	C -> D
 	D -> B
 	E -> F
-	A -> E
+	f -> E
 	B -> F
 	F -> G
 }
-```
+```]
 
 = Graph 2: Eating
 ```dot
@@ -71,7 +70,7 @@ digraph {
     r2->r3[color=red]
 }
 ```
-```dotrender
+#raw-render(height:20em)[```dot
 digraph {
     1[label="(1,0,0,0) i", shape=none]
     2[label="(1,0) -1", shape=none]
@@ -86,7 +85,7 @@ digraph {
     r1->r3[color=red]
     r2->r3[color=red]
 }
-```
+```]
 
 = Graph 4: State Machine
 ```dot
@@ -113,7 +112,7 @@ digraph finite_state_machine {
 	LR_8 -> LR_5 [ label = "S(a)" ];
 }
 ```
-```dotrender
+#raw-render(height:20em)[```dot
 digraph finite_state_machine {
 	rankdir=LR;
 	size="8,5"
@@ -136,7 +135,7 @@ digraph finite_state_machine {
 	LR_8 -> LR_6 [ label = "S(b)" ];
 	LR_8 -> LR_5 [ label = "S(a)" ];
 }
-```
+```]
 
 = Graph 5: Clustering
 ```dot
@@ -170,7 +169,7 @@ digraph G {
 	end [shape=Msquare];
 }
 ```
-```dotrender
+#raw-render(height:20em)[```dot
 # http://www.graphviz.org/content/cluster
 digraph G {
 
@@ -200,7 +199,7 @@ digraph G {
 	start [shape=Mdiamond];
 	end [shape=Msquare];
 }
-```
+```]
 
 == Graph 6: HTML
 ```dot
@@ -233,7 +232,7 @@ digraph structs {
     struct1:f2 -> struct3:here;
 }
 ```
-```dotrender
+#raw-render(height:20em)[```dot
 digraph structs {
     node [shape=plaintext]
     struct1 [label=<
@@ -262,4 +261,4 @@ digraph structs {
     struct1:f1 -> struct2:f0;
     struct1:f2 -> struct3:here;
 }
-```
+```]

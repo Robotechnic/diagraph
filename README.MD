@@ -20,32 +20,15 @@ It allows you to render a graphviz dot string to a svg image in three different 
 
 ## Raw render function
 
-```typ
+````typ
 #raw-render[
     ```dot
     digraph {
         a -> b
     }
-    `` `
+    ```
 ]
-```
-
-## Show rule
-For a simpler usage, you can setup a simple show rule:
-
-```typ
-#show: raw-dotrender-rule
-```
-
-This allow you to draw a graphviz graph like this:
-
-```typ
-```dotrender
-digraph {
-    a -> b
-}
-`` `
-```
+````
 
 
 You can see an example of this in the [example](https://github.com/Robotechnic/diagraph/tree/main/examples) folder.
@@ -106,30 +89,6 @@ raw-render(
 
 This function will panic if the provided content is not a `raw`.
 
-### raw-dotrender-rule
-
-This function is a show rule that allow you to use raw to render a graphviz dot string.
-
-```typ
-raw-dotrender-rule(
-    engine: string,
-    width: auto relative,
-    height: auto relative,
-    fit: string,
-    background: string,
-    doc
-)
-```
-
-| Parameter | Description | Default value |
-| :-------: | :---------: | :-----------: |
-| engine | The graphviz engine to use | dot |
-| width | The width of the svg | auto |
-| height | The height of the svg | auto |
-| fit | The fit mode of the image | contain |
-| background | The background color of the svg | transparent |
-| doc | The document | Required |
-
 ## Build
 
 This project was built with emscripten `3.1.45`. Apart from that, you just need to run `make wasm` to build the wasm file. All libraries are downloaded and built automatically to get the right version that works.
@@ -160,6 +119,11 @@ is strictly equivalent to:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Changelog
+
+### 0.1.1
+
+- Remove the `raw-render-rule` show rule because it doesn't allow to use custom font and the `render` / `raw-render` functions are more flexible
+- Add the `background` parameter to the `render` function
 
 ### 0.1.0
 
