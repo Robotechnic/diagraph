@@ -18,9 +18,9 @@
 		// double-quoted values.
 		let xml-attributes-regex = `(?:(?:[\w-]+=".+?[^\\]"|\s*)*?)`.text
 		// Matches a "width" XML attribute and captures its value.
-		let width-attribute-regex = `(?:width="([\d.]+(?:pt|cm))")`.text
+		let width-attribute-regex = `(?:width="([\d.]+pt)")`.text
 		// Same for height.
-		let height-attribute-regex = `(?:height="([\d.]+(?:pt|cm))")`.text
+		let height-attribute-regex = `(?:height="([\d.]+pt)")`.text
 		// Matches a XML opening `svg` tag with "width" and "height" attributes
 		// in this order, and captures the width and the height in pt.
 		let svg-width-height-regex = regex(
@@ -55,7 +55,7 @@
 				return none
 			}
 		}
-		result.map(eval)
+		result.map(x => float(x) * 1pt)
 	}
 
 	if render.slice(0, 6) == "error:" {
