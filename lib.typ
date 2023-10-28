@@ -14,14 +14,14 @@
 	///
 	/// If the dimensions of the SVG cannot be inferred, returns `none`.
 	let get-svg-dimensions(svg) = {
-		// Matches an arbitrary amount of arbitrary xml attributes with a
+		// Matches an arbitrary amount of arbitrary XML attributes with a
 		// double-quoted values.
 		let xml-attributes-regex = `(?:(?:\w|-)+=".+?[^\\]"|\s*)*?`.text
-		// Matches a "width" xml attribute and captures its value.
+		// Matches a "width" XML attribute and captures its value.
 		let width-attribute-regex = `(?:width="(\d+(?:pt|cm))")`.text
 		// Same for height.
 		let height-attribute-regex = `(?:height="(\d+(?:pt|cm))")`.text
-		// Matches a xml opening `svg` tag with "width" and "height" attributes
+		// Matches a XML opening `svg` tag with "width" and "height" attributes
 		// in this order, and captures the width and the height in pt.
 		let svg-width-height-regex = regex(
 			`<svg\s+`.text
