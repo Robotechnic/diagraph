@@ -32,7 +32,7 @@
 	let get-svg-dimensions(svg) = {
 		// Matches an arbitrary amount of arbitrary XML attributes with a
 		// double-quoted values.
-		let xml-attributes-regex = `(?:(?:[\w-]+=".+?[^\\]"|\s*)*?)`.text
+		let xml-attributes-regex = `(?:[\w-]+=".+?[^\\]"|\s*)*?`.text
 		// Matches a "width" XML attribute and captures its value.
 		let width-attribute-regex = `(?:width="([\d.]+)pt")`.text
 		// Same for height.
