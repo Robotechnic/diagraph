@@ -24,7 +24,7 @@
 		// Matches a XML opening `svg` tag with "width" and "height" attributes
 		// in this order, and captures the width and the height in pt.
 		let svg-width-height-regex = regex(
-			`<svg\s+`.text
+			`<svg\s`.text
 			+ xml-attributes-regex
 			+ width-attribute-regex
 			+ xml-attributes-regex
@@ -34,7 +34,7 @@
 		)
 		// Same, but with "width" and "height" in reverse order.
 		let svg-height-width-regex = regex(
-			`<svg\s+`.text
+			`<svg\s`.text
 			+ xml-attributes-regex
 			+ width-attribute-regex
 			+ xml-attributes-regex
