@@ -9,55 +9,6 @@
 		)
 	)
 
-	/// Returns a `(width, height)` pair corresponding to the dimensions of an
-	/// SVG, which is passed as its source code.
-	///
-	/// If the dimensions of the SVG cannot be inferred, returns `none`.
-	let get-svg-dimensions(svg) = {
-		// Matches an arbitrary amount of arbitrary XML attributes with a
-		// double-quoted values.
-		let xml-attributes-regex = `(?:(?:[\w-]+=".+?[^\\]"|\s*)*?)`.text
-		// Matches a "width" XML attribute and captures its value.
-		let width-attribute-regex = `(?:width="([\d.]+pt)")`.text
-		// Same for height.
-		let height-attribute-regex = `(?:height="([\d.]+pt)")`.text
-		// Matches a XML opening `svg` tag with "width" and "height" attributes
-		// in this order, and captures the width and the height in pt.
-		let svg-width-height-regex = regex(
-			`<svg\s`.text
-			+ xml-attributes-regex
-			+ width-attribute-regex
-			+ xml-attributes-regex
-			+ height-attribute-regex
-			+ xml-attributes-regex
-			+ ">"
-		)
-		// Same, but with "width" and "height" in reverse order.
-		let svg-height-width-regex = regex(
-			`<svg\s`.text
-			+ xml-attributes-regex
-			+ width-attribute-regex
-			+ xml-attributes-regex
-			+ height-attribute-regex
-			+ xml-attributes-regex
-			+ ">"
-		)
-
-		let result
-		let match = svg.match(svg-width-height-regex)
-		if match != none {
-			result = match.captures
-		} else {
-			let match = svg.match(svg-height-width-regex)
-			if match != none {
-				result = match.captures
-			} else {
-				return none
-			}
-		}
-		result.map(x => float(x) * 1pt)
-	}
-
 	if render.slice(0, 6) == "error:" {
 		return raw(render)
 	}
@@ -72,6 +23,52 @@
 
 	if width != auto and height != auto {
 		return default
+	}
+
+	/// Returns a `(width, height)` pair corresponding to the dimensions of an
+	/// SVG, which is passed as its source code.
+	///
+	/// If the dimensions of the SVG cannot be inferred, returns `none`.
+	let get-svg-dimensions(svg) = {
+		// Matches an arbitrary amount of arbitrary XML attributes with a
+		// double-quoted values.
+		let xml-attributes-regex = `(?:(?:[\w-]+=".+?[^\\]"|\s*)*?)`.text
+		// Matches a "width" XML attribute and captures its value.
+		let width-attribute-regex = `(?:width="([\d.]+)pt")`.text
+		// Same for height.
+		let height-attribute-regex = `(?:height="([\d.]+)pt")`.text
+		// Matches a XML opening `svg` tag with a "width" attribute, and its
+		// value in pt.
+		let svg-width-regex = regex(
+			`<svg\s`.text
+			+ xml-attributes-regex
+			+ width-attribute-regex
+			+ xml-attributes-regex
+			+ ">"
+		)
+		// Matches a XML opening `svg` tag with a "height" attribute, and its
+		// value in pt.
+		let svg-height-regex = regex(
+			`<svg\s`.text
+			+ xml-attributes-regex
+			+ height-attribute-regex
+			+ xml-attributes-regex
+			+ ">"
+		)
+
+		let width-match = svg.match(svg-width-regex)
+		if width-match == none {
+			return none
+		}
+		let width = float(width-match.captures.first()) * 1pt
+
+		let height-match = svg.match(svg-height-regex)
+		if height-match == none {
+			return none
+		}
+		let height = float(height-match.captures.first()) * 1pt
+
+		(width, height)
 	}
 
 	let initial-dimensions = get-svg-dimensions(render)
