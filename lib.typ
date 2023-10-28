@@ -72,12 +72,13 @@
 		)
 	}
 
+	let initial-dimensions = get-svg-dimensions(render)
+	let svg-text-size = 14pt // Default font size in Graphviz
 	style(styles => {
-		let initial-dimensions = get-svg-dimensions(render)
-
-		let svg-text-size = 14pt // Default font size in Graphviz
 		let document-text-size = measure(line(length: 1em), styles).width
-		let (auto-width, auto-height) = initial-dimensions.map(dimension => dimension / svg-text-size * document-text-size)
+		let (auto-width, auto-height) = initial-dimensions.map(dimension => {
+			dimension / svg-text-size * document-text-size
+		})
 
 		let final-width = if width == auto { auto-width } else { width }
 		let final-height = if height == auto { auto-height } else { height }
