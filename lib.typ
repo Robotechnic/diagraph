@@ -62,17 +62,24 @@
 		return raw(render)
 	}
 
+	let default = image.decode(
+		render,
+		format: "svg",
+		width: width,
+		height: height,
+		fit: fit,
+	)
+
 	if width != auto and height != auto {
-		return image.decode(
-			render,
-			format: "svg",
-			width: width,
-			height: height,
-			fit: fit,
-		)
+		return default
 	}
 
 	let initial-dimensions = get-svg-dimensions(render)
+
+	if initial-dimensions == none {
+		return default
+	}
+
 	let svg-text-size = 14pt // Default font size in Graphviz
 	style(styles => {
 		let document-text-size = measure(line(length: 1em), styles).width
