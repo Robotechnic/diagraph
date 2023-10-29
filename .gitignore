@@ -61,3 +61,5 @@ graphviz_interface/compile_commands.json
 
 diagraph/*
 autosubmit.sh
+
+.vscode
