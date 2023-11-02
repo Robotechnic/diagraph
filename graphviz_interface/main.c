@@ -118,8 +118,8 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
 
     // display bounding box of the svg render in the console
     // this is useful to debug the svg render
-    int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x);
-    int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y);
+    int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 8;
+    int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y) + 8;
 
     size_t result_buffer_len = 0;
     result_buffer_len = sizeof(width) + sizeof(height) + length + 2;
