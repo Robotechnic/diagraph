@@ -7,7 +7,7 @@ compile_database:
 
 link :
 	mkdir -p ~/.cache/typst/packages/preview/diagraph
-	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.1.1
+	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.1.2
 
 module :
 	mkdir -p ./diagraph
@@ -17,7 +17,9 @@ module :
 	cp ./typst.toml ./diagraph/typst.toml
 	cp ./LICENSE ./diagraph/LICENSE
 
-clean :
+clean : clean-link
 	cd graphviz_interface; \
 	make clean
+
+clean-link:
 	rm -rf ~/.cache/typst/packages/preview/diagraph
