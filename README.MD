@@ -36,6 +36,8 @@ For more information about the graphviz dot language, you can check the [officia
 
 ## Functions definitions
 
+In the following functions, `auto` mean that the image will be scaled so the graph text size match the document text size.
+
 ### render
 
 This function allow you to render a graphviz dot string to a svg image.
@@ -118,6 +120,10 @@ is strictly equivalent to:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Changelog
+
+### 0.1.2
+
+- The graph are now scaled to make the graph text size match the document text size
 
 ### 0.1.1
 

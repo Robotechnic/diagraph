@@ -25,7 +25,7 @@ lt_symlist_t lt_preloaded_symbols[] = {
 
 char errBuff[1024];
 int vizErrorf(char *str) {
-    strncpy(errBuff + 7, str, sizeof(errBuff) - 8);
+    strncpy(errBuff + 8, str, sizeof(errBuff) - 8);
     errBuff[0] = 1;
     errBuff[1] = 'e';
     errBuff[2] = 'r';
@@ -78,7 +78,7 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     background[background_len] = '\0';
     free(buffer);
 
-    GVC_t *gvc = gvContext();
+    GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
     graph_t *g = agmemread(dot);
 
     if (strlen(background) > 0) {
@@ -118,16 +118,17 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
 
     // display bounding box of the svg render in the console
     // this is useful to debug the svg render
-    int width = floor(GD_bb(g).UR.x - GD_bb(g).LL.x);
-    int height = floor(GD_bb(g).UR.y - GD_bb(g).LL.y);
+    int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x);
+    int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y);
 
     size_t result_buffer_len = 0;
-    result_buffer_len = sizeof(width) + sizeof(height) + length + 1;
+    result_buffer_len = sizeof(width) + sizeof(height) + length + 2;
     uint8_t *result_buffer = malloc(result_buffer_len);
     result_buffer[0] = 0;
-    big_endian_encode(result_buffer + 1, width);
-    big_endian_encode(result_buffer + 1 + sizeof(width), height);
-    memcpy(result_buffer + 1 + sizeof(width) + sizeof(height), data, length);
+    result_buffer[1] = sizeof(width);
+    big_endian_encode(result_buffer + 2, width);
+    big_endian_encode(result_buffer + 2 + sizeof(width), height);
+    memcpy(result_buffer + 2 + sizeof(width) + sizeof(height), data, length);
 
     wasm_minimal_protocol_send_result_to_host(result_buffer, result_buffer_len);
     gvFreeRenderData(data);

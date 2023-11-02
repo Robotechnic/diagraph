@@ -1,4 +1,4 @@
-#import "@preview/diagraph:0.1.1": *
+#import "@preview/diagraph:0.1.2": *
 
 
 = Graph 1: Test
@@ -15,7 +15,7 @@ digraph {
 	F -> G
 }
 ```
-#raw-render(height:20em)[```dot
+#raw-render[```dot
 digraph {
 	rankdir=LR;
 	f -> B
@@ -41,7 +41,7 @@ digraph {
     eat -> survive
 }
 ```
-#raw-render(height:20em)[```dot
+#raw-render[```dot
 digraph {
     orange -> fruit
     apple -> fruit
@@ -70,7 +70,7 @@ digraph {
     r2->r3[color=red]
 }
 ```
-#raw-render(height:20em)[```dot
+#raw-render[```dot
 digraph {
     1[label="(1,0,0,0) i", shape=none]
     2[label="(1,0) -1", shape=none]
@@ -112,7 +112,7 @@ digraph finite_state_machine {
 	LR_8 -> LR_5 [ label = "S(a)" ];
 }
 ```
-#raw-render(height:20em)[```dot
+#raw-render[```dot
 digraph finite_state_machine {
 	rankdir=LR;
 	size="8,5"
@@ -169,7 +169,7 @@ digraph G {
 	end [shape=Msquare];
 }
 ```
-#raw-render(height:20em)[```dot
+#raw-render[```dot
 # http://www.graphviz.org/content/cluster
 digraph G {
 
@@ -232,7 +232,7 @@ digraph structs {
     struct1:f2 -> struct3:here;
 }
 ```
-#raw-render(height:20em)[```dot
+#raw-render[```dot
 digraph structs {
     node [shape=plaintext]
     struct1 [label=<
