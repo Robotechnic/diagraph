@@ -1,0 +1,8 @@
+digraph {
+	it -> works
+	works -> like
+	like -> a
+	a -> charm
+	charm -> "."
+	"." -> it
+}
