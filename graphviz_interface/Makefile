@@ -7,8 +7,8 @@ SOURCES=main.c
 INSTALLDIR=$(shell pwd)/install
 SRCDIR=$(shell pwd)/graphiz-src
 EPSRCDIR=$(shell pwd)/expat-src
-CFLAGS = -Oz --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1 -Wall #--closure=0
-INCLUDE_FLAGS = -I"$(INSTALLDIR)/include" -I"$(INSTALLDIR)/include/graphviz" -L"$(INSTALLDIR)/lib" -L"$(INSTALLDIR)/lib/graphviz" -lgvplugin_dot_layout -lgvplugin_neato_layout -lgvplugin_core -lgvc -lpathplan -lcgraph -lxdot -lcdt -lexpat
+CFLAGS = -Oz --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1 -Wall
+INCLUDE_FLAGS = -I"$(INSTALLDIR)/include" -I"$(INSTALLDIR)/include/graphviz" -L"$(INSTALLDIR)/lib" -L"$(INSTALLDIR)/lib/graphviz" -lgvplugin_dot_layout -lgvplugin_neato_layout -lgvplugin_core -lgvc -lpathplan -lcgraph -lxdot -lcdt -lexpat -lm
 GRAPHVIZ_INFO_INCLUDE=-include "$(SRCDIR)/graphviz_version.h"
 INCLUDE_FLAGS += $(GRAPHVIZ_INFO_INCLUDE)
 
