@@ -112,7 +112,7 @@ digraph finite_state_machine {
 	LR_8 -> LR_5 [ label = "S(a)" ];
 }
 ```
-#raw-render[```dot
+#raw-render(height: 20em)[```dot
 digraph finite_state_machine {
 	rankdir=LR;
 	size="8,5"
