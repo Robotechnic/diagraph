@@ -24,17 +24,45 @@
 		panic("First byte of render result must be 0 or 1")
 	}
 
-	// let integer_size = render.at(1)
-	// let point_width = big-endian-decode(render.slice(2, integer_size + 2))
-	// let point_height = big-endian-decode(render.slice(integer_size + 3, integer_size * 2 + 2))
-	
-	return image.decode(
-		render.slice(2 + integer_size * 2),
-		format: "svg",
-		height: height,
-		width: width,
-		fit: fit,
-	)
+	let integer_size = render.at(1)
+
+	if width != auto or height != auto {
+		return image.decode(
+			render.slice(2 + integer_size * 2),
+			format: "svg",
+			height: height,
+			width: width,
+			fit: fit,
+		)
+	}
+
+	/// Returns a `(width, height)` pair corresponding to the dimensions of the SVG stored in the bytes.
+	let get-svg-dimensions(svg) = {
+	  let point_width = big-endian-decode(render.slice(2, integer_size + 2)) * 1pt
+	  let point_height = big-endian-decode(render.slice(integer_size + 3, integer_size * 2 + 2)) * 1pt
+		return (point_width, point_height)
+	}
+
+	let initial-dimensions = get-svg-dimensions(render)
+
+	let svg-text-size = 14pt // Default font size in Graphviz
+	style(styles => {
+		let document-text-size = measure(line(length: 1em), styles).width
+		let (auto-width, auto-height) = initial-dimensions.map(dimension => {
+			dimension / svg-text-size * document-text-size
+		})
+
+		let final-width = if width == auto { auto-width } else { width }
+		let final-height = if height == auto { auto-height } else { height }
+
+		return image.decode(
+			render.slice(2 + integer_size * 2),
+			format: "svg",
+			width: final-width,
+			height: final-height,
+			fit: fit,
+		)
+	})
 }
 
 #let raw-render(engine: "dot", width: auto, height: auto, fit: "contain", background: "transparent", raw) = {
