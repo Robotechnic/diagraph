@@ -101,6 +101,7 @@ There are also some other make commands:
 - `make clean-link`: Only clean the link
 - `make compile_database`: Generate the compile_commands.json file
 - `make module`: It copy the files needed to run the plugin in a folder called `graphviz` in the current directory
+- `make wasi-stub`: Build the wasi stub executable, it require a rust toolchain properly configured
 
 ### Wasi stub
 
