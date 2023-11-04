@@ -1,11 +1,11 @@
 #include "emscripten.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include "utils/utils.h"
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin.h>
-#include "utils/utils.h"
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define PROTOCOL_FUNCTION __attribute__((import_module("typst_env"))) extern
 
@@ -21,8 +21,7 @@ lt_symlist_t lt_preloaded_symbols[] = {
     {"gvplugin_dot_layout_LTX_library", &gvplugin_dot_layout_LTX_library},
     {"gvplugin_neato_layout_LTX_library", &gvplugin_neato_layout_LTX_library},
     {"gvplugin_core_LTX_library", &gvplugin_core_LTX_library},
-    {0, 0}
-};
+    {0, 0}};
 
 char errBuff[1024];
 int vizErrorf(char const *str) {
@@ -40,7 +39,7 @@ int vizErrorf(char const *str) {
 
 /**
  * @brief Render a graphviz graph to svg from a dot string
- * 
+ *
  * @param dot_len the length of the buffer containing the dot string
  * @param engine_len the length of the buffer containing the engine string
  * @param background_len the length of the buffer containing the background color string
@@ -56,7 +55,7 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     uint8_t *buffer = malloc(dot_len + engine_len + background_len);
 
     if (!buffer) {
-      return 1;
+        return 1;
     }
     wasm_minimal_protocol_write_args_to_buffer(buffer);
 
@@ -79,7 +78,7 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     graph_t *g = agmemread(dot);
 
     if (strlen(background) > 0) {
-      agattr(g, AGRAPH, "bgcolor", background);
+        agattr(g, AGRAPH, "bgcolor", background);
     }
 
     agattr(g, AGRAPH, "center", "true");
@@ -91,26 +90,24 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     unsigned int length;
 
     if (!g) {
-      free(engine);
-      wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff,
-                                                strlen(errBuff));
-      return 0;
+        free(engine);
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
+        return 0;
     }
 
     if (gvLayout(gvc, g, engine) == -1) {
-      free(engine);
-      wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff,
-                                                strlen(errBuff));
-      return 0;
+        free(engine);
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
+        return 0;
     }
 
     int result = gvRenderData(gvc, g, "svg", &data, &length);
     free(engine);
     if (result == -1) {
-      gvFreeRenderData(data);
-      char *err = "error: failed to render graph to svg\0";
-      wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
-      return 1;
+        gvFreeRenderData(data);
+        char *err = "error: failed to render graph to svg\0";
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
+        return 1;
     }
 
     // display bounding box of the svg render in the console

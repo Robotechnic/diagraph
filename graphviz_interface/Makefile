@@ -19,6 +19,9 @@ build: $(SOURCES) | $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz
 	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./diagraph.wasm
 	mv ./"diagraph - stubbed.wasm" ../diagraph.wasm
 
+format:
+	clang-format -i -style=file src/*.c src/*/*.c src/*/*.h
+
 clean:
 	rm -rf $(SRCDIR)
 	rm -rf $(EPSRCDIR)

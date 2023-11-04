@@ -5,6 +5,10 @@ wasm :
 compile_database:
 	bear --output ./graphviz_interface/compile_commands.json -- make wasm
 
+format:
+	cd graphviz_interface; \
+	make format
+
 link :
 	mkdir -p ~/.cache/typst/packages/preview/diagraph
 	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.1.2
