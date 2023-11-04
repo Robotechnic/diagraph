@@ -5,6 +5,7 @@
 #include <math.h>
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin.h>
+#include "utils/utils.h"
 
 #define PROTOCOL_FUNCTION __attribute__((import_module("typst_env"))) extern
 
@@ -37,16 +38,12 @@ int vizErrorf(char *str) {
     return 0;
 }
 
-void big_endian_encode(uint8_t *buffer, int value) {
-    for (int i = 0; i < sizeof(int); i++) {
-        buffer[i] = (value >> (8 * (sizeof(int) - i - 1))) & 0xFF;
-    }
-}
-
 /**
  * @brief Render a graphviz graph to svg from a dot string
  * 
  * @param dot_len the length of the buffer containing the dot string
+ * @param engine_len the length of the buffer containing the engine string
+ * @param background_len the length of the buffer containing the background color string
  * @return int 0 on success, 1 on failure
  */
 EMSCRIPTEN_KEEPALIVE
