@@ -1,5 +1,6 @@
 #include "emscripten.h"
 
+#include "protocol/protocol.h"
 #include "utils/utils.h"
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin.h>
@@ -7,24 +8,30 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PROTOCOL_FUNCTION __attribute__((import_module("typst_env"))) extern
+#define INIT_BUFFER_UNPACK(buffer_len)                                                             \
+    size_t offset = 0;                                                                             \
+    uint8_t *buffer = malloc(buffer_len);                                                          \
+    if (!buffer) {                                                                                 \
+        return 1;                                                                                  \
+    }                                                                                              \
+    wasm_minimal_protocol_write_args_to_buffer(buffer);
 
-PROTOCOL_FUNCTION void wasm_minimal_protocol_send_result_to_host(const uint8_t *ptr, size_t len);
-PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
+#define NEXT_CHAR(name, len)                                                                       \
+    char *name = malloc(len + 1);                                                                  \
+    memcpy(name, buffer + offset, len);                                                            \
+    name[len] = '\0';                                                                              \
+    offset += len;
 
-extern gvplugin_library_t gvplugin_dot_layout_LTX_library;
-extern gvplugin_library_t gvplugin_neato_layout_LTX_library;
+#define NEXT_INT(name)                                                                             \
+    int name = big_endian_decode(buffer + offset);                                                 \
+    offset += sizeof(int);
 
-extern gvplugin_library_t gvplugin_core_LTX_library;
-
-lt_symlist_t lt_preloaded_symbols[] = {
-    {"gvplugin_dot_layout_LTX_library", &gvplugin_dot_layout_LTX_library},
-    {"gvplugin_neato_layout_LTX_library", &gvplugin_neato_layout_LTX_library},
-    {"gvplugin_core_LTX_library", &gvplugin_core_LTX_library},
-    {0, 0}};
+#define FREE_BUFFER()                                                                              \
+    free(buffer);                                                                                  \
+    buffer = NULL;
 
 char errBuff[1024];
-int vizErrorf(char const *str) {
+int vizErrorf(char *str) {
     strncpy(errBuff + 8, str, sizeof(errBuff) - 8);
     errBuff[0] = 1;
     errBuff[1] = 'e';
@@ -52,27 +59,11 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     agseterr(AGERR);
     agseterrf(vizErrorf);
 
-    uint8_t *buffer = malloc(dot_len + engine_len + background_len);
-
-    if (!buffer) {
-        return 1;
-    }
-    wasm_minimal_protocol_write_args_to_buffer(buffer);
-
-    // this copy is needed because the buffer
-    // is not null terminated and because
-    // the buffer doesn't reset properly when
-    // watch mode is enabled
-    char *dot = malloc(dot_len + 1);
-    char *engine = malloc(engine_len + 1);
-    char *background = malloc(background_len + 1);
-    memcpy(dot, buffer, dot_len);
-    dot[dot_len] = '\0';
-    memcpy(engine, buffer + dot_len, engine_len);
-    engine[engine_len] = '\0';
-    memcpy(background, buffer + dot_len + engine_len, background_len);
-    background[background_len] = '\0';
-    free(buffer);
+    INIT_BUFFER_UNPACK(dot_len + engine_len + background_len)
+    NEXT_CHAR(dot, dot_len)
+    NEXT_CHAR(engine, engine_len)
+    NEXT_CHAR(background, background_len)
+    FREE_BUFFER()
 
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
     graph_t *g = agmemread(dot);
@@ -110,8 +101,6 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
         return 1;
     }
 
-    // display bounding box of the svg render in the console
-    // this is useful to debug the svg render
     int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 8;
     int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y) + 8;
 
