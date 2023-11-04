@@ -6,7 +6,7 @@ void big_endian_encode(uint8_t *buffer, int value) {
 	}
 }
 
-int big_endian_decode(uint8_t *buffer) {
+int big_endian_decode(uint8_t const *buffer) {
 	int value = 0;
 	for (int i = 0; i < sizeof(int); i++) {
 		value |= buffer[i] << (8 * (sizeof(int) - i - 1));

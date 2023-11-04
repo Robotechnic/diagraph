@@ -25,7 +25,7 @@ lt_symlist_t lt_preloaded_symbols[] = {
 };
 
 char errBuff[1024];
-int vizErrorf(char *str) {
+int vizErrorf(char const *str) {
     strncpy(errBuff + 8, str, sizeof(errBuff) - 8);
     errBuff[0] = 1;
     errBuff[1] = 'e';
