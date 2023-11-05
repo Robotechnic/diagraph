@@ -1,75 +1,89 @@
-#let plugin = plugin("diagraph.wasm")
+#let render(
+	text,
+	node-labels: (:),
+	engine: "dot",
+	width: auto,
+	height: auto,
+	fit: "contain",
+	background: "transparent"
+) = {
+	import "utils.typ": *
 
-#let render(text, engine: "dot", width: auto, height: auto, fit: "contain", background: "transparent") = {
-	let render = plugin.render(
-		bytes(text), 
-		bytes(engine), 
-		bytes(background)
-	)
+	let plugin = plugin("diagraph.wasm")
 
-	if render.at(0) == 1 {
-		return raw(str(render.slice(1)))
-	}
 
-	if render.at(0) != 0 {
-		panic("First byte of render result must be 0 or 1")
-	}
-
-	let integer_size = render.at(1)
-
-	if width != auto or height != auto {
-		return image.decode(
-			render.slice(2 + integer_size * 2),
-			format: "svg",
-			height: height,
-			width: width,
-			fit: fit,
-		)
-	}
-
-	/// Decodes a big-endian integer from the given bytes.
-	let big-endian-decode(bytes) = {
-		let result = 0
-		for byte in array(bytes) {
-			result = result * 256
-			result = result + byte
-		}
-		return result
-	}
-
-	/// Returns a `(width, height)` pair corresponding to the dimensions of the SVG stored in the bytes.
-	let get-svg-dimensions(svg) = {
-	  let point_width = big-endian-decode(render.slice(2, integer_size + 2)) * 1pt
-	  let point_height = big-endian-decode(render.slice(integer_size + 3, integer_size * 2 + 2)) * 1pt
-		return (point_width, point_height)
-	}
-
-	let initial-dimensions = get-svg-dimensions(render)
-
-	let svg-text-size = 14pt // Default font size in Graphviz
 	style(styles => {
-		let document-text-size = measure(line(length: 1em), styles).width
-		let (auto-width, auto-height) = initial-dimensions.map(dimension => {
-			dimension / svg-text-size * document-text-size
-		})
+		let font-size = measure(line(length: 1em), styles).width
+
+		let output = plugin.render(
+			big-endian-encode(calc.round(font-size / 0.01pt)),
+			bytes(text),
+			encode-str-array(node-labels.keys()),
+			bytes(engine),
+			bytes(background)
+		)
+
+		if output.at(0) == 1 {
+			return raw(str(output.slice(1)))
+		}
+
+		if output.at(0) != 0 {
+			panic("First byte of output must be 0 or 1")
+		}
+
+		let integer_size = output.at(1)
+		output = output.slice(2)
+
+		// Get the coordinates of all nodes with overridden labels
+		let node-coordinates-size = 2 * node-labels.len() * integer_size
+		let node-coordinates = array-to-pairs(group-bytes(output.slice(0, node-coordinates-size), integer_size).map(big-endian-decode))
+		output = output.slice(node-coordinates-size)
+
+		/// Returns a `(width, height)` pair corresponding to the dimensions of the SVG stored in the bytes.
+		let get-svg-dimensions(svg) = {
+			let point_width = big-endian-decode(output.slice(0, integer_size)) * 1pt
+			let point_height = big-endian-decode(output.slice(integer_size + 1, integer_size * 2)) * 1pt
+			return (point_width, point_height)
+		}
+
+		let (auto-width, auto-height) = get-svg-dimensions(output)
+		output = output.slice(integer_size * 2)
 
 		let final-width = if width == auto { auto-width } else { width }
 		let final-height = if height == auto { auto-height } else { height }
 
-		return image.decode(
-			render.slice(2 + integer_size * 2),
+		// Rescale the final image to the desired size
+		show: block.with(width: final-width, height: final-height)
+		show: scale.with(x: final-width / auto-width * 100%, y: final-height / auto-height * 100%)
+
+		// Construct the graph with proper labels
+		show: block.with(width: auto-width, height: auto-height)
+
+		image.decode(
+			output,
 			format: "svg",
 			width: final-width,
 			height: final-height,
 			fit: fit,
 		)
+
+		for (label, coordinates) in array.zip(node-labels.values(), node-coordinates) {
+			let (x, y) = coordinates.map(w => w * 1pt)
+			let label-dimensions = measure(label, styles)
+			place(
+				top + left,
+				dx: x - label-dimensions.width / 2,
+				dy: y - label-dimensions.height / 2,
+				label,
+			)
+		}
 	})
 }
 
-#let raw-render(engine: "dot", width: auto, height: auto, fit: "contain", background: "transparent", raw) = {
+#let raw-render(node-labels: (:), engine: "dot", width: auto, height: auto, fit: "contain", background: "transparent", raw) = {
 	if (not raw.has("text")) {
 		panic("This function requires a `text` field")
 	}
 	let text = raw.text
-	return render(text, engine: engine, width: width, height: height, fit: fit, background: background)
+	return render(text, node-labels: node-labels, engine: engine, width: width, height: height, fit: fit, background: background)
 }
