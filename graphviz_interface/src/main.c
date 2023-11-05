@@ -68,6 +68,14 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
     graph_t *g = agmemread(dot);
 
+    if (!g) {
+        free(engine);
+        free(background);
+        free(dot);
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
+        return 0;
+    }
+
     if (strlen(background) > 0) {
         agattr(g, AGRAPH, "bgcolor", background);
     }
@@ -79,12 +87,6 @@ int render(size_t dot_len, size_t engine_len, size_t background_len) {
     free(dot);
     char *data = NULL;
     unsigned int length;
-
-    if (!g) {
-        free(engine);
-        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
-        return 0;
-    }
 
     if (gvLayout(gvc, g, engine) == -1) {
         free(engine);
