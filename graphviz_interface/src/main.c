@@ -10,44 +10,39 @@
 
 #define INIT_BUFFER_UNPACK(buffer_len)                                                             \
     size_t __buffer_offset = 0;                                                                    \
-    uint8_t *buffer = malloc(buffer_len);                                                          \
-    if (!buffer) {                                                                                 \
+    uint8_t *__input_buffer = malloc((buffer_len));                                                  \
+    if (!__input_buffer) {                                                                         \
         return 1;                                                                                  \
     }                                                                                              \
-    wasm_minimal_protocol_write_args_to_buffer(buffer);
+    wasm_minimal_protocol_write_args_to_buffer(__input_buffer);
 
-#define NEXT_CHAR(name, len)                                                                       \
-    name = malloc(len + 1);                                                                        \
-    memcpy(name, buffer + __buffer_offset, len);                                                   \
-    name[len] = '\0';                                                                              \
-    __buffer_offset += len;
+#define NEXT_CHAR(dst, len)                                                                       \
+    (dst) = malloc((len) + 1);                                                                        \
+    memcpy((dst), __input_buffer + __buffer_offset, (len));                                           \
+    (dst)[(len)] = '\0';                                                                              \
+    __buffer_offset += (len);
 
-#define NEXT_STR(name) {                                                                           \
-        int len = strlen(buffer + __buffer_offset);                                                \
-        name = malloc(len + 1);                                                                    \
-        strcpy(name, buffer + __buffer_offset);                                                    \
+#define NEXT_STR(dst) {                                                                           \
+        int len = strlen(__input_buffer + __buffer_offset);                                        \
+        (dst) = malloc(len + 1);                                                                    \
+        strcpy((dst), __input_buffer + __buffer_offset);                                            \
         __buffer_offset += len + 1;                                                                \
     }
 
-#define NEXT_INT(name, int_size)                                                                   \
-    name = big_endian_decode(buffer + __buffer_offset, int_size);                                  \
-    __buffer_offset += int_size;
+#define NEXT_INT(dst, int_size)                                                                   \
+    (dst) = big_endian_decode(__input_buffer + __buffer_offset, (int_size));                          \
+    __buffer_offset += (int_size);
 
 #define FREE_BUFFER()                                                                              \
-    free(buffer);                                                                                  \
-    buffer = NULL;
+    free(__input_buffer);                                                                          \
+    __input_buffer = NULL;
 
 char errBuff[1024];
 int vizErrorf(char *str) {
-    strncpy(errBuff + 8, str, sizeof(errBuff) - 8);
-    errBuff[0] = 1;
-    errBuff[1] = 'e';
-    errBuff[2] = 'r';
-    errBuff[3] = 'r';
-    errBuff[4] = 'o';
-    errBuff[5] = 'r';
-    errBuff[6] = ':';
-    errBuff[7] = ' ';
+    char *intro = "\1Diagraph error: ";
+    int intro_len = strlen(intro);
+    strncpy(errBuff + intro_len, str, sizeof(errBuff) - intro_len);
+    memcpy(errBuff, intro, intro_len);
     return 0;
 }
 
@@ -65,35 +60,40 @@ int vizErrorf(char *str) {
  * - the rest is SVG data.
  * All integers are encoded in in big-endian.
  *
+ * @param font_size_len the length of the integer encoding the font size
  * @param dot_len the length of the buffer containing the dot string
- * @param overridden_labels_len the length of the buffer containing the identifiers of the nodes whose label is overridden
+ * @param overridden_labels_len the length of the buffer containing the identifiers of the nodes whose labels are overridden
  * @param engine_len the length of the buffer containing the engine string
  * @param background_len the length of the buffer containing the background color string
  * @return int 0 on success, 1 on failure
  */
 EMSCRIPTEN_KEEPALIVE
-int render(size_t document_font_size_len, size_t dot_len, size_t overridden_labels_len, size_t engine_len, size_t background_len) {
+int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, size_t engine_len, size_t background_len) {
     // set error report to custom function
     // it allow us to get the error message from graphviz
     agseterr(AGERR);
     agseterrf(vizErrorf);
 
-    INIT_BUFFER_UNPACK(dot_len + overridden_labels_len + engine_len + background_len)
-    int document_font_size_100;
-    NEXT_INT(document_font_size_100, document_font_size_len)
+    INIT_BUFFER_UNPACK(font_size_len + dot_len + overridden_labels_len + engine_len + background_len);
+    int font_size_100;
+    NEXT_INT(font_size_100, font_size_len);
     char *dot;
-    NEXT_CHAR(dot, dot_len)
+    NEXT_CHAR(dot, dot_len);
     int overridden_label_count;
-    NEXT_INT(overridden_label_count, 4)
+    NEXT_INT(overridden_label_count, 4);
     char *overridden_labels[overridden_label_count];
+    int label_widths[overridden_label_count];
+    int label_heights[overridden_label_count];
     for (int i = 0; i < overridden_label_count; i++) {
         NEXT_STR(overridden_labels[i]);
+        NEXT_INT(label_widths[i], 4);
+        NEXT_INT(label_heights[i], 4);
     }
     char *engine;
-    NEXT_CHAR(engine, engine_len)
+    NEXT_CHAR(engine, engine_len);
     char *background;
-    NEXT_CHAR(background, background_len)
-    FREE_BUFFER()
+    NEXT_CHAR(background, background_len);
+    FREE_BUFFER();
 
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
     graph_t *g = agmemread(dot);
@@ -106,9 +106,10 @@ int render(size_t document_font_size_len, size_t dot_len, size_t overridden_labe
     agattr(g, AGRAPH, "margin", "0");
 
     {
-        double font_size = ((double) document_font_size_100) / 100.0;
+        double font_size = ((double) font_size_100) / 100.0;
         char font_size_string[128];
         snprintf(font_size_string, 128, "%fpt", font_size);
+        // TODO: Apparently fontsize can also be set on clusters (see: https://graphviz.org/docs/attrs/fontsize/).
         agattr(g, AGRAPH, "fontsize", font_size_string);
         agattr(g, AGNODE, "fontsize", font_size_string);
         agattr(g, AGEDGE, "fontsize", font_size_string);
@@ -125,9 +126,27 @@ int render(size_t document_font_size_len, size_t dot_len, size_t overridden_labe
 
     // Remove labels for nodes whose label is overridden
     for (int i = 0; i < overridden_label_count; i++) {
+        // TODO: Optimize using `agattr` (see page 8 of https://graphviz.org/pdf/cgraph.pdf).
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
             agset(n, "label", "");
+            // We use `agsafeset` instead of `agset` here because `agset` does not work.
+            // `agsafeset` "creates" a new attribute in case it does not already exists.
+            // The last value passed to `agsafeset` is this attribute's default value,
+            // which we set to whatever the doc tells us is the default value.
+            // https://graphviz.org/docs/attrs/fixedsize/
+            // https://graphviz.org/docs/attrs/width/
+            // https://graphviz.org/docs/attrs/height/
+            agsafeset(n, "fixedsize", "true", "false");
+            // Dimensions are specified in inches. 1 inch = 72 points.
+            double width = 3.0 * ((double) label_widths[i]) / 72.0;
+            char width_string[128];
+            snprintf(width_string, 128, "%f", width);
+            agsafeset(n, "width", width_string, "0.75");
+            double height = 3.0 * ((double) label_heights[i]) / 72.0;
+            char height_string[128];
+            snprintf(height_string, 128, "%f", height);
+            agsafeset(n, "height", height_string, "0.5");
         }
     }
 

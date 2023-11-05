@@ -18,9 +18,17 @@
   return result
 }
 
-#let encode-str-array(arr) = {
+#let encode-node-label-info(node-name, label-width, label-height) = {
+  bytes(
+    array(bytes(node-name)) + (0,) +
+    array(big-endian-encode(calc.ceil(label-width / 1pt))) +
+    array(big-endian-encode(calc.ceil(label-height / 1pt)))
+  )
+}
+
+#let encode-node-label-info-array(arr) = {
   let encoded-len = big-endian-encode(arr.len())
-  let encoded-parts = (encoded-len,) + arr.map(str => bytes(array(bytes(str)) + (0,)))
+  let encoded-parts = (encoded-len,) + arr.map(node-label-info => encode-node-label-info(..node-label-info))
   bytes(encoded-parts.map(array).fold((), (acc, x) => acc + x))
 }
 
