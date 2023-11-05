@@ -1,5 +1,5 @@
 #let render(
-	text,
+	dot,
 	node-labels: (:),
 	engine: "dot",
 	width: auto,
@@ -15,16 +15,25 @@
 	style(styles => {
 		let font-size = measure(line(length: 1em), styles).width
 
+		let node-label-infos = node-labels.pairs().map(((id, label)) => {
+			let dimensions = measure(label, styles)
+			(id, dimensions.width, dimensions.height)
+		})
+
 		let output = plugin.render(
 			big-endian-encode(calc.round(font-size / 0.01pt)),
-			bytes(text),
-			encode-str-array(node-labels.keys()),
+			bytes(dot),
+			encode-node-label-info-array(node-label-infos),
 			bytes(engine),
 			bytes(background)
 		)
 
 		if output.at(0) == 1 {
-			return raw(str(output.slice(1)))
+			return {
+				show: highlight.with(fill: red)
+				set text(white)
+				raw(block: true, str(output.slice(1)))
+			}
 		}
 
 		if output.at(0) != 0 {
@@ -84,6 +93,6 @@
 	if (not raw.has("text")) {
 		panic("This function requires a `text` field")
 	}
-	let text = raw.text
-	return render(text, node-labels: node-labels, engine: engine, width: width, height: height, fit: fit, background: background)
+	let dot = raw.text
+	return render(dot, node-labels: node-labels, engine: engine, width: width, height: height, fit: fit, background: background)
 }
