@@ -17,7 +17,7 @@ module :
 	mkdir -p ./diagraph
 	cp ./diagraph.wasm ./diagraph/diagraph.wasm
 	cp ./lib.typ ./diagraph/lib.typ
-	cp ./README.MD ./diagraph/README.MD
+	cp ./README.md ./diagraph/README.md
 	cp ./typst.toml ./diagraph/typst.toml
 	cp ./LICENSE ./diagraph/LICENSE
 
