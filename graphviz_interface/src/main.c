@@ -10,27 +10,27 @@
 
 #define INIT_BUFFER_UNPACK(buffer_len)                                                             \
     size_t __buffer_offset = 0;                                                                    \
-    uint8_t *__input_buffer = malloc((buffer_len));                                                  \
+    uint8_t *__input_buffer = malloc((buffer_len));                                                \
     if (!__input_buffer) {                                                                         \
         return 1;                                                                                  \
     }                                                                                              \
     wasm_minimal_protocol_write_args_to_buffer(__input_buffer);
 
-#define NEXT_CHAR(dst, len)                                                                       \
-    (dst) = malloc((len) + 1);                                                                        \
-    memcpy((dst), __input_buffer + __buffer_offset, (len));                                           \
-    (dst)[(len)] = '\0';                                                                              \
+#define NEXT_CHAR(dst, len)                                                                        \
+    (dst) = malloc((len) + 1);                                                                     \
+    memcpy((dst), __input_buffer + __buffer_offset, (len));                                        \
+    (dst)[(len)] = '\0';                                                                           \
     __buffer_offset += (len);
 
-#define NEXT_STR(dst) {                                                                           \
+#define NEXT_STR(dst) {                                                                            \
         int len = strlen(__input_buffer + __buffer_offset);                                        \
-        (dst) = malloc(len + 1);                                                                    \
-        strcpy((dst), __input_buffer + __buffer_offset);                                            \
+        (dst) = malloc(len + 1);                                                                   \
+        strcpy((dst), __input_buffer + __buffer_offset);                                           \
         __buffer_offset += len + 1;                                                                \
     }
 
-#define NEXT_INT(dst, int_size)                                                                   \
-    (dst) = big_endian_decode(__input_buffer + __buffer_offset, (int_size));                          \
+#define NEXT_INT(dst, int_size)                                                                    \
+    (dst) = big_endian_decode(__input_buffer + __buffer_offset, (int_size));                       \
     __buffer_offset += (int_size);
 
 #define FREE_BUFFER()                                                                              \
@@ -109,7 +109,6 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         double font_size = ((double) font_size_100) / 100.0;
         char font_size_string[128];
         snprintf(font_size_string, 128, "%fpt", font_size);
-        // TODO: Apparently fontsize can also be set on clusters (see: https://graphviz.org/docs/attrs/fontsize/).
         agattr(g, AGRAPH, "fontsize", font_size_string);
         agattr(g, AGNODE, "fontsize", font_size_string);
         agattr(g, AGEDGE, "fontsize", font_size_string);
