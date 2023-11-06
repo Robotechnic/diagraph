@@ -63,3 +63,4 @@ diagraph/*
 autosubmit.sh
 
 .vscode
+.idea
