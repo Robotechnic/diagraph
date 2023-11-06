@@ -20,12 +20,18 @@
 			(id, dimensions.width, dimensions.height)
 		})
 
+		let background-string = if type(background) == color {
+			background.to-hex()
+		} else {
+			background
+		}
+
 		let output = plugin.render(
 			big-endian-encode(calc.round(font-size / 0.01pt)),
 			bytes(dot),
 			encode-node-label-info-array(node-label-infos),
 			bytes(engine),
-			bytes(background)
+			bytes(background-string)
 		)
 
 		if output.at(0) == 1 {
