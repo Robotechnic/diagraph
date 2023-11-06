@@ -74,8 +74,7 @@ int vizErrorf(char *str) {
  */
 EMSCRIPTEN_KEEPALIVE
 int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, size_t engine_len, size_t background_len) {
-    // set error report to custom function
-    // it allow us to get the error message from graphviz
+    // Set error report to custom function. Lets us get error messages from Graphviz.
     agseterr(AGERR);
     agseterrf(vizErrorf);
 
