@@ -71,8 +71,8 @@
 		image.decode(
 			output,
 			format: "svg",
-			width: final-width,
-			height: final-height,
+			width: auto-width,
+			height: auto-height,
 			fit: fit,
 		)
 
