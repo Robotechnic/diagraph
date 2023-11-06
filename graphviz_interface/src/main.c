@@ -146,7 +146,7 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
             char label[2048];
-            snprintf(label, 2048, "<table border=\"1\" fixedsize=\"true\" width=\"%lf\" height=\"%lf\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
+            snprintf(label, 2048, "<table border=\"0\" fixedsize=\"true\" width=\"%lf\" height=\"%lf\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
             agset(n, "label", agstrdup_html(g, label));
         }
     }
