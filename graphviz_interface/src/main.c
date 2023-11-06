@@ -81,12 +81,15 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     int overridden_label_count;
     NEXT_INT(overridden_label_count, 4);
     char *overridden_labels[overridden_label_count];
-    int label_widths[overridden_label_count];
-    int label_heights[overridden_label_count];
+    double label_widths[overridden_label_count];
+    double label_heights[overridden_label_count];
     for (int i = 0; i < overridden_label_count; i++) {
         NEXT_STR(overridden_labels[i]);
-        NEXT_INT(label_widths[i], 4);
-        NEXT_INT(label_heights[i], 4);
+        int encoded_width, encoded_height;
+        NEXT_INT(encoded_width, 4);
+        NEXT_INT(encoded_height, 4);
+        label_widths[i] = ((double) encoded_width) / 100.0;
+        label_heights[i] = ((double) encoded_height) / 100.0;
     }
     char engine[engine_len + 1];
     NEXT_SIZED_STR(engine, engine_len);
@@ -117,6 +120,9 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     agattr(g, AGRAPH, "center", "true");
     agattr(g, AGRAPH, "margin", "0");
 
+    // This is the default margin around the graph (even though we just set it to 0).
+    double margin = 4;
+
     {
         double font_size = ((double) font_size_100) / 100.0;
         char font_size_string[128];
@@ -140,7 +146,7 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
             char label[2048];
-            snprintf(label, 2048, "<table border=\"1\" fixedsize=\"true\" width=\"%d\" height=\"%d\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
+            snprintf(label, 2048, "<table border=\"1\" fixedsize=\"true\" width=\"%lf\" height=\"%lf\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
             agset(n, "label", agstrdup_html(g, label));
         }
     }
@@ -165,8 +171,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     for (int i = 0; i < overridden_label_count; i++) {
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
-            int label_x = floor(ND_coord(n).x + ND_width(n) / 2);
-            int label_y = floor(ND_coord(n).y + ND_height(n) / 2);
+            int label_x = floor(ND_coord(n).x + margin);
+            int label_y = floor(ND_coord(n).y + margin);
             big_endian_encode(node_positions + i * 2, label_x);
             big_endian_encode(node_positions + (i * 2 + 1), label_y);
         } else {
@@ -181,8 +187,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         }
     }
 
-    int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 8;
-    int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y) + 8;
+    int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 2 * (int) margin;
+    int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y) + 2 * (int) margin;
 
     size_t output_buffer_len = 2 + sizeof(node_positions) + sizeof(width) + sizeof(height) + svg_chunk_size;
     uint8_t *output_buffer = malloc(output_buffer_len);

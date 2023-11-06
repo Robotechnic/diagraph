@@ -21,8 +21,8 @@
 #let encode-node-label-info(node-name, label-width, label-height) = {
   bytes(
     array(bytes(node-name)) + (0,) +
-    array(big-endian-encode(calc.ceil(label-width / 1pt))) +
-    array(big-endian-encode(calc.ceil(label-height / 1pt)))
+    array(big-endian-encode(calc.ceil(label-width / 0.01pt))) +
+    array(big-endian-encode(calc.ceil(label-height / 0.01pt)))
   )
 }
 
