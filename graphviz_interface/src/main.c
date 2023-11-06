@@ -32,6 +32,12 @@
     (dst) = big_endian_decode(__input_buffer + __buffer_offset, (int_size));                       \
     __buffer_offset += (int_size);
 
+#define NEXT_DOUBLE(dst, int_size, precision) {                                                    \
+    int __encoded_value = big_endian_decode(__input_buffer + __buffer_offset, (int_size));         \
+    (dst) = ((double) __encoded_value) / precision;                                                \
+    __buffer_offset += (int_size);                                                                 \
+}
+
 #define FREE_BUFFER()                                                                              \
     free(__input_buffer);                                                                          \
     __input_buffer = NULL;
@@ -74,8 +80,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     agseterrf(vizErrorf);
 
     INIT_BUFFER_UNPACK(font_size_len + dot_len + overridden_labels_len + engine_len + background_len);
-    int font_size_100;
-    NEXT_INT(font_size_100, font_size_len);
+    double font_size;
+    NEXT_DOUBLE(font_size, font_size_len, 100.0);
     char dot[dot_len + 1];
     NEXT_SIZED_STR(dot, dot_len);
     int overridden_label_count;
@@ -85,11 +91,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     double label_heights[overridden_label_count];
     for (int i = 0; i < overridden_label_count; i++) {
         NEXT_STR(overridden_labels[i]);
-        int encoded_width, encoded_height;
-        NEXT_INT(encoded_width, 4);
-        NEXT_INT(encoded_height, 4);
-        label_widths[i] = ((double) encoded_width) / 100.0;
-        label_heights[i] = ((double) encoded_height) / 100.0;
+        NEXT_DOUBLE(label_widths[i], 4, 100.0);
+        NEXT_DOUBLE(label_heights[i], 4, 100.0);
     }
     char engine[engine_len + 1];
     NEXT_SIZED_STR(engine, engine_len);
@@ -121,10 +124,9 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     agattr(g, AGRAPH, "margin", "0");
 
     // This is the default margin around the graph (even though we just set it to 0).
-    double margin = 4;
+    double margin = 4.0;
 
     {
-        double font_size = ((double) font_size_100) / 100.0;
         char font_size_string[128];
         snprintf(font_size_string, 128, "%fpt", font_size);
         agattr(g, AGRAPH, "fontsize", font_size_string);
@@ -187,21 +189,21 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         }
     }
 
-    int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 2 * (int) margin;
-    int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y) + 2 * (int) margin;
+    int svg_width = (int) floor(GD_bb(g).UR.x - GD_bb(g).LL.x + 2.0 * margin);
+    int svg_height = (int) floor(GD_bb(g).UR.y - GD_bb(g).LL.y + 2.0 * margin);
 
-    size_t output_buffer_len = 2 + sizeof(node_positions) + sizeof(width) + sizeof(height) + svg_chunk_size;
+    size_t output_buffer_len = 2 + sizeof(node_positions) + sizeof(svg_width) + sizeof(svg_height) + svg_chunk_size;
     uint8_t *output_buffer = malloc(output_buffer_len);
     size_t offset = 0;
     output_buffer[offset++] = 0;
-    output_buffer[offset++] = sizeof(width);
+    output_buffer[offset++] = sizeof(svg_width);
     // TODO: We could write the positions in the right buffer to start with.
     memcpy(output_buffer + offset, node_positions, sizeof(node_positions));
     offset += sizeof(node_positions);
-    big_endian_encode(output_buffer + offset, width);
-    offset += sizeof(width);
-    big_endian_encode(output_buffer + offset, height);
-    offset += sizeof(height);
+    big_endian_encode(output_buffer + offset, svg_width);
+    offset += sizeof(svg_width);
+    big_endian_encode(output_buffer + offset, svg_height);
+    offset += sizeof(svg_height);
     memcpy(output_buffer + offset, render_data, svg_chunk_size);
 
     wasm_minimal_protocol_send_result_to_host(output_buffer, output_buffer_len);
