@@ -172,6 +172,10 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         }
     }
 
+    for (int i = 0; i < overridden_label_count; i++) {
+        free(overridden_labels[i]);
+    }
+
     char *data = NULL;
     unsigned int svg_chunk_size;
 
@@ -192,7 +196,9 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     size_t offset = 0;
     output_buffer[offset++] = 0;
     output_buffer[offset++] = sizeof(width);
+    // TODO: We could write the positions in the right buffer to start with.
     memcpy(output_buffer + offset, node_positions, position_chunk_size);
+    free(node_positions);
     offset += position_chunk_size;
     big_endian_encode(output_buffer + offset, width);
     offset += sizeof(width);
