@@ -119,6 +119,9 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     free(dot);
 
     if (!g) {
+        for (int i = 0; i < overridden_label_count; i++) {
+            free(overridden_labels[i]);
+        }
         free(engine);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
@@ -129,51 +132,19 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         // TODO: Optimize using `agattr` (see page 8 of https://graphviz.org/pdf/cgraph.pdf).
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
-            agset(n, "label", "");
-            // We use `agsafeset` instead of `agset` here because `agset` does not work.
-            // `agsafeset` "creates" a new attribute in case it does not already exists.
-            // The last value passed to `agsafeset` is this attribute's default value,
-            // which we set to whatever the doc tells us is the default value.
-            // https://graphviz.org/docs/attrs/fixedsize/
-            // https://graphviz.org/docs/attrs/width/
-            // https://graphviz.org/docs/attrs/height/
-            agsafeset(n, "fixedsize", "true", "false");
-            // Dimensions are specified in inches. 1 inch = 72 points.
-            double width = 3.0 * ((double) label_widths[i]) / 72.0;
-            char width_string[128];
-            snprintf(width_string, 128, "%f", width);
-            agsafeset(n, "width", width_string, "0.75");
-            double height = 3.0 * ((double) label_heights[i]) / 72.0;
-            char height_string[128];
-            snprintf(height_string, 128, "%f", height);
-            agsafeset(n, "height", height_string, "0.5");
+            char label[2048];
+            snprintf(label, 2048, "<table border=\"0\" fixedsize=\"true\" width=\"%d\" height=\"%d\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
+            agset(n, "label", agstrdup_html(g, label));
         }
     }
 
     if (gvLayout(gvc, g, engine) == -1) {
+        for (int i = 0; i < overridden_label_count; i++) {
+            free(overridden_labels[i]);
+        }
         free(engine);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
-    }
-
-    size_t position_chunk_size = overridden_label_count * 2 * sizeof(int);
-    int *node_positions = malloc(position_chunk_size);
-    for (int i = 0; i < overridden_label_count; i++) {
-        Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
-        if (n != NULL) {
-            int node_x = floor(GD_bb(n).LL.x);
-            int node_y = floor(GD_bb(n).LL.y);
-            big_endian_encode(node_positions + i * 2, node_x);
-            big_endian_encode(node_positions + (i * 2 + 1), node_y);
-        } else {
-            char *err = "Unable to get all node positions.";
-            wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
-            return 1;
-        }
-    }
-
-    for (int i = 0; i < overridden_label_count; i++) {
-        free(overridden_labels[i]);
     }
 
     char *data = NULL;
@@ -182,10 +153,36 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     int result = gvRenderData(gvc, g, "svg", &data, &svg_chunk_size);
     free(engine);
     if (result == -1) {
+        for (int i = 0; i < overridden_label_count; i++) {
+            free(overridden_labels[i]);
+        }
         gvFreeRenderData(data);
         char *err = "error: failed to render graph to svg\0";
         wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
         return 1;
+    }
+
+    size_t position_chunk_size = overridden_label_count * 2 * sizeof(int);
+    int *node_positions = malloc(position_chunk_size);
+    for (int i = 0; i < overridden_label_count; i++) {
+        Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
+        if (n != NULL) {
+            int label_x = floor(ND_coord(n).x + ND_width(n) / 2);
+            int label_y = floor(ND_coord(n).y + ND_height(n) / 2);
+            big_endian_encode(node_positions + i * 2, label_x);
+            big_endian_encode(node_positions + (i * 2 + 1), label_y);
+        } else {
+            free(node_positions);
+            for (int i = 0; i < overridden_label_count; i++) {
+                free(overridden_labels[i]);
+            }
+            char *err = "Unable to get all node positions.";
+            wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
+            return 1;
+        }
+    }
+    for (int i = 0; i < overridden_label_count; i++) {
+        free(overridden_labels[i]);
     }
 
     int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 8;
