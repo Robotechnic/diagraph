@@ -16,18 +16,17 @@
     }                                                                                              \
     wasm_minimal_protocol_write_args_to_buffer(__input_buffer);
 
-#define NEXT_CHAR(dst, len)                                                                        \
-    (dst) = malloc((len) + 1);                                                                     \
+#define NEXT_SIZED_STR(dst, len)                                                                   \
     memcpy((dst), __input_buffer + __buffer_offset, (len));                                        \
     (dst)[(len)] = '\0';                                                                           \
     __buffer_offset += (len);
 
 #define NEXT_STR(dst) {                                                                            \
-        int len = strlen(__input_buffer + __buffer_offset);                                        \
-        (dst) = malloc(len + 1);                                                                   \
-        strcpy((dst), __input_buffer + __buffer_offset);                                           \
-        __buffer_offset += len + 1;                                                                \
-    }
+    int __str_len = strlen(__input_buffer + __buffer_offset);                                      \
+    (dst) = malloc(__str_len + 1);                                                                 \
+    strcpy((dst), __input_buffer + __buffer_offset);                                               \
+    __buffer_offset += __str_len + 1;                                                              \
+}
 
 #define NEXT_INT(dst, int_size)                                                                    \
     (dst) = big_endian_decode(__input_buffer + __buffer_offset, (int_size));                       \
@@ -47,12 +46,12 @@ int vizErrorf(char *str) {
 }
 
 /**
- * @brief Render a graphviz graph to svg from a dot string
+ * @brief Render a graphviz graph to svg from a dot string.
  *
  * Output buffer layout is:
  * - 1 byte for result (0: OK, 1: error);
  * - 1 byte for sizeof(int);
- * - coordinates of nodes with overridden labels: for each such node
+ * - coordinates of nodes with overridden labels: for each such node,
  *   - sizeof(int) bytes for x,
  *   - sizeof(int) bytes for y;
  * - sizeof(int) bytes for SVG width;
@@ -77,8 +76,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     INIT_BUFFER_UNPACK(font_size_len + dot_len + overridden_labels_len + engine_len + background_len);
     int font_size_100;
     NEXT_INT(font_size_100, font_size_len);
-    char *dot;
-    NEXT_CHAR(dot, dot_len);
+    char dot[dot_len + 1];
+    NEXT_SIZED_STR(dot, dot_len);
     int overridden_label_count;
     NEXT_INT(overridden_label_count, 4);
     char *overridden_labels[overridden_label_count];
@@ -89,11 +88,24 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         NEXT_INT(label_widths[i], 4);
         NEXT_INT(label_heights[i], 4);
     }
-    char *engine;
-    NEXT_CHAR(engine, engine_len);
-    char *background;
-    NEXT_CHAR(background, background_len);
+    char engine[engine_len + 1];
+    NEXT_SIZED_STR(engine, engine_len);
+    char background[background_len + 1];
+    NEXT_SIZED_STR(background, background_len);
     FREE_BUFFER();
+
+    char *render_data = NULL;
+
+    #define FREE_EVERYTHING() {                                                                    \
+        for (int i = 0; i < overridden_label_count; i++) {                                         \
+            free(overridden_labels[i]);                                                            \
+        }                                                                                          \
+        gvFreeRenderData(render_data);                                                             \
+        gvFreeLayout(gvc, g);                                                                      \
+        agclose(g);                                                                                \
+        gvFinalize(gvc);                                                                           \
+        gvFreeContext(gvc);                                                                        \
+    }
 
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
     graph_t *g = agmemread(dot);
@@ -114,14 +126,10 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         agattr(g, AGEDGE, "fontsize", font_size_string);
     }
 
-    free(background);
-    free(dot);
-
     if (!g) {
         for (int i = 0; i < overridden_label_count; i++) {
             free(overridden_labels[i]);
         }
-        free(engine);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
     }
@@ -132,37 +140,28 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
             char label[2048];
-            snprintf(label, 2048, "<table border=\"0\" fixedsize=\"true\" width=\"%d\" height=\"%d\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
+            snprintf(label, 2048, "<table border=\"1\" fixedsize=\"true\" width=\"%d\" height=\"%d\"><tr><td></td></tr></table>", label_widths[i], label_heights[i]);
             agset(n, "label", agstrdup_html(g, label));
         }
     }
 
     if (gvLayout(gvc, g, engine) == -1) {
-        for (int i = 0; i < overridden_label_count; i++) {
-            free(overridden_labels[i]);
-        }
-        free(engine);
+        FREE_EVERYTHING();
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
     }
 
-    char *data = NULL;
     unsigned int svg_chunk_size;
-
-    int result = gvRenderData(gvc, g, "svg", &data, &svg_chunk_size);
+    int result = gvRenderData(gvc, g, "svg", &render_data, &svg_chunk_size);
     free(engine);
     if (result == -1) {
-        for (int i = 0; i < overridden_label_count; i++) {
-            free(overridden_labels[i]);
-        }
-        gvFreeRenderData(data);
-        char *err = "error: failed to render graph to svg\0";
+        FREE_EVERYTHING();
+        char *err = "Diagraph error: failed to render graph to svg\0";
         wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
         return 1;
     }
 
-    size_t position_chunk_size = overridden_label_count * 2 * sizeof(int);
-    int *node_positions = malloc(position_chunk_size);
+    int node_positions[overridden_label_count * 2];
     for (int i = 0; i < overridden_label_count; i++) {
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
@@ -171,10 +170,7 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
             big_endian_encode(node_positions + i * 2, label_x);
             big_endian_encode(node_positions + (i * 2 + 1), label_y);
         } else {
-            free(node_positions);
-            for (int i = 0; i < overridden_label_count; i++) {
-                free(overridden_labels[i]);
-            }
+            FREE_EVERYTHING();
             errBuff[0] = 1;
             char message[512];
             snprintf(message, sizeof(message), "Unable to override node label: node %s does not exist", overridden_labels[i]);
@@ -184,34 +180,26 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
             return 0;
         }
     }
-    for (int i = 0; i < overridden_label_count; i++) {
-        free(overridden_labels[i]);
-    }
 
     int width = (int)floor(GD_bb(g).UR.x - GD_bb(g).LL.x) + 8;
     int height = (int)floor(GD_bb(g).UR.y - GD_bb(g).LL.y) + 8;
 
-    size_t output_buffer_len = 2 + position_chunk_size + sizeof(width) + sizeof(height) + svg_chunk_size;
+    size_t output_buffer_len = 2 + sizeof(node_positions) + sizeof(width) + sizeof(height) + svg_chunk_size;
     uint8_t *output_buffer = malloc(output_buffer_len);
     size_t offset = 0;
     output_buffer[offset++] = 0;
     output_buffer[offset++] = sizeof(width);
     // TODO: We could write the positions in the right buffer to start with.
-    memcpy(output_buffer + offset, node_positions, position_chunk_size);
-    free(node_positions);
-    offset += position_chunk_size;
+    memcpy(output_buffer + offset, node_positions, sizeof(node_positions));
+    offset += sizeof(node_positions);
     big_endian_encode(output_buffer + offset, width);
     offset += sizeof(width);
     big_endian_encode(output_buffer + offset, height);
     offset += sizeof(height);
-    memcpy(output_buffer + offset, data, svg_chunk_size);
+    memcpy(output_buffer + offset, render_data, svg_chunk_size);
 
     wasm_minimal_protocol_send_result_to_host(output_buffer, output_buffer_len);
-    gvFreeRenderData(data);
-    gvFreeLayout(gvc, g);
-    agclose(g);
-    gvFinalize(gvc);
-    gvFreeContext(gvc);
+    FREE_EVERYTHING();
     return 0;
 }
 
