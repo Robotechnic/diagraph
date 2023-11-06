@@ -81,8 +81,9 @@
 			let label-dimensions = measure(label, styles)
 			place(
 				top + left,
-				dx: x - label-dimensions.width / 2,
-				dy: y - label-dimensions.height / 2,
+				// Magic numbers. Don't ask, they just work (at any font size too, amazing!).
+				dx: x - label-dimensions.width / 2 + 3.6pt,
+				dy: final-height - y - label-dimensions.height / 2 - 4pt,
 				label,
 			)
 		}
