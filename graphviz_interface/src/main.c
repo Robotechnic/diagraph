@@ -176,9 +176,13 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
             for (int i = 0; i < overridden_label_count; i++) {
                 free(overridden_labels[i]);
             }
-            char *err = "Unable to get all node positions.";
-            wasm_minimal_protocol_send_result_to_host((uint8_t *)err, strlen(err));
-            return 1;
+            errBuff[0] = 1;
+            char message[512];
+            snprintf(message, sizeof(message), "Unable to override node label: node %s does not exist", overridden_labels[i]);
+            strcpy(errBuff + 1, message);
+            char err[256] = "Unable to get all node positions.";
+            wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
+            return 0;
         }
     }
     for (int i = 0; i < overridden_label_count; i++) {
