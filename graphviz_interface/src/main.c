@@ -160,7 +160,6 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
 
     unsigned int svg_chunk_size;
     int result = gvRenderData(gvc, g, "svg", &render_data, &svg_chunk_size);
-    free(engine);
     if (result == -1) {
         FREE_EVERYTHING();
         char *err = "Diagraph error: failed to render graph to svg\0";
@@ -168,21 +167,20 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         return 1;
     }
 
-    int node_positions[overridden_label_count * 2];
+    uint8_t node_positions[overridden_label_count * 2 * sizeof(int)];
     for (int i = 0; i < overridden_label_count; i++) {
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
             int label_x = floor(ND_coord(n).x + margin);
             int label_y = floor(ND_coord(n).y + margin);
-            big_endian_encode(node_positions + i * 2, label_x);
-            big_endian_encode(node_positions + (i * 2 + 1), label_y);
+            big_endian_encode(node_positions + i * 2 * sizeof(int), label_x);
+            big_endian_encode(node_positions + (i * 2 + 1) * sizeof(int), label_y);
         } else {
             FREE_EVERYTHING();
             errBuff[0] = 1;
             char message[512];
             snprintf(message, sizeof(message), "Unable to override node label: node %s does not exist", overridden_labels[i]);
             strcpy(errBuff + 1, message);
-            char err[256] = "Unable to get all node positions.";
             wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
             return 0;
         }
