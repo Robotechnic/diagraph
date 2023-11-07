@@ -70,8 +70,14 @@
 /// Get an array of evaluated labels from a graph.
 #let get-labels(dot) = {
   let encoded-labels = plugin.get_labels(bytes(dot))
-  let encoded-label-array = array(encoded-labels).split(0).slice(0, -1)
-  encoded-label-array.map(label => eval(mode: "markup", str(bytes(label))))
+  let label-strings = array(encoded-labels).split(0).slice(0, -1).map(bytes).map(str)
+  label-strings.map(label => {
+    eval(
+      mode: "markup",
+      // The comment bellow is shown on the error message if the label is malformed.
+      label // If you see this, you have a malformed node label.
+    )
+  })
 }
 
 /// Encodes the dimensions of labels into bytes.
