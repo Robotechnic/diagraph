@@ -85,17 +85,11 @@
 		for (label, coordinates) in array.zip(node-labels.values(), node-coordinates) {
 			let (x, y) = coordinates.map(w => w / double-precision * 1pt)
 			let label-dimensions = measure(label, styles)
-			let boxed-label = box(
-				fill: rgb(255, 0, 255, 127),
-				width: label-dimensions.width,
-				height: label-dimensions.height,
-				label
-			)
 			place(
 				top + left,
 				dx: x - label-dimensions.width / 2,
 				dy: final-height - y - label-dimensions.height / 2,
-				boxed-label,
+				label,
 			)
 		}
 	})
