@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define SQRT2 (1.41421356237)
+#define TYPST_INT_SIZE 4
 
 void big_endian_encode(uint8_t *buffer, int value);
 int big_endian_decode(uint8_t const *buffer, int size);
