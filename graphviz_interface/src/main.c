@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DOUBLE_PRECISION 1000
+
 #define INIT_BUFFER_UNPACK(buffer_len)                                                             \
     size_t __buffer_offset = 0;                                                                    \
     uint8_t *__input_buffer = malloc((buffer_len));                                                \
@@ -80,7 +82,7 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
 
     INIT_BUFFER_UNPACK(font_size_len + dot_len + overridden_labels_len + engine_len + background_len);
     double font_size;
-    NEXT_DOUBLE(font_size, font_size_len, 100.0);
+    NEXT_DOUBLE(font_size, font_size_len, DOUBLE_PRECISION);
     char dot[dot_len + 1];
     NEXT_SIZED_STR(dot, dot_len);
     int overridden_label_count;
@@ -90,8 +92,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     double label_heights[overridden_label_count];
     for (int i = 0; i < overridden_label_count; i++) {
         NEXT_STR(overridden_labels[i]);
-        NEXT_DOUBLE(label_widths[i], 4, 100.0);
-        NEXT_DOUBLE(label_heights[i], 4, 100.0);
+        NEXT_DOUBLE(label_widths[i], 4, DOUBLE_PRECISION);
+        NEXT_DOUBLE(label_heights[i], 4, DOUBLE_PRECISION);
     }
     char engine[engine_len + 1];
     NEXT_SIZED_STR(engine, engine_len);
@@ -171,8 +173,8 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
     for (int i = 0; i < overridden_label_count; i++) {
         Agnode_t *n = agnode(g, overridden_labels[i], FALSE);
         if (n != NULL) {
-            int label_x = floor(ND_coord(n).x + margin);
-            int label_y = floor(ND_coord(n).y + margin);
+            int label_x = floor((ND_coord(n).x + margin) * DOUBLE_PRECISION);
+            int label_y = floor((ND_coord(n).y + margin) * DOUBLE_PRECISION);
             big_endian_encode(node_positions + i * 2 * sizeof(int), label_x);
             big_endian_encode(node_positions + (i * 2 + 1) * sizeof(int), label_y);
         } else {
@@ -186,14 +188,14 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         }
     }
 
-    int svg_width = (int) floor(GD_bb(g).UR.x - GD_bb(g).LL.x + 2.0 * margin);
-    int svg_height = (int) floor(GD_bb(g).UR.y - GD_bb(g).LL.y + 2.0 * margin);
+    int svg_width = (int) floor((GD_bb(g).UR.x - GD_bb(g).LL.x + 2.0 * margin) * DOUBLE_PRECISION);
+    int svg_height = (int) floor((GD_bb(g).UR.y - GD_bb(g).LL.y + 2.0 * margin) * DOUBLE_PRECISION);
 
     size_t output_buffer_len = 2 + sizeof(node_positions) + sizeof(svg_width) + sizeof(svg_height) + svg_chunk_size;
     uint8_t *output_buffer = malloc(output_buffer_len);
     size_t offset = 0;
     output_buffer[offset++] = 0;
-    output_buffer[offset++] = sizeof(svg_width);
+    output_buffer[offset++] = sizeof(int);
     // TODO: We could write the positions in the right buffer to start with.
     memcpy(output_buffer + offset, node_positions, sizeof(node_positions));
     offset += sizeof(node_positions);
