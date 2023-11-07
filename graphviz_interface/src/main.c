@@ -103,6 +103,9 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
 
     char *render_data = NULL;
 
+    GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
+    graph_t *g = agmemread(dot);
+
     #define FREE_EVERYTHING() {                                                                    \
         for (int i = 0; i < overridden_label_count; i++) {                                         \
             free(overridden_labels[i]);                                                            \
@@ -114,8 +117,11 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         gvFreeContext(gvc);                                                                        \
     }
 
-    GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
-    graph_t *g = agmemread(dot);
+    if (!g) {
+        FREE_EVERYTHING();
+        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
+        return 0;
+    }
 
     if (strlen(background) > 0) {
         agattr(g, AGRAPH, "bgcolor", background);
@@ -133,14 +139,6 @@ int render(size_t font_size_len, size_t dot_len, size_t overridden_labels_len, s
         agattr(g, AGRAPH, "fontsize", font_size_string);
         agattr(g, AGNODE, "fontsize", font_size_string);
         agattr(g, AGEDGE, "fontsize", font_size_string);
-    }
-
-    if (!g) {
-        for (int i = 0; i < overridden_label_count; i++) {
-            free(overridden_labels[i]);
-        }
-        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
-        return 0;
     }
 
     // Remove labels for nodes whose label is overridden
