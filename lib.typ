@@ -27,7 +27,7 @@
 		}
 
 		let output = plugin.render(
-			big-endian-encode(calc.round(font-size / 0.01pt)),
+			big-endian-encode(calc.round(font-size * double-precision / 1pt)),
 			bytes(dot),
 			encode-node-label-info-array(node-label-infos),
 			bytes(engine),
@@ -56,8 +56,8 @@
 
 		/// Returns a `(width, height)` pair corresponding to the dimensions of the SVG stored in the bytes.
 		let get-svg-dimensions(svg) = {
-			let point_width = big-endian-decode(output.slice(0, integer_size)) * 1pt
-			let point_height = big-endian-decode(output.slice(integer_size + 1, integer_size * 2)) * 1pt
+			let point_width = big-endian-decode(output.slice(0, integer_size)) / double-precision * 1pt
+			let point_height = big-endian-decode(output.slice(integer_size + 1, integer_size * 2)) / double-precision * 1pt
 			return (point_width, point_height)
 		}
 
@@ -83,8 +83,14 @@
 		)
 
 		for (label, coordinates) in array.zip(node-labels.values(), node-coordinates) {
-			let (x, y) = coordinates.map(w => w * 1pt)
+			let (x, y) = coordinates.map(w => w / double-precision * 1pt)
 			let label-dimensions = measure(label, styles)
+			let boxed-label = box(
+				fill: rgb(255, 0, 255, 127),
+				width: label-dimensions.width,
+				height: label-dimensions.height,
+				label
+			)
 			place(
 				top + left,
 				dx: x - label-dimensions.width / 2,
