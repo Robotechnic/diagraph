@@ -54,6 +54,31 @@ int vizErrorf(char *str) {
 }
 
 /**
+ * @brief Tests if the name of a node can be interpreted as math by Typst.
+ *
+ * Note that this function has false negatives, but should not have any false positive.
+ */
+bool is_name_valid_math(char *name) {
+    bool was_identifier_character = false;
+    for (int i = 0; name[i]; i++) {
+        if (name[i] < 0) {
+            // Non-ASCII characters are too complicated to handle properly.
+            return false;
+        }
+        if ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z') {
+            if (was_identifier_character) {
+                return false;
+            } else {
+                was_identifier_character = true;
+            }
+        } else {
+            was_identifier_character = false;
+        }
+    }
+    return true;
+}
+
+/**
  * @brief Return a list of all labels.
  */
 EMSCRIPTEN_KEEPALIVE
@@ -87,15 +112,16 @@ int get_labels(size_t dot_len) {
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
         char *label = agget(n, "label");
         if (!aghtmlstr(label)) {
+            // If there is no explicitely set label for a node, so Graphviz intuitively sets its "label" attribute to "\\N".
             bool has_label = strcmp(label, "\\N") != 0;
             if (!has_label) {
-                // There is no explicitely set label for this node, so Graphviz intuitively sets its "label" attribute to "\\N".
                 label = agnameof(n);
             }
             int label_len = strlen(label);
-            labels[label_count] = malloc(label_len + 1);
-            strcpy(labels[label_count], label);
-            total_size += label_len + 1;
+            labels[label_count] = malloc(label_len + 2);
+            labels[label_count][0] = has_label || !is_name_valid_math(label) ? 't' : 'm';
+            strcpy(labels[label_count] + 1, label);
+            total_size += label_len + 2;
             label_count++;
         }
     }
