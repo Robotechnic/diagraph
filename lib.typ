@@ -1,9 +1,14 @@
 #import "internals.typ": render
 
-#let raw-render(engine: "dot", width: auto, height: auto, fit: "contain", clip: true, background: "transparent", raw) = {
-	if (not raw.has("text")) {
-		panic("This function requires a `text` field")
-	}
-	let dot = raw.text
-	return render(dot, engine: engine, width: width, height: height, fit: fit, clip: clip, background: background)
+/// Renders a graph with Graphviz.
+///
+/// See `render`'s documentation in `internals.typ` for a list of valid
+/// arguments and their descriptions.
+#let raw-render(
+  /// A `raw` element containing Dot code.
+	raw,
+	..args,
+) = {
+	assert(raw.has("text"), message: "`raw-render` expects a `raw` element")
+	return render(raw.text, ..args)
 }

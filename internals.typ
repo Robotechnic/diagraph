@@ -41,7 +41,8 @@
   )
 }
 
-/// Transforms bytes into an array whose elements are all `bytes` with the specified length.
+/// Transforms bytes into an array whose elements are all `bytes` with the
+/// specified length.
 #let group-bytes(buffer, group-len) = {
   assert(calc.rem(buffer.len(), group-len) == 0)
   array(buffer).fold((), (acc, x) => {
@@ -99,19 +100,29 @@
   )
 }
 
+/// Renders a graph with Graphviz.
 #let render(
+  /// A string containing Dot code.
 	dot,
+  /// Nodes whose name appear in this dictionary will have their label
+  /// overridden with the corresponding content. Defaults to an empty
+  /// dictionary.
+  labels: (:),
+  /// The name of the engine to generate the graph with. Defaults to `"dot"`.
 	engine: "dot",
+  /// The width of the image to display. If set to `auto` (the default), will
+  /// be the width of the generated SVG.
 	width: auto,
+  /// The height of the image to display. If set to `auto` (the default), will
+  /// be the height of the generated SVG.
 	height: auto,
-	fit: "contain",
-  clip: false,
-	background: "transparent",
+  /// Whether to hide parts of the graph that extend beyond its frame. Defaults
+  /// to `true`.
+  clip: true,
+  /// A color or gradient to fill the background with. If set to `none` (the
+  /// default), the background will be transparent.
+  background: none,
 ) = {
-  if type(background) == color {
-    background = background.to-hex()
-  }
-
   let labels = get-labels(dot)
   let label-count = labels.len()
 
@@ -123,7 +134,6 @@
 			bytes(dot),
       encode-label-dimensions(styles, labels),
 			bytes(engine),
-			bytes(background)
 		)
 
 		if output.at(0) != 0 {
@@ -168,7 +178,7 @@
     )
 
 		// Construct the graph and its labels.
-		show: block.with(width: svg-width, height: svg-height)
+		show: block.with(width: svg-width, height: svg-height, fill: background)
 
     // Display SVG.
 		image.decode(
@@ -176,7 +186,6 @@
 			format: "svg",
 			width: svg-width,
 			height: svg-height,
-			fit: fit,
 		)
 
     // Place labels.
