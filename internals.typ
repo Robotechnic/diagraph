@@ -70,13 +70,17 @@
 /// Get an array of evaluated labels from a graph.
 #let get-labels(dot) = {
   let encoded-labels = plugin.get_labels(bytes(dot))
-  let label-strings = array(encoded-labels).split(0).slice(0, -1).map(bytes).map(str)
-  label-strings.map(label => {
-    eval(
-      mode: "markup",
-      // The comment bellow is shown on the error message if the label is malformed.
-      label // If you see this, you have a malformed node label.
-    )
+  let encoded-label-array = array(encoded-labels).split(0).slice(0, -1).map(bytes)
+  encoded-label-array.map(encoded-label => {
+    let mode = str(encoded-label.slice(0, 1))
+    let label-str = str(encoded-label.slice(1))
+    if mode == "t" {
+      [#label-str]
+    } else if mode == "m" {
+      math.equation(eval(mode: "math", label-str))
+    } else {
+      panic("Internal Diagraph error: Unsopported mode: `" + mode + "`")
+    }
   })
 }
 
