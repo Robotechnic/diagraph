@@ -151,16 +151,15 @@
     let svg-height = int-to-length(decode-int(output.slice(integer-size + 1, integer-size * 2)))
 		output = output.slice(integer-size * 2)
 
-    // panic(str(output))
-
 		let final-width = if width == auto { svg-width } else { width }
 		let final-height = if height == auto { svg-height } else { height }
 
-		// Rescale the final image to the desired size
+		// Rescale the final image to the desired size.
 		show: block.with(
       width: final-width,
       height: final-height,
       clip: clip,
+      breakable: false,
     )
 		show: scale.with(
       origin: top + left,
@@ -168,10 +167,10 @@
       y: final-height / svg-height * 100%,
     )
 
-		// Construct the graph with proper labels
+		// Construct the graph and its labels.
 		show: block.with(width: svg-width, height: svg-height)
 
-    // Place SVG
+    // Display SVG.
 		image.decode(
 			output,
 			format: "svg",
@@ -180,7 +179,7 @@
 			fit: fit,
 		)
 
-    // Place labels
+    // Place labels.
 		for (label, coordinates) in labels.zip(label-coordinates) {
 			let (x, y) = coordinates
 			let label-dimensions = measure(label, styles)
