@@ -242,7 +242,7 @@
 			place(
 				top + left,
 				dx: x - label-dimensions.width / 2,
-				dy: final-height - y - label-dimensions.height / 2,
+				dy: final-height - y - label-dimensions.height / 2 - (final-height - svg-height),
 				label,
 			)
 		}
@@ -254,7 +254,7 @@
         place(
           top + left,
           dx: x - label-dimensions.width / 2,
-          dy: final-height - y - label-dimensions.height / 2,
+          dy: final-height - y - label-dimensions.height / 2 - (final-height - svg-height),
           label,
         )
       }
