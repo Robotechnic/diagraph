@@ -1,94 +1,81 @@
 # diagraph
 
-A simple graphviz binding for typst using the new webassembly plugin system
+A simple Graphviz binding for Typst using the WebAssembly plugin system.
+
 
 ## Usage
+
+### Basic usage
 
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/diagraph:0.1.0": *
+#import "@preview/diagraph:0.2.0": *
 ```
 
-It allows you to render a graphviz dot string to a svg image in three different ways:
-
-## Render function
+You can render a Graphviz Dot string to a SVG image using the `render` function:
 
 ```typ
 #render("digraph { a -> b }")
 ```
 
-## Raw render function
+Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
 
 ````typ
-#raw-render[
-    ```dot
-    digraph {
-        a -> b
-    }
-    ```
-]
+#raw-render(
+  ```dot
+  digraph {
+    a -> b
+  }
+  ```
+)
 ````
 
-You can see an example of this in the [example](https://github.com/Robotechnic/diagraph/tree/main/examples) folder.
+You can see an example of this in [`examples/`](https://github.com/Robotechnic/diagraph/tree/main/examples).
 
-For more information about the graphviz dot language, you can check the [official documentation](https://graphviz.org/documentation/).
+For more information about the Graphviz Dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 
-## Functions definitions
+### Arguments
 
-In the following functions, `auto` mean that the image will be scaled so the graph text size match the document text size.
+`render` and `raw-render` accept multiple arguments that help you customize your graphs.
 
-### render
+- `engine` (`str`) is the name of the engine to generate the graph with. Available engines are circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, and twopi. Defaults to `"dot"`.
 
-This function allow you to render a graphviz dot string to a svg image.
+- `width` and `height` (`length` or `auto`) are the dimensions of the image to display. If set to `auto` (the default), will be the dimensions of the generated SVG. If a `length`, cannot be expressed in `em`.
 
-```typ
-render(
-    dot: string,
-    engine: string,
-    width: auto relative,
-    height: auto relative,
-    fit: string,
-    background: string
+- `clip` (`bool`) determines whether to hide parts of the graph that extend beyond its frame. Defaults to `true`.
+
+- `background` (`none` or `color` or `gradient`) describes how to fill the background. If set to `none` (the default), the background will be transparent.
+
+- `labels` (`dict`) is a list of labels to use to override the defaults labels. This is discussed in depth in the next section. Defaults to `(:)`.
+
+### Labels
+
+By default, all node labels are rendered by Typst. If a node has no explicitly set label (using the `[label="..."]` syntax), its name is used as its label, and interpreted as math if possible. This means a node named `n_0` will render as 𝑛<sub>0</sub>.
+
+If you want a node label to contain a more complex mathematical equation, or more complex markup, you can use the `labels` argument: pass a dictionary that maps node names to Typst `content`. Each node with a name within the dictionary will have its label overridden by the corresponding content.
+
+````typ
+#raw-render(
+  ```
+  digraph {
+    rankdir=LR
+    node[shape=circle]
+    Hmm -> a_0
+    Hmm -> big
+    a_0 -> "a'" -> big [style="dashed"]
+    big -> sum
+  }
+  ```,
+  labels: (:
+    big: [_some_#text(2em)[ big ]*text*],
+    sum: $ sum_(i=0)^n 1/i $,
+  ),
 )
-```
+````
 
-| Parameter | Description | Default value |
-| :-------: | :---------: | :-----------: |
-| dot | The dot string to render | Required |
-| engine | The graphviz engine to use | dot |
-| width | The width of the svg | auto |
-| height | The height of the svg | auto |
-| fit | The fit mode of the svg | contain |
-| background | The background color of the svg | transparent |
+See [`examples/`](https://github.com/Robotechnic/diagraph/tree/main/examples) for the rendered graph.
 
-All the optional parameters are the same as the one of images, you can check the [documentation](https://typst.app/docs/reference/visualize/image/) for more details.
-
-### raw-render
-
-This function allow you to use raw to render a graphviz dot string.
-
-```typ
-raw-render(
-    engine: string,
-    width: auto relative,
-    height: auto relative,
-    fit: string,
-    background: string,
-    raw
-)
-```
-
-| Parameter | Description | Default value |
-| :-------: | :---------: | :-----------: |
-| engine | The graphviz engine to use | dot |
-| width | The width of the svg | auto |
-| height | The height of the svg | auto |
-| fit | The fit mode of the svg | contain |
-| background | The background color of the svg | transparent |
-| raw | The dot string to render | Required |
-
-This function will panic if the provided content is not a `raw`.
 
 ## Build
 
@@ -107,29 +94,22 @@ There are also some other make commands:
 
 Somme functions need to be stubbed to work with the webassembly plugin system. The `wasi-stub` executable is a spetial one fitting the needs of the typst plugin system. You can find the source code [here](https://github.com/astrale-sharp/wasm-minimal-protocol/tree/master). It is important to use this one as the default subbed functions are not the same and the makefile is suited for this one.
 
-## Notes
-
-Background color is just a shortcut for the `bgcolor` attribute of the graphviz `digraph` so:
-
-```typ
-#render("digraph { bgcolor = red; a -> b }")
-```
-
-is strictly equivalent to:
-
-```typ
-#render("digraph { a -> b }", background: "red")
-```
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
+
 ## Changelog
+
+### 0.2.0
+
+- Node labels are now handled by Typst
+
 
 ### 0.1.2
 
-- The graph are now scaled to make the graph text size match the document text size
+- Graphs are now scaled to make the graph text size match the document text size
 
 ### 0.1.1
 
