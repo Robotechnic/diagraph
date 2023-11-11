@@ -109,6 +109,11 @@
   )
 }
 
+/// Converts any length to a length in points
+#let unit-to-point(value, styles) = {
+  value.abs + value.em * measure(line(length: 1em), styles).width
+}
+
 /// Renders a graph with Graphviz.
 #let render(
   /// A string containing Dot code.
@@ -120,10 +125,12 @@
   /// The name of the engine to generate the graph with. Defaults to `"dot"`.
 	engine: "dot",
   /// The width of the image to display. If set to `auto` (the default), will
-  /// be the width of the generated SVG.
+  /// be the width of the generated SVG or, if the height is set
+  /// to a value, it will be scaled to keep the aspect ratio.
 	width: auto,
   /// The height of the image to display. If set to `auto` (the default), will
-  /// be the height of the generated SVG.
+  /// be the height of the generated SVG or if the width is set 
+  /// to a value, it will be scaled to keep the aspect ratio.
 	height: auto,
   /// Whether to hide parts of the graph that extend beyond its frame. Defaults
   /// to `true`.
@@ -193,8 +200,16 @@
     let svg-height = int-to-length(decode-int(output.slice(integer-size + 1, integer-size * 2)))
 		output = output.slice(integer-size * 2)
 
-		let final-width = if width == auto { svg-width } else { width }
-		let final-height = if height == auto { svg-height } else { height }
+		let final-width = if width == auto { svg-width } else { unit-to-point(width, styles) }
+		let final-height = if height == auto { svg-height } else { unit-to-point(height, styles) }
+
+    if width == auto and height != auto {
+      let ratio = final-height / svg-height
+      final-width = svg-width * ratio
+    } else if width != auto and height == auto {
+      let ratio = final-width / svg-width
+      final-height = svg-height * ratio
+    }
 
 		// Rescale the final image to the desired size.
 		show: block.with(
