@@ -16,6 +16,7 @@ link :
 module :
 	mkdir -p ./diagraph
 	cp ./diagraph.wasm ./diagraph/diagraph.wasm
+	cp ./internals.typ ./diagraph/internals.typ
 	cp ./lib.typ ./diagraph/lib.typ
 	cp ./README.md ./diagraph/README.md
 	cp ./typst.toml ./diagraph/typst.toml
