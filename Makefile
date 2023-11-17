@@ -18,7 +18,7 @@ module :
 	cp ./diagraph.wasm ./diagraph/diagraph.wasm
 	cp ./internals.typ ./diagraph/internals.typ
 	cp ./lib.typ ./diagraph/lib.typ
-	cp ./README.md ./diagraph/README.md
+	cp ./README.MD ./diagraph/README.MD
 	cp ./typst.toml ./diagraph/typst.toml
 	cp ./LICENSE ./diagraph/LICENSE
 
