@@ -72,10 +72,11 @@ bool is_name_valid_math(char *name) {
             // Non-ASCII characters are too complicated to handle properly.
             return false;
         }
-        if (was_identifier_character) {
-            if ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z' || '0' <= name[i] && name[i] <= '9') {
-                return false;
-            }
+        if (
+            was_identifier_character &&
+            ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z' || '0' <= name[i] && name[i] <= '9')
+        ) {
+            return false;
         } else if ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z') {
             was_identifier_character = true;
         } else {
