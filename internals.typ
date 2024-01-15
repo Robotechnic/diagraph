@@ -109,9 +109,20 @@
   )
 }
 
-/// Converts any length to a length in points
-#let unit-to-point(value, styles) = {
-  value.abs + value.em * measure(line(length: 1em), styles).width
+/// Converts any relative length to an absolute length.
+#let relative-to-absolute(value, styles, container-dimension) = {
+  if type(value) == relative {
+    let absolute-part = relative-to-absolute(value.length, styles, container-dimension)
+    let ratio-part = relative-to-absolute(value.ratio, styles, container-dimension)
+    return absolute-part + ratio-part
+  }
+  if type(value) == length {
+    return value.abs + value.em * measure(line(length: 1em), styles).width
+  }
+  if type(value) == ratio {
+    return value * container-dimension
+  }
+  panic("Expected relative length, found " + str(type(value)))
 }
 
 /// Renders a graph with Graphviz.
@@ -124,13 +135,13 @@
   labels: (:),
   /// The name of the engine to generate the graph with. Defaults to `"dot"`.
 	engine: "dot",
-  /// The width of the image to display. If set to `auto` (the default), will
-  /// be the width of the generated SVG or, if the height is set
-  /// to a value, it will be scaled to keep the aspect ratio.
+  /// The width of the image to display. If set to `auto` (the default), will be
+  /// the width of the generated SVG or, if the height is set to a value, it
+  /// will be scaled to keep the aspect ratio.
 	width: auto,
   /// The height of the image to display. If set to `auto` (the default), will
-  /// be the height of the generated SVG or if the width is set 
-  /// to a value, it will be scaled to keep the aspect ratio.
+  /// be the height of the generated SVG or if the width is set to a value, it
+  /// will be scaled to keep the aspect ratio.
 	height: auto,
   /// Whether to hide parts of the graph that extend beyond its frame. Defaults
   /// to `true`.
@@ -146,7 +157,7 @@
   let native-labels = get-labels(manual-label-names, dot)
   let native-label-count = native-labels.len()
 
-	style(styles => {
+	layout(((width: container-width, height: container-height)) => style(styles => {
 		let font-size = measure(line(length: 1em), styles).width
 
 		let output = plugin.render(
@@ -200,8 +211,16 @@
     let svg-height = int-to-length(decode-int(output.slice(integer-size + 1, integer-size * 2)))
 		output = output.slice(integer-size * 2)
 
-		let final-width = if width == auto { svg-width } else { unit-to-point(width, styles) }
-		let final-height = if height == auto { svg-height } else { unit-to-point(height, styles) }
+		let final-width = if width == auto {
+      svg-width
+    } else {
+      relative-to-absolute(width, styles, container-width)
+    }
+		let final-height = if height == auto {
+      svg-height
+    } else {
+      relative-to-absolute(height, styles, container-height)
+    }
 
     if width == auto and height != auto {
       let ratio = final-height / svg-height
@@ -259,5 +278,5 @@
         )
       }
     }
-	})
+	}))
 }
