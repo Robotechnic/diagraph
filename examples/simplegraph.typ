@@ -115,7 +115,17 @@ Labels are overridden manually.
     LR_8 -> LR_6 [label="S(b)"]
     LR_8 -> LR_5 [label="S(a)"]
   }
-  ```
+  ```, labels: (
+		"LR_0": $"LR"_0$,
+		"LR_1": $"LR"_1$,
+		"LR_2": $"LR"_2$,
+		"LR_3": $"LR"_3$,
+		"LR_4": $"LR"_4$,
+		"LR_5": $"LR"_5$,
+		"LR_6": $"LR"_6$,
+		"LR_7": $"LR"_7$,
+		"LR_8": $"LR"_8$
+	)
 )
 
 
