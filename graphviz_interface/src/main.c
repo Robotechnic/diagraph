@@ -113,8 +113,6 @@ int get_labels(size_t manual_label_count_len, size_t manual_label_names_len, siz
         for (int i = 0; i < manual_label_count; i++) {
             free(manual_label_names[i]);
         }
-        gvFreeLayout(gvc, g);
-        agclose(g);
         gvFinalize(gvc);
         gvFreeContext(gvc);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
@@ -260,8 +258,10 @@ void get_label_positions(graph_t *g, double pad, const bool *consider, uint8_t *
         free(manual_label_names[i]);                                                               \
     }                                                                                              \
     gvFreeRenderData(render_data);                                                                 \
-    gvFreeLayout(gvc, g);                                                                          \
-    agclose(g);                                                                                    \
+    if (g) {                                                                                       \
+        gvFreeLayout(gvc, g);                                                                      \
+        agclose(g);                                                                                \
+    }                                                                                              \
     gvFinalize(gvc);                                                                               \
     gvFreeContext(gvc);                                                                            \
 }
