@@ -23,22 +23,24 @@
     (dst)[(len)] = '\0';                                                                           \
     __buffer_offset += (len);
 
-#define NEXT_STR(dst) {                                                                            \
-    int __str_len = strlen((char *) __input_buffer + __buffer_offset);                             \
-    (dst) = malloc(__str_len + 1);                                                                 \
-    strcpy((dst), (char *) __input_buffer + __buffer_offset);                                      \
-    __buffer_offset += __str_len + 1;                                                              \
-}
+#define NEXT_STR(dst)                                                                              \
+    {                                                                                              \
+        int __str_len = strlen((char *)__input_buffer + __buffer_offset);                          \
+        (dst) = malloc(__str_len + 1);                                                             \
+        strcpy((dst), (char *)__input_buffer + __buffer_offset);                                   \
+        __buffer_offset += __str_len + 1;                                                          \
+    }
 
 #define NEXT_INT(dst)                                                                              \
     (dst) = big_endian_decode(__input_buffer + __buffer_offset, TYPST_INT_SIZE);                   \
     __buffer_offset += TYPST_INT_SIZE;
 
-#define NEXT_DOUBLE(dst) {                                                                         \
-    int __encoded_value;                                                                           \
-    NEXT_INT(__encoded_value);                                                                     \
-    (dst) = ((double) __encoded_value) / DOUBLE_PRECISION;                                         \
-}
+#define NEXT_DOUBLE(dst)                                                                           \
+    {                                                                                              \
+        int __encoded_value;                                                                       \
+        NEXT_INT(__encoded_value);                                                                 \
+        (dst) = ((double)__encoded_value) / DOUBLE_PRECISION;                                      \
+    }
 
 #define FREE_BUFFER()                                                                              \
     free(__input_buffer);                                                                          \
@@ -72,10 +74,9 @@ bool is_name_valid_math(char *name) {
             // Non-ASCII characters are too complicated to handle properly.
             return false;
         }
-        if (
-            was_identifier_character &&
-            ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z' || '0' <= name[i] && name[i] <= '9')
-        ) {
+        if (was_identifier_character &&
+            ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z' ||
+             '0' <= name[i] && name[i] <= '9')) {
             return false;
         } else if ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z') {
             was_identifier_character = true;
@@ -137,7 +138,8 @@ int get_labels(size_t manual_label_count_len, size_t manual_label_names_len, siz
         }
         char *label = agget(n, "label");
         if (!aghtmlstr(label)) {
-            // If there is no explicitely set label for a node, so Graphviz intuitively sets its "label" attribute to "\\N".
+            // If there is no explicitely set label for a node, so Graphviz intuitively sets its
+            // "label" attribute to "\\N".
             bool has_label = strcmp(label, "\\N") != 0;
             if (!has_label) {
                 label = agnameof(n);
@@ -180,13 +182,10 @@ int get_labels(size_t manual_label_count_len, size_t manual_label_names_len, siz
  */
 char *create_label_for_dimension(graph_t *g, double width, double height) {
     char label[2048];
-    snprintf(
-        label,
-        sizeof(label),
-        "<table border=\"0\" fixedsize=\"true\" width=\"%lf\" height=\"%lf\"><tr><td></td></tr></table>",
-        width,
-        height
-    );
+    snprintf(label, sizeof(label),
+             "<table border=\"0\" fixedsize=\"true\" width=\"%lf\" "
+             "height=\"%lf\"><tr><td></td></tr></table>",
+             width, height);
     return agstrdup_html(g, label);
 }
 
@@ -196,7 +195,9 @@ char *create_label_for_dimension(graph_t *g, double width, double height) {
  * new label in the corresponding cell in `manual_override_indices`. Writes `-1` in
  * `manual_override_indices` for other nodes.
  */
-void manually_override_labels(graph_t *g, double manual_label_count, const double *label_widths, const double *label_heights, const char **label_names, int *manual_override_indices) {
+void manually_override_labels(graph_t *g, double manual_label_count, const double *label_widths,
+                              const double *label_heights, const char **label_names,
+                              int *manual_override_indices) {
     int label_index = 0;
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
@@ -214,10 +215,11 @@ void manually_override_labels(graph_t *g, double manual_label_count, const doubl
 
 /**
  * Replaces non-HTML and non-already overridden labels in a graph with invisible labels that have
- * specific dimensions. For each label that is overridden, writes `true` in the corresponding cell in
- * `is_label_overridden`. Writes `false` for other labels.
+ * specific dimensions. For each label that is overridden, writes `true` in the corresponding cell
+ * in `is_label_overridden`. Writes `false` for other labels.
  */
-void override_native_labels(graph_t *g, const double *label_widths, const double *label_heights, bool *is_label_overridden, const int *manual_override_indices) {
+void override_native_labels(graph_t *g, const double *label_widths, const double *label_heights,
+                            bool *is_label_overridden, const int *manual_override_indices) {
     int label_index = 0;
     int native_override_chain_index = 0;
 
@@ -225,7 +227,9 @@ void override_native_labels(graph_t *g, const double *label_widths, const double
         is_label_overridden[label_index] = false;
         if (manual_override_indices[label_index] < 0) {
             if (!aghtmlstr(agget(n, "label"))) {
-                agset(n, "label", create_label_for_dimension(g, label_widths[native_override_chain_index], label_heights[native_override_chain_index]));
+                agset(n, "label",
+                      create_label_for_dimension(g, label_widths[native_override_chain_index],
+                                                 label_heights[native_override_chain_index]));
                 is_label_overridden[label_index] = true;
                 native_override_chain_index++;
             }
@@ -253,18 +257,19 @@ void get_label_positions(graph_t *g, double pad, const bool *consider, uint8_t *
     }
 }
 
-#define FREE_EVERYTHING() {                                                                        \
-    for (int i = 0; i < manual_label_count; i++) {                                                 \
-        free(manual_label_names[i]);                                                               \
-    }                                                                                              \
-    gvFreeRenderData(render_data);                                                                 \
-    if (g) {                                                                                       \
-        gvFreeLayout(gvc, g);                                                                      \
-        agclose(g);                                                                                \
-    }                                                                                              \
-    gvFinalize(gvc);                                                                               \
-    gvFreeContext(gvc);                                                                            \
-}
+#define FREE_EVERYTHING()                                                                          \
+    {                                                                                              \
+        for (int i = 0; i < manual_label_count; i++) {                                             \
+            free(manual_label_names[i]);                                                           \
+        }                                                                                          \
+        gvFreeRenderData(render_data);                                                             \
+        if (g) {                                                                                   \
+            gvFreeLayout(gvc, g);                                                                  \
+            agclose(g);                                                                            \
+        }                                                                                          \
+        gvFinalize(gvc);                                                                           \
+        gvFreeContext(gvc);                                                                        \
+    }
 
 /**
  * @brief Render a graphviz graph to svg from a dot string.
@@ -287,19 +292,24 @@ void get_label_positions(graph_t *g, double pad, const bool *consider, uint8_t *
  *
  * @param font_size_len the length of the integer encoding the font size
  * @param dot_len the length of the buffer containing the dot string
- * @param native_label_dimensions_len the length of the buffer containing the dimensions of the native labels generated by Typst
- * @param manual_label_dimensions_len the length of the buffer containing the dimensions of the manual labels generated by Typst
- * @param manual_label_names_len the length of the buffer containing the names of the manual labels generated by Typst
+ * @param native_label_dimensions_len the length of the buffer containing the dimensions of the
+ * native labels generated by Typst
+ * @param manual_label_dimensions_len the length of the buffer containing the dimensions of the
+ * manual labels generated by Typst
+ * @param manual_label_names_len the length of the buffer containing the names of the manual labels
+ * generated by Typst
  * @param engine_len the length of the buffer containing the engine string
  * @return int 0 on success, 1 on failure
  */
 EMSCRIPTEN_KEEPALIVE
-int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_len, size_t manual_label_dimensions_len, size_t manual_label_names_len, size_t engine_len) {
+int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_len,
+           size_t manual_label_dimensions_len, size_t manual_label_names_len, size_t engine_len) {
     // Set error report to custom function. Lets us get error messages from Graphviz.
     agseterr(AGERR);
     agseterrf(vizErrorf);
 
-    INIT_BUFFER_UNPACK(font_size_len + dot_len + native_label_dimensions_len + manual_label_dimensions_len + manual_label_names_len + engine_len);
+    INIT_BUFFER_UNPACK(font_size_len + dot_len + native_label_dimensions_len +
+                       manual_label_dimensions_len + manual_label_names_len + engine_len);
     double font_size;
     NEXT_DOUBLE(font_size);
     char dot[dot_len + 1];
@@ -356,11 +366,13 @@ int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_
 
     // Handle manually overridden labels.
     int manual_override_indices[total_label_count];
-    manually_override_labels(g, manual_label_count, manual_label_widths, manual_label_heights, manual_label_names, manual_override_indices);
+    manually_override_labels(g, manual_label_count, manual_label_widths, manual_label_heights,
+                             manual_label_names, manual_override_indices);
 
     // Override native labels.
     bool is_native_label_overridden[total_label_count];
-    override_native_labels(g, native_label_widths, native_label_heights, is_native_label_overridden, manual_override_indices);
+    override_native_labels(g, native_label_widths, native_label_heights, is_native_label_overridden,
+                           manual_override_indices);
 
     // Layout graph.
     // FIXME: The call to `gvLayout` causes to reach an `unreachable` instruction if a (user-made)
@@ -399,7 +411,8 @@ int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_
     int total_manual_label_uses = 0;
     int manual_label_usage_count[manual_label_count];
     uint8_t manual_label_positions[manual_label_count][total_label_count * 2 * sizeof(int)];
-    for (int manual_label_index = 0; manual_label_index < manual_label_count; manual_label_index++) {
+    for (int manual_label_index = 0; manual_label_index < manual_label_count;
+         manual_label_index++) {
         manual_label_usage_count[manual_label_index] = 0;
         bool is_manually_overridden_by_this_label[total_label_count];
         for (int i = 0; i < total_label_count; i++) {
@@ -410,26 +423,32 @@ int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_
                 total_manual_label_uses++;
             }
         }
-        get_label_positions(g, pad, is_manually_overridden_by_this_label, manual_label_positions[manual_label_index]);
+        get_label_positions(g, pad, is_manually_overridden_by_this_label,
+                            manual_label_positions[manual_label_index]);
     }
 
     // Get SVG dimensions.
-    int svg_width = (int) floor((GD_bb(g).UR.x - GD_bb(g).LL.x + 2.0 * pad) * DOUBLE_PRECISION);
-    int svg_height = (int) floor((GD_bb(g).UR.y - GD_bb(g).LL.y + 2.0 * pad) * DOUBLE_PRECISION);
+    int svg_width = (int)floor((GD_bb(g).UR.x - GD_bb(g).LL.x + 2.0 * pad) * DOUBLE_PRECISION);
+    int svg_height = (int)floor((GD_bb(g).UR.y - GD_bb(g).LL.y + 2.0 * pad) * DOUBLE_PRECISION);
 
     // Generate output.
-    size_t output_buffer_len = 2 + sizeof(native_label_positions) + sizeof(int) * manual_label_count + sizeof(int) * 2 * total_manual_label_uses + sizeof(svg_width) + sizeof(svg_height) + svg_chunk_size;
+    size_t output_buffer_len = 2 + sizeof(native_label_positions) +
+                               sizeof(int) * manual_label_count +
+                               sizeof(int) * 2 * total_manual_label_uses + sizeof(svg_width) +
+                               sizeof(svg_height) + svg_chunk_size;
     uint8_t *output_buffer = malloc(output_buffer_len);
     size_t offset = 0;
     output_buffer[offset++] = 0;
     output_buffer[offset++] = sizeof(int);
     memcpy(output_buffer + offset, native_label_positions, sizeof(native_label_positions));
     offset += sizeof(native_label_positions);
-    for (int manual_label_index = 0; manual_label_index < manual_label_count; manual_label_index++) {
+    for (int manual_label_index = 0; manual_label_index < manual_label_count;
+         manual_label_index++) {
         int count = manual_label_usage_count[manual_label_index];
         big_endian_encode(output_buffer + offset, count);
         offset += sizeof(int);
-        memcpy(output_buffer + offset, manual_label_positions[manual_label_index], count * 2 * sizeof(int));
+        memcpy(output_buffer + offset, manual_label_positions[manual_label_index],
+               count * 2 * sizeof(int));
         offset += count * 2 * sizeof(int);
     }
     big_endian_encode(output_buffer + offset, svg_width);
