@@ -200,8 +200,16 @@
     let svg-height = int-to-length(decode-int(output.slice(integer-size + 1, integer-size * 2)))
 		output = output.slice(integer-size * 2)
 
-		let final-width = if width == auto { svg-width } else { unit-to-point(width, styles) }
-		let final-height = if height == auto { svg-height } else { unit-to-point(height, styles) }
+		let final-width = if width == auto { 
+			svg-width 
+		} else { 
+			unit-to-point(width, styles) 
+		}
+		let final-height = if height == auto { 
+			svg-height
+		} else {
+			unit-to-point(height, styles)
+		}
 
     if width == auto and height != auto {
       let ratio = final-height / svg-height
@@ -210,6 +218,7 @@
       let ratio = final-width / svg-width
       final-height = svg-height * ratio
     }
+	
 
 		// Rescale the final image to the desired size.
 		show: block.with(
