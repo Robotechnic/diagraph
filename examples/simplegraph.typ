@@ -234,3 +234,20 @@ digraph {
     sum: $ sum_(i=0)^n 1/i $,
   ),
 )
+
+= Automatic math labels
+
+#render-example(
+	```
+	digraph {
+		a -> alpha
+		phi -> rho
+		rho -> a
+		tau -> omega
+		phi -> a_8
+		a_8 -> alpha
+		a_8 -> omega
+		alpha_8 -> omega
+	}
+	```
+)
