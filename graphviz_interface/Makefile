@@ -58,7 +58,7 @@ $(SRCDIR): | graphviz-src.tar.gz
 	tar xvzf graphviz-src.tar.gz -C $(SRCDIR) --strip=1
 
 graphviz-src.tar.gz:
-	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/9.0.0/graphviz-9.0.0.tar.gz" -o graphviz-src.tar.gz
+	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/10.0.1/graphviz-10.0.1.tar.gz" -o graphviz-src.tar.gz
 
 # download and extract expat source
 $(EPSRCDIR): | libexpat-src.tar.gz

@@ -2,6 +2,7 @@
 
 #include "protocol/protocol.h"
 #include "utils/utils.h"
+#include "math/math.h"
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin.h>
 #include <math.h>
@@ -9,42 +10,6 @@
 #include <string.h>
 
 #define DOUBLE_PRECISION 1000
-
-#define INIT_BUFFER_UNPACK(buffer_len)                                                             \
-    size_t __buffer_offset = 0;                                                                    \
-    uint8_t *__input_buffer = malloc((buffer_len));                                                \
-    if (!__input_buffer) {                                                                         \
-        return 1;                                                                                  \
-    }                                                                                              \
-    wasm_minimal_protocol_write_args_to_buffer(__input_buffer);
-
-#define NEXT_SIZED_STR(dst, len)                                                                   \
-    memcpy((dst), __input_buffer + __buffer_offset, (len));                                        \
-    (dst)[(len)] = '\0';                                                                           \
-    __buffer_offset += (len);
-
-#define NEXT_STR(dst)                                                                              \
-    {                                                                                              \
-        int __str_len = strlen((char *)__input_buffer + __buffer_offset);                          \
-        (dst) = malloc(__str_len + 1);                                                             \
-        strcpy((dst), (char *)__input_buffer + __buffer_offset);                                   \
-        __buffer_offset += __str_len + 1;                                                          \
-    }
-
-#define NEXT_INT(dst)                                                                              \
-    (dst) = big_endian_decode(__input_buffer + __buffer_offset, TYPST_INT_SIZE);                   \
-    __buffer_offset += TYPST_INT_SIZE;
-
-#define NEXT_DOUBLE(dst)                                                                           \
-    {                                                                                              \
-        int __encoded_value;                                                                       \
-        NEXT_INT(__encoded_value);                                                                 \
-        (dst) = ((double)__encoded_value) / DOUBLE_PRECISION;                                      \
-    }
-
-#define FREE_BUFFER()                                                                              \
-    free(__input_buffer);                                                                          \
-    __input_buffer = NULL;
 
 char errBuff[1024];
 int vizErrorf(char *str) {
@@ -60,31 +25,6 @@ int vizErrorf(char *str) {
  */
 int get_total_label_count(graph_t *g) {
     return agnnodes(g);
-}
-
-/**
- * @brief Tests if the name of a node can be interpreted as math by Typst.
- *
- * Note that this function has false negatives, but should not have any false positive.
- */
-bool is_name_valid_math(char *name) {
-    bool was_identifier_character = false;
-    for (int i = 0; name[i]; i++) {
-        if (name[i] < 0) {
-            // Non-ASCII characters are too complicated to handle properly.
-            return false;
-        }
-        if (was_identifier_character &&
-            ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z' ||
-             '0' <= name[i] && name[i] <= '9')) {
-            return false;
-        } else if ('A' <= name[i] && name[i] <= 'Z' || 'a' <= name[i] && name[i] <= 'z') {
-            was_identifier_character = true;
-        } else {
-            was_identifier_character = false;
-        }
-    }
-    return true;
 }
 
 /**
@@ -146,7 +86,7 @@ int get_labels(size_t manual_label_count_len, size_t manual_label_names_len, siz
             }
             int label_len = strlen(label);
             labels[label_index] = malloc(label_len + 2);
-            labels[label_index][0] = has_label || !is_name_valid_math(label) ? 't' : 'm';
+            labels[label_index][0] = has_label || !is_math(label) ? 't' : 'm';
             strcpy(labels[label_index] + 1, label);
             total_size += label_len + 2;
             label_index++;
@@ -183,8 +123,8 @@ int get_labels(size_t manual_label_count_len, size_t manual_label_names_len, siz
 char *create_label_for_dimension(graph_t *g, double width, double height) {
     char label[2048];
     snprintf(label, sizeof(label),
-             "<table border=\"0\" fixedsize=\"true\" width=\"%lf\" "
-             "height=\"%lf\"><tr><td></td></tr></table>",
+             "<TABLE BORDER=\"0\" FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
+             "HEIGHT=\"%lf\"><TR><TD></TD></TR></TABLE>",
              width, height);
     return agstrdup_html(g, label);
 }
