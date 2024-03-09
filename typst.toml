@@ -2,7 +2,7 @@
 name = "diagraph"
 version = "0.2.1"
 entrypoint = "lib.typ"
-authors = ["Robotechnic", "MDLC01"]
+authors = ["Robotechnic", "Malo <@MDLC01>"]
 license = "MIT"
 repository = "https://github.com/Robotechnic/diagraph.git"
 description = "Graphviz bindings for Typst"
