@@ -9,3 +9,4 @@ description = "Graphviz bindings for Typst"
 compiler = "0.8.0"
 exclude = ["graphviz_interface/*", "examples/*", ".gitignore", "Makefile"]
 keywords = ["graphviz", "graph", "diagram"]
+categories = ["components", "visualization", "integration"]
