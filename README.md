@@ -98,6 +98,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.2.2
+
+- Fix an alignment issue
+- Added a better mathematic formula recognition for node labels
+
 ### 0.2.1
 
 - Added support for relative lenghts in the `width` and `height` arguments

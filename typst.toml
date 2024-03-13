@@ -1,8 +1,8 @@
 [package]
 name = "diagraph"
-version = "0.2.1"
+version = "0.2.2"
 entrypoint = "lib.typ"
-authors = ["Robotechnic", "Malo <@MDLC01>"]
+authors = ["Robotechnic <@Robotechnic>", "Malo <@MDLC01>"]
 license = "MIT"
 repository = "https://github.com/Robotechnic/diagraph.git"
 description = "Graphviz bindings for Typst"
