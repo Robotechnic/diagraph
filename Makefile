@@ -11,7 +11,7 @@ format:
 
 link :
 	mkdir -p ~/.cache/typst/packages/preview/diagraph
-	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.2.1
+	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.2.2
 
 module :
 	mkdir -p ./diagraph
