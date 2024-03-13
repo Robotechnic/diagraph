@@ -285,8 +285,6 @@ void get_label_positions(graph_t *g, double pad, const bool *consider, uint8_t *
  *   - for each use:
  *     - sizeof(int) bytes for x,
  *     - sizeof(int) bytes for y;
- * - sizeof(int) bytes for SVG width;
- * - sizeof(int) bytes for SVG height;
  * - the rest is SVG data.
  * All integers are encoded in in big-endian.
  *
@@ -427,15 +425,10 @@ int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_
                             manual_label_positions[manual_label_index]);
     }
 
-    // Get SVG dimensions.
-    int svg_width = (int)floor((GD_bb(g).UR.x - GD_bb(g).LL.x + 2.0 * pad) * DOUBLE_PRECISION);
-    int svg_height = (int)floor((GD_bb(g).UR.y - GD_bb(g).LL.y + 2.0 * pad) * DOUBLE_PRECISION);
-
     // Generate output.
     size_t output_buffer_len = 2 + sizeof(native_label_positions) +
                                sizeof(int) * manual_label_count +
-                               sizeof(int) * 2 * total_manual_label_uses + sizeof(svg_width) +
-                               sizeof(svg_height) + svg_chunk_size;
+                               sizeof(int) * 2 * total_manual_label_uses + svg_chunk_size;
     uint8_t *output_buffer = malloc(output_buffer_len);
     size_t offset = 0;
     output_buffer[offset++] = 0;
@@ -451,10 +444,6 @@ int render(size_t font_size_len, size_t dot_len, size_t native_label_dimensions_
                count * 2 * sizeof(int));
         offset += count * 2 * sizeof(int);
     }
-    big_endian_encode(output_buffer + offset, svg_width);
-    offset += sizeof(svg_width);
-    big_endian_encode(output_buffer + offset, svg_height);
-    offset += sizeof(svg_height);
     memcpy(output_buffer + offset, render_data, svg_chunk_size);
 
     wasm_minimal_protocol_send_result_to_host(output_buffer, output_buffer_len);
