@@ -229,7 +229,8 @@
       let ratio = final-width / svg-width
       final-height = svg-height * ratio
     }
-	
+
+    set align(top + left)
 
 		// Rescale the final image to the desired size.
 		show: block.with(
