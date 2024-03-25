@@ -73,6 +73,39 @@
   })
 }
 
+/// Converts a string containing escape sequences to content.
+#let parse-string(s) = {
+  let result = []
+  let row = ""
+  let is-escaped = false
+
+  for cluster in s {
+    if is-escaped {
+      is-escaped = false
+
+      if cluster == "l" {
+        result += align(left, row)
+        row = ""
+      } else if cluster == "n" {
+        result += align(center, row)
+        row = ""
+      } else if cluster == "r" {
+        result += align(right, row)
+        row = ""
+      } else {
+        row += cluster
+      }
+    } else if cluster == "\\" {
+      is-escaped = true
+    } else {
+      row += cluster
+    }
+  }
+
+  set block(spacing: 0.65em)
+  result + align(center, row)
+}
+
 /// Get an array of evaluated labels from a graph.
 #let get-labels(manual-label-names, dot) = {
   let encoded-labels = plugin.get_labels(
@@ -85,7 +118,7 @@
     let mode = str(encoded-label.slice(0, 1))
     let label-str = str(encoded-label.slice(1))
     if mode == "t" {
-      [#label-str]
+      parse-string(label-str)
     } else if mode == "m" {
       math.equation(eval(mode: "math", label-str))
     } else {
@@ -226,15 +259,17 @@
       final-height = svg-height * ratio
     }
 
-    set align(top + left)
-
 		// Rescale the final image to the desired size.
+
 		show: block.with(
       width: final-width,
       height: final-height,
       clip: clip,
       breakable: false,
     )
+
+    set align(top + left)
+
 		show: scale.with(
       origin: top + left,
       x: final-width / svg-width * 100%,
