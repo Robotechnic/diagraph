@@ -95,11 +95,11 @@
 }
 
 /// Encodes the dimensions of labels into bytes.
-#let encode-label-dimensions(styles, labels) = {
+#let encode-label-dimensions(labels) = {
   encode-int-array(
     labels
       .map(label => {
-        let dimensions = measure(label, styles)
+        let dimensions = measure(label)
         (
           length-to-int(dimensions.width),
           length-to-int(dimensions.height),
@@ -110,14 +110,14 @@
 }
 
 /// Converts any relative length to an absolute length.
-#let relative-to-absolute(value, styles, container-dimension) = {
+#let relative-to-absolute(value, container-dimension) = {
   if type(value) == relative {
-    let absolute-part = relative-to-absolute(value.length, styles, container-dimension)
-    let ratio-part = relative-to-absolute(value.ratio, styles, container-dimension)
+    let absolute-part = relative-to-absolute(value.length, container-dimension)
+    let ratio-part = relative-to-absolute(value.ratio, container-dimension)
     return absolute-part + ratio-part
   }
   if type(value) == length {
-    return value.abs + value.em * measure(line(length: 1em), styles).width
+    return value.to-absolute()
   }
   if type(value) == ratio {
     return value * container-dimension
@@ -157,14 +157,12 @@
   let native-labels = get-labels(manual-label-names, dot)
   let native-label-count = native-labels.len()
 
-	layout(((width: container-width, height: container-height)) => style(styles => {
-		let font-size = measure(line(length: 1em), styles).width
-
+	layout(((width: container-width, height: container-height)) => context {
 		let output = plugin.render(
-			encode-int(length-to-int(font-size)),
+			encode-int(length-to-int(text.size.to-absolute())),
 			bytes(dot),
-      encode-label-dimensions(styles, native-labels),
-      encode-label-dimensions(styles, manual-labels),
+      encode-label-dimensions(native-labels),
+      encode-label-dimensions(manual-labels),
       encode-string-array(manual-label-names),
 			bytes(engine),
 		)
@@ -207,19 +205,17 @@
     }
 
     // Get SVG dimensions.
-    let svg-width = int-to-length(decode-int(output.slice(0, integer-size)))
-    let svg-height = int-to-length(decode-int(output.slice(integer-size + 1, integer-size * 2)))
-		output = output.slice(integer-size * 2)
+    let (width: svg-width, height: svg-height) = measure(image.decode(output, format: "svg"))
 
 		let final-width = if width == auto {
       svg-width
     } else {
-      relative-to-absolute(width, styles, container-width)
+      relative-to-absolute(width, container-width)
     }
 		let final-height = if height == auto {
       svg-height
     } else {
-      relative-to-absolute(height, styles, container-height)
+      relative-to-absolute(height, container-height)
     }
 
     if width == auto and height != auto {
@@ -259,7 +255,7 @@
     // Place native labels.
 		for (label, coordinates) in native-labels.zip(native-label-coordinates) {
 			let (x, y) = coordinates
-			let label-dimensions = measure(label, styles)
+			let label-dimensions = measure(label)
 			place(
 				top + left,
 				dx: x - label-dimensions.width / 2,
@@ -270,7 +266,7 @@
 
     // Place manual labels.
     for (label, coordinate-set) in manual-labels.zip(manual-label-coordinate-sets) {
-      let label-dimensions = measure(label, styles)
+      let label-dimensions = measure(label)
       for (x, y) in coordinate-set {
         place(
           top + left,
@@ -280,5 +276,5 @@
         )
       }
     }
-	}))
+	})
 }
