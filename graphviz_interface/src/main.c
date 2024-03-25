@@ -1,6 +1,7 @@
 #include "emscripten.h"
 
 #include "protocol/protocol.h"
+#include "protocol/plugin.h"
 #include "utils/utils.h"
 #include "math/math.h"
 #include <graphviz/gvc.h>
