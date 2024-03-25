@@ -21,6 +21,7 @@ lt_symlist_t lt_preloaded_symbols[] = {
     {"gvplugin_core_LTX_library", &gvplugin_core_LTX_library},
     {0, 0}};
 
+
 #define INIT_BUFFER_UNPACK(buffer_len)                                                             \
     size_t __buffer_offset = 0;                                                                    \
     uint8_t *__input_buffer = malloc((buffer_len));                                                \
