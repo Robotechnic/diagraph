@@ -35,7 +35,7 @@ const char* greek_alphabet[] = {
  * @return true if the string is a greek letter
  */
 bool is_greek(const char *str, size_t len) {
-	for (int i = 0; i < 24; i++) {
+	for (int i = 0; i < sizeof(greek_alphabet) / sizeof(greek_alphabet[0]); i++) {
 		if (strncasecmp(str, greek_alphabet[i], len) == 0) {
 			return true;
 		}
@@ -54,9 +54,8 @@ bool is_number(char c) {
 bool is_math(const char *name) {
     bool was_identifier_character = false;
 	size_t identifier_length = 0;
-	size_t len = 0;
-    for (int i = 0; name[i]; i++) {
-		len++;
+	size_t len = strlen(name);
+    for (int i = 0; i < len; i++) {
         if (name[i] < 0) {
             // Non-ASCII characters are too complicated to handle properly.
             return false;

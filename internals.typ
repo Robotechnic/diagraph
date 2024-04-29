@@ -1,77 +1,6 @@
+#import "graphviz_interface/protocol.typ": *
 #let plugin = plugin("diagraph.wasm")
 
-
-#let double-precision = 1000
-
-#let length-to-int(value) = {
-  calc.round(value * double-precision / 1pt)
-}
-
-#let int-to-length(value) = {
-  value / double-precision * 1pt
-}
-
-
-/// Encodes a 32-bytes integer into big-endian bytes.
-#let encode-int(value) = {
-  bytes((
-    calc.rem(calc.quo(value, 0x1000000), 0x100),
-    calc.rem(calc.quo(value, 0x10000), 0x100),
-    calc.rem(calc.quo(value, 0x100), 0x100),
-    calc.rem(calc.quo(value, 0x1), 0x100),
-  ))
-}
-
-/// Decodes a big-endian integer from the given bytes.
-#let decode-int(bytes) = {
-  let result = 0
-  for byte in array(bytes) {
-    result = result * 256 + byte
-  }
-  return result
-}
-
-/// Encodes an array of integers into bytes.
-#let encode-int-array(arr) = {
-  bytes(
-    arr
-      .map(encode-int)
-      .map(array)
-      .flatten()
-  )
-}
-
-/// Encodes an array of strings into bytes.
-#let encode-string-array(strings) = {
-  bytes(strings.map(string => array(bytes(string)) + (0,)).flatten())
-}
-
-/// Transforms bytes into an array whose elements are all `bytes` with the
-/// specified length.
-#let group-bytes(buffer, group-len) = {
-  assert(calc.rem(buffer.len(), group-len) == 0)
-  array(buffer).fold((), (acc, x) => {
-    if acc.len() != 0 and acc.last().len() < group-len {
-      acc.last().push(x)
-      acc
-    } else {
-      acc + ((x,),)
-    }
-  }).map(bytes)
-}
-
-/// Group elements of the array in pairs.
-#let array-to-pairs(arr) = {
-  assert(calc.even(arr.len()))
-  arr.fold((), (acc, x) => {
-    if acc.len() != 0 and acc.last().len() < 2 {
-      acc.last().push(x)
-      acc
-    } else {
-      acc + ((x,),)
-    }
-  })
-}
 
 /// Converts a string containing escape sequences to content.
 #let parse-string(s) = {
@@ -108,38 +37,41 @@
 
 /// Get an array of evaluated labels from a graph.
 #let get-labels(manual-label-names, dot) = {
-  let encoded-labels = plugin.get_labels(
-    encode-int(manual-label-names.len()),
-    encode-string-array(manual-label-names),
-    bytes(dot),
-  )
-  let encoded-label-array = array(encoded-labels).split(0).slice(0, -1).map(bytes)
-  encoded-label-array.map(encoded-label => {
-    let mode = str(encoded-label.slice(0, 1))
-    let label-str = str(encoded-label.slice(1))
-    if mode == "t" {
-      parse-string(label-str)
-    } else if mode == "m" {
-      math.equation(eval(mode: "math", label-str))
+	let encoded-labels = plugin.get_labels(encode-overriddenLabels((
+		"labels": manual-label-names,
+		"dot": dot,
+	)))
+	let (labels, size) = decode-nativeLabels(encoded-labels)
+  labels.at("nativeLabels").map(encoded-label => {
+    if encoded-label.at("mathMode") {
+      math.equation(eval(mode: "math", encoded-label.at("label")))
     } else {
-      panic("Internal Diagraph error: Unsopported mode: `" + mode + "`")
+      parse-string(encoded-label.at("label"))
     }
   })
 }
 
 /// Encodes the dimensions of labels into bytes.
-#let encode-label-dimensions(labels) = {
-  encode-int-array(
-    labels
-      .map(label => {
-        let dimensions = measure(label)
-        (
-          length-to-int(dimensions.width),
-          length-to-int(dimensions.height),
-        )
-      })
-      .flatten()
-  )
+#let encode-label-dimensions(labels, labels-name: ()) = {
+	if labels-name == () {
+		labels.map(label => {
+			let dimensions = measure(label)
+			(
+				label: "",
+				width: dimensions.width / 1pt,
+				height: dimensions.height / 1pt,
+			)
+		})
+	} else {
+		labels.zip(labels-name).map((label) => {
+			let dimensions = measure(label.at(0))
+			(
+				label: label.at(1),
+				width: dimensions.width / 1pt,
+				height: dimensions.height / 1pt,
+			)
+		})
+	}
 }
 
 /// Converts any relative length to an absolute length.
@@ -156,6 +88,14 @@
     return value * container-dimension
   }
   panic("Expected relative length, found " + str(type(value)))
+}
+
+#let two-digits(n) = {
+	if n.len() == 1 {
+		"0" + n
+	} else {
+		n
+	}
 }
 
 /// Renders a graph with Graphviz.
@@ -186,19 +126,24 @@
   let manual-labels = labels.values()
   let manual-label-names = labels.keys()
   let manual-label-count = manual-labels.len()
-
   let native-labels = get-labels(manual-label-names, dot)
   let native-label-count = native-labels.len()
-
+	
 	layout(((width: container-width, height: container-height)) => context {
-		let output = plugin.render(
-			encode-int(length-to-int(text.size.to-absolute())),
-			bytes(dot),
-      encode-label-dimensions(native-labels),
-      encode-label-dimensions(manual-labels),
-      encode-string-array(manual-label-names),
-			bytes(engine),
-		)
+		// return (repr((
+		// 	"fontSize": text.size.to-absolute(),
+		// 	"dot": dot,
+		// 	"nativeLabels": encode-label-dimensions(native-labels),
+		// 	"manualLabels": encode-label-dimensions(manual-labels, labels-name: manual-label-names),
+		// 	"engine": engine,
+		// )))
+		let output = plugin.render(encode-renderGraph((
+			"fontSize": text.size.to-absolute(),
+			"dot": dot,
+			"nativeLabels": encode-label-dimensions(native-labels),
+			"manualLabels": encode-label-dimensions(manual-labels, labels-name: manual-label-names),
+			"engine": engine,
+		)))
 
 		if output.at(0) != 0 {
 			return {
@@ -208,37 +153,12 @@
 			}
 		}
 
-		let integer-size = output.at(1)
-		output = output.slice(2)
+		let output = decode-graphInfo(output).at(0)
 
-		// Get native label coordinates.
-		let native-label-coordinates-size = 2 * native-label-count * integer-size
-		let native-label-coordinates = array-to-pairs(
-      group-bytes(output.slice(0, native-label-coordinates-size), integer-size)
-      .map(decode-int)
-      .map(int-to-length)
-    )
-		output = output.slice(native-label-coordinates-size)
-
-    // Get manual label coordinates.
-    let manual-label-coordinate-sets = ()
-    for manual-label-index in range(manual-label-count) {
-      let coordinate-set = ()
-      let use-count = decode-int(output.slice(0, integer-size))
-      output = output.slice(integer-size)
-      for i in range(use-count) {
-        coordinate-set.push(
-          (output.slice(0, integer-size), output.slice(integer-size, 2 * integer-size))
-            .map(decode-int)
-            .map(int-to-length)
-        )
-        output = output.slice(integer-size * 2)
-      }
-      manual-label-coordinate-sets.push(coordinate-set)
-    }
+		// return [#repr(output)]
 
     // Get SVG dimensions.
-    let (width: svg-width, height: svg-height) = measure(image.decode(output, format: "svg"))
+    let (width: svg-width, height: svg-height) = measure(image.decode(output.at("svg"), format: "svg"))
 
 		let final-width = if width == auto {
       svg-width
@@ -258,9 +178,7 @@
       let ratio = final-width / svg-width
       final-height = svg-height * ratio
     }
-
 		// Rescale the final image to the desired size.
-
 		show: block.with(
       width: final-width,
       height: final-height,
@@ -281,35 +199,32 @@
 
     // Display SVG.
 		image.decode(
-			output,
+			output.at("svg"),
 			format: "svg",
 			width: svg-width,
 			height: svg-height,
 		)
 
     // Place native labels.
-		for (label, coordinates) in native-labels.zip(native-label-coordinates) {
-			let (x, y) = coordinates
+		for (label, coordinates) in native-labels.zip(output.at("nativeLabels")) {
 			let label-dimensions = measure(label)
 			place(
 				top + left,
-				dx: x - label-dimensions.width / 2,
-				dy: final-height - y - label-dimensions.height / 2 - (final-height - svg-height),
+				dx: coordinates.at("x") - label-dimensions.width / 2,
+				dy: final-height - coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
 				label,
 			)
 		}
 
     // Place manual labels.
-    for (label, coordinate-set) in manual-labels.zip(manual-label-coordinate-sets) {
-      let label-dimensions = measure(label)
-      for (x, y) in coordinate-set {
-        place(
-          top + left,
-          dx: x - label-dimensions.width / 2,
-          dy: final-height - y - label-dimensions.height / 2 - (final-height - svg-height),
-          label,
-        )
-      }
-    }
+		for (label, coordinates) in manual-labels.zip(output.at("manualLabels")) {
+			let label-dimensions = measure(label)
+			place(
+				top + left,
+				dx: coordinates.at("x") - label-dimensions.width / 2,
+				dy: final-height - coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
+				label,
+			)
+		}
 	})
 }

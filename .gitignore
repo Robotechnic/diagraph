@@ -59,6 +59,7 @@ graphviz_interface/expat-src/*
 graphviz_interface/install/*
 graphviz_interface/*.gz
 graphviz_interface/*.wasm
+graphviz_interface/build
 graphviz_interface/compile_commands.json
 
 diagraph/*
@@ -66,3 +67,7 @@ autosubmit.sh
 
 .vscode
 .idea
+*.tar.xz
+
+graphviz_interface/src/test
+graphviz_interface/CMakeLists.txt

@@ -3,7 +3,7 @@
 CC=emcc
 CONFIGURE=emconfigure
 EMMAKE=emmake
-SOURCES=$(wildcard src/*.c) $(wildcard src/*/*.c)
+SOURCES=src/main.c $(wildcard src/*/*.c)
 INSTALLDIR=$(shell pwd)/install
 SRCDIR=$(shell pwd)/graphiz-src
 EPSRCDIR=$(shell pwd)/expat-src
@@ -14,10 +14,13 @@ INCLUDE_FLAGS += $(GRAPHVIZ_INFO_INCLUDE)
 
 all: build
 
-build: $(SOURCES) | $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz
+build: $(SOURCES) $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz src/protocol/protocol.c
 	$(CC) $(CFLAGS) $(SOURCES) -o diagraph.wasm $(INCLUDE_FLAGS)
 	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./diagraph.wasm
 	mv ./"diagraph - stubbed.wasm" ../diagraph.wasm
+
+protocol src/protocol/protocol.c src/protocol/protocol.h: diagraph.prot
+	wasmpg diagraph.prot -t . -c src/protocol
 
 format:
 	clang-format -i -style=file src/*.c src/*/*.c src/*/*.h
@@ -26,11 +29,13 @@ clean:
 	rm -rf $(SRCDIR)
 	rm -rf $(EPSRCDIR)
 	rm -rf $(INSTALLDIR)
-	rm *.wasm || true
-	rm libexpat-src.tar.gz || true
-	rm graphviz-src.tar.gz || true
+	rm -f *.wasm \
+		  libexpat-src.tar.xz \
+		  graphviz-src.tar.gz \
+		  src/protocol/protocol.c \
+		  src/protocol/protocol.h
 
-$(INSTALLDIR)/lib/graphviz: $(SRCDIR) $(INSTALLDIR) | $(SRCDIR)/Makefile
+$(INSTALLDIR)/lib/graphviz: $(SRCDIR) $(INSTALLDIR) $(SRCDIR)/Makefile
 	cd $(SRCDIR)/lib && emmake make install -j16
 	cd $(SRCDIR)/plugin && emmake make install -j16
 
@@ -41,11 +46,13 @@ $(SRCDIR)/Makefile: | $(SRCDIR) $(INSTALLDIR) $(INSTALLDIR)/lib/libexpat.a
 		--enable-swig=no --enable-sharp=no --enable-go=no \
 		--enable-ocaml=no --enable-perl=no --enable-php=no \
 		--enable-python=no --enable-r=no --enable-ruby=no \
+		--disable-man-pdfs --disable-guile --diable-java \
+		--disable-tcl
 
 $(INSTALLDIR)/lib/libexpat.a: $(EPSRCDIR) $(INSTALLDIR) | $(EPSRCDIR)/Makefile
 	cd "$(EPSRCDIR)/lib" && emmake make all install -j16
 
-$(EPSRCDIR)/Makefile: | $(EPSRCDIR) $(INSTALLDIR)
+$(EPSRCDIR)/Makefile: | $(EPSRCDIR)/configure $(INSTALLDIR)
 	cd $(EPSRCDIR) && $(CONFIGURE) ./configure --prefix="$(INSTALLDIR)" \
 		--host=wasm32 --disable-shared CFLAGS="-Oz" CXXFLAGS="-Oz"
 
@@ -61,9 +68,9 @@ graphviz-src.tar.gz:
 	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/10.0.1/graphviz-10.0.1.tar.gz" -o graphviz-src.tar.gz
 
 # download and extract expat source
-$(EPSRCDIR): | libexpat-src.tar.gz
+$(EPSRCDIR) $(EPSRCDIR)/configure: | libexpat-src.tar.xz
 	mkdir -p $(EPSRCDIR)
-	tar xvzf libexpat-src.tar.gz -C $(EPSRCDIR) --strip=1
+	tar xf libexpat-src.tar.xz -C $(EPSRCDIR) --strip=1
 
-libexpat-src.tar.gz:
-	curl "https://netix.dl.sourceforge.net/project/expat/expat/2.5.0/expat-2.5.0.tar.gz" -o libexpat-src.tar.gz
+libexpat-src.tar.xz:
+	curl "https://netix.dl.sourceforge.net/project/expat/expat/2.6.2/expat-2.6.2.tar.xz" -o libexpat-src.tar.xz

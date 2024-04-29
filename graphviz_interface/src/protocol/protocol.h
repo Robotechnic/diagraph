@@ -1,13 +1,27 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
-#include "emscripten.h"
+#include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+#include "emscripten.h"
 
 #define PROTOCOL_FUNCTION __attribute__((import_module("typst_env"))) extern
 
 PROTOCOL_FUNCTION void wasm_minimal_protocol_send_result_to_host(const uint8_t *ptr, size_t len);
 PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
+
+union FloatBuffer {
+    float f;
+    int i;
+};
+
+void big_endian_encode(int value, uint8_t *buffer, int size);
+
+int big_endian_decode(uint8_t const *buffer, int size);
+
+#define TYPST_INT_SIZE 4
 
 #define INIT_BUFFER_UNPACK(buffer_len)                                                             \
     size_t __buffer_offset = 0;                                                                    \
@@ -17,32 +31,145 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
     }                                                                                              \
     wasm_minimal_protocol_write_args_to_buffer(__input_buffer);
 
-#define NEXT_SIZED_STR(dst, len)                                                                   \
-    memcpy((dst), __input_buffer + __buffer_offset, (len));                                        \
-    (dst)[(len)] = '\0';                                                                           \
-    __buffer_offset += (len);
+#define CHECK_BUFFER()                                                                             \
+	if (__buffer_offset >= buffer_len) {                                                           \
+		return 2;                                                                                  \
+	}
 
 #define NEXT_STR(dst)                                                                              \
+	CHECK_BUFFER()                                                                                 \
     {                                                                                              \
-        int __str_len = strlen((char *)__input_buffer + __buffer_offset);                          \
-        (dst) = malloc(__str_len + 1);                                                             \
-        strcpy((dst), (char *)__input_buffer + __buffer_offset);                                   \
-        __buffer_offset += __str_len + 1;                                                          \
+		if (__input_buffer[__buffer_offset] == '\0') {                                            \
+			(dst) = malloc(1);                                                                     \
+			if (!(dst)) {                                                                          \
+				return 1;                                                                          \
+			}                                                                                      \
+			(dst)[0] = '\0';                                                                      \
+			__buffer_offset++;                                                                     \
+		} else {                                                                                   \
+			int __str_len = strlen((char *)__input_buffer + __buffer_offset);                      \
+			(dst) = malloc(__str_len + 1);                                                         \
+			if (!(dst)) {                                                                          \
+				return 1;                                                                          \
+			}                                                                                      \
+			strcpy((dst), (char *)__input_buffer + __buffer_offset);                               \
+			__buffer_offset += __str_len + 1;                                                      \
+		}                                                                                          \
     }
 
 #define NEXT_INT(dst)                                                                              \
+	CHECK_BUFFER()                                                                                 \
     (dst) = big_endian_decode(__input_buffer + __buffer_offset, TYPST_INT_SIZE);                   \
     __buffer_offset += TYPST_INT_SIZE;
 
-#define NEXT_DOUBLE(dst)                                                                           \
+#define NEXT_CHAR(dst)                                                                             \
+	CHECK_BUFFER()                                                                                 \
+    (dst) = __input_buffer[__buffer_offset++];
+
+#define NEXT_FLOAT(dst)                                                                            \
+	CHECK_BUFFER()                                                                                 \
     {                                                                                              \
         int __encoded_value;                                                                       \
         NEXT_INT(__encoded_value);                                                                 \
-        (dst) = ((double)__encoded_value) / DOUBLE_PRECISION;                                      \
+        union FloatBuffer __float_buffer;                                                          \
+        __float_buffer.i = __encoded_value;                                                        \
+        (dst) = __float_buffer.f;                                                                  \
     }
-
+    
 #define FREE_BUFFER()                                                                              \
     free(__input_buffer);                                                                          \
     __input_buffer = NULL;
 
-#endif // PROTOCOL_H
+#define INIT_BUFFER_PACK(buffer_len)                                                               \
+    size_t __buffer_offset = 0;                                                                    \
+    uint8_t *__input_buffer = calloc((buffer_len), 1);                                             \
+    if (!__input_buffer) {                                                                         \
+        return 1;                                                                                  \
+    }
+
+#define FLOAT_PACK(fp)                                                                             \
+    {                                                                                              \
+		if (fp == 0.0f) {  																	       \
+			big_endian_encode(0, __input_buffer + __buffer_offset, TYPST_INT_SIZE);                \
+		} else {                                                                                   \
+			union FloatBuffer __float_buffer;                                                      \
+			__float_buffer.f = (fp);                                                               \
+			big_endian_encode(__float_buffer.i, __input_buffer + __buffer_offset, TYPST_INT_SIZE); \
+		}                                                                                          \
+		__buffer_offset += TYPST_INT_SIZE;                                                         \
+	}
+
+#define INT_PACK(i)                                                                                \
+    big_endian_encode((i), __input_buffer + __buffer_offset, TYPST_INT_SIZE);                      \
+    __buffer_offset += TYPST_INT_SIZE;
+
+#define CHAR_PACK(c)                                                                               \
+    __input_buffer[__buffer_offset++] = (c);
+
+#define STR_PACK(s)                                                                                \
+    if (s == NULL || s[0] == '\0') {                                                               \
+        __input_buffer[__buffer_offset++] = '\0';                                                 \
+    } else {                                                                                       \
+        strcpy((char *)__input_buffer + __buffer_offset, (s));                                     \
+        size_t __str_len = strlen((s));                                                            \
+        __input_buffer[__buffer_offset + __str_len] = '\0';                                       \
+        __buffer_offset += __str_len + 1;                                                          \
+    }
+typedef struct {
+    char* label;
+    bool mathMode;
+} NativeLabel;
+void free_NativeLabel(NativeLabel *s);
+
+typedef struct {
+    char* label;
+    float width;
+    float height;
+} SizedLabel;
+void free_SizedLabel(SizedLabel *s);
+
+typedef struct {
+    float x;
+    float y;
+} Coordinates;
+void free_Coordinates(Coordinates *s);
+
+typedef struct {
+    char* * labels;
+    size_t labels_len;
+    char* dot;
+} overriddenLabels;
+void free_overriddenLabels(overriddenLabels *s);
+int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
+
+typedef struct {
+    bool error;
+    Coordinates * manualLabels;
+    size_t manualLabels_len;
+    Coordinates * nativeLabels;
+    size_t nativeLabels_len;
+    char* svg;
+} graphInfo;
+void free_graphInfo(graphInfo *s);
+int encode_graphInfo(const graphInfo *s);
+
+typedef struct {
+    float fontSize;
+    char* dot;
+    SizedLabel * nativeLabels;
+    size_t nativeLabels_len;
+    SizedLabel * manualLabels;
+    size_t manualLabels_len;
+    char* engine;
+} renderGraph;
+void free_renderGraph(renderGraph *s);
+int decode_renderGraph(size_t buffer_len, renderGraph *out);
+
+typedef struct {
+    NativeLabel * nativeLabels;
+    size_t nativeLabels_len;
+} nativeLabels;
+void free_nativeLabels(nativeLabels *s);
+int encode_nativeLabels(const nativeLabels *s);
+
+#endif
