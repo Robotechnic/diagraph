@@ -9,6 +9,7 @@ struct NativeLabel {
 	bool mathMode;
 }
 
+
 protocol Typst nativeLabels{
 	NativeLabel nativeLabels[];
 }
@@ -28,14 +29,18 @@ protocol C renderGraph {
 	string engine;
 }
 
-struct Coordinates {
+struct LabelInfo {
 	point x;
 	point y;
+	
+	int color;
+	string fontName;
+	point fontSize;
 }
 
 protocol Typst graphInfo {
 	bool error;
-	Coordinates manualLabels[];
-	Coordinates nativeLabels[];
+	LabelInfo manualLabels[];
+	LabelInfo nativeLabels[];
 	string svg;
 }

@@ -10,6 +10,7 @@
 #endif
 #include "protocol/protocol.h"
 
+#include "color/color.h"
 #include "math/math.h"
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin.h>
@@ -218,7 +219,7 @@ void override_native_labels(graph_t *g, const renderGraph *renderInfo, bool *is_
 /**
  * Encodes the position of considered labels in the output buffer.
  */
-void get_label_positions(graph_t *g, double pad, const bool *consider, Coordinates *output) {
+void get_label_info(graph_t *g, double pad, const bool *consider, LabelInfo *output) {
     int label_index = 0;
     int considered_count = 0;
 
@@ -226,6 +227,15 @@ void get_label_positions(graph_t *g, double pad, const bool *consider, Coordinat
         if (consider[label_index]) {
             output[considered_count].x = (float)ND_coord(n).x + pad;
             output[considered_count].y = (float)ND_coord(n).y + pad;
+            output[considered_count].color = color_to_int(agget(n, "fontcolor"));
+            output[considered_count].fontSize = atof(agget(n, "fontsize"));
+			char* fn = agget(n, "fontname");
+			if (fn) {
+				output[considered_count].fontName = malloc(strlen(fn) + 1);
+				strcpy(output[considered_count].fontName, fn);
+			} else {
+				output[considered_count].fontName = NULL;
+			}
             considered_count++;
         }
         label_index++;
@@ -274,14 +284,14 @@ int render(size_t buffer_len) {
           renderInfo.manualLabels_len);
 
     g_render.nativeLabels_len = renderInfo.nativeLabels_len;
-    g_render.nativeLabels = calloc(g_render.nativeLabels_len, sizeof(Coordinates));
+    g_render.nativeLabels = calloc(g_render.nativeLabels_len, sizeof(LabelInfo));
     if (!g_render.nativeLabels) {
         ERROR("Failed to allocate memory for native labels");
         free_renderGraph(&renderInfo);
         return 1;
     }
     g_render.manualLabels_len = renderInfo.manualLabels_len;
-    g_render.manualLabels = calloc(g_render.manualLabels_len, sizeof(Coordinates));
+    g_render.manualLabels = calloc(g_render.manualLabels_len, sizeof(LabelInfo));
     if (!g_render.manualLabels) {
         ERROR("Failed to allocate memory for manual labels");
         free_renderGraph(&renderInfo);
@@ -364,13 +374,13 @@ int render(size_t buffer_len) {
     }
 
     // Get native label positions.
-    get_label_positions(g, pad, is_native_label_overridden, g_render.nativeLabels);
+    get_label_info(g, pad, is_native_label_overridden, g_render.nativeLabels);
 
     // Get manual label positions.
     for (int i = 0; i < total_label_count; i++) {
         is_native_label_overridden[i] = !is_native_label_overridden[i];
     }
-    get_label_positions(g, pad, is_native_label_overridden, g_render.manualLabels);
+    get_label_info(g, pad, is_native_label_overridden, g_render.manualLabels);
 
     agclose(g);
     gvFinalize(gvc);

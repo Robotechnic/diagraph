@@ -90,12 +90,11 @@
   panic("Expected relative length, found " + str(type(value)))
 }
 
-#let two-digits(n) = {
-	if n.len() == 1 {
-		"0" + n
-	} else {
-		n
-	}
+#let int-to-string(n, digits, base: 10) = {
+	let n-str = str(n, base: base)
+	let n-len = n-str.len()
+	let zeros = "0" * (digits - n-len)
+	zeros + n-str
 }
 
 /// Renders a graph with Graphviz.
@@ -212,7 +211,7 @@
 				top + left,
 				dx: coordinates.at("x") - label-dimensions.width / 2,
 				dy: final-height - coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
-				label,
+				text(fill: rgb(int-to-string(coordinates.at("color"), 8, base: 16)))[#label],
 			)
 		}
 

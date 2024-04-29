@@ -70,4 +70,5 @@ autosubmit.sh
 *.tar.xz
 
 graphviz_interface/src/test
+graphviz_interface/src/test.c
 graphviz_interface/CMakeLists.txt
