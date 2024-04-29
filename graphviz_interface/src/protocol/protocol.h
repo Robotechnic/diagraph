@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 #include "emscripten.h"
 
 #define PROTOCOL_FUNCTION __attribute__((import_module("typst_env"))) extern
@@ -12,14 +13,6 @@
 PROTOCOL_FUNCTION void wasm_minimal_protocol_send_result_to_host(const uint8_t *ptr, size_t len);
 PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
 
-union FloatBuffer {
-    float f;
-    int i;
-};
-
-void big_endian_encode(int value, uint8_t *buffer, int size);
-
-int big_endian_decode(uint8_t const *buffer, int size);
 
 #define TYPST_INT_SIZE 4
 
@@ -68,13 +61,8 @@ int big_endian_decode(uint8_t const *buffer, int size);
 
 #define NEXT_FLOAT(dst)                                                                            \
 	CHECK_BUFFER()                                                                                 \
-    {                                                                                              \
-        int __encoded_value;                                                                       \
-        NEXT_INT(__encoded_value);                                                                 \
-        union FloatBuffer __float_buffer;                                                          \
-        __float_buffer.i = __encoded_value;                                                        \
-        (dst) = __float_buffer.f;                                                                  \
-    }
+    (dst) = decode_float(__input_buffer + __buffer_offset);                                        \
+	__buffer_offset += TYPST_INT_SIZE;
     
 #define FREE_BUFFER()                                                                              \
     free(__input_buffer);                                                                          \
@@ -82,7 +70,7 @@ int big_endian_decode(uint8_t const *buffer, int size);
 
 #define INIT_BUFFER_PACK(buffer_len)                                                               \
     size_t __buffer_offset = 0;                                                                    \
-    uint8_t *__input_buffer = calloc((buffer_len), 1);                                             \
+    uint8_t *__input_buffer = malloc((buffer_len));                                                \
     if (!__input_buffer) {                                                                         \
         return 1;                                                                                  \
     }
@@ -92,7 +80,10 @@ int big_endian_decode(uint8_t const *buffer, int size);
 		if (fp == 0.0f) {  																	       \
 			big_endian_encode(0, __input_buffer + __buffer_offset, TYPST_INT_SIZE);                \
 		} else {                                                                                   \
-			union FloatBuffer __float_buffer;                                                      \
+			union FloatBuffer { 																   \
+				float f;   																	       \
+				int i;   																	       \
+			} __float_buffer;                                                                      \
 			__float_buffer.f = (fp);                                                               \
 			big_endian_encode(__float_buffer.i, __input_buffer + __buffer_offset, TYPST_INT_SIZE); \
 		}                                                                                          \
@@ -107,7 +98,7 @@ int big_endian_decode(uint8_t const *buffer, int size);
     __input_buffer[__buffer_offset++] = (c);
 
 #define STR_PACK(s)                                                                                \
-    if (s == NULL || s[0] == '\0') {                                                               \
+    if (s == NULL || s[0] == '\0') {                                                              \
         __input_buffer[__buffer_offset++] = '\0';                                                 \
     } else {                                                                                       \
         strcpy((char *)__input_buffer + __buffer_offset, (s));                                     \
@@ -117,22 +108,25 @@ int big_endian_decode(uint8_t const *buffer, int size);
     }
 typedef struct {
     char* label;
-    bool mathMode;
-} NativeLabel;
-void free_NativeLabel(NativeLabel *s);
-
-typedef struct {
-    char* label;
     float width;
     float height;
 } SizedLabel;
 void free_SizedLabel(SizedLabel *s);
 
 typedef struct {
+    char* label;
+    bool mathMode;
+} NativeLabel;
+void free_NativeLabel(NativeLabel *s);
+
+typedef struct {
     float x;
     float y;
-} Coordinates;
-void free_Coordinates(Coordinates *s);
+    int color;
+    char* fontName;
+    float fontSize;
+} LabelInfo;
+void free_LabelInfo(LabelInfo *s);
 
 typedef struct {
     char* * labels;
@@ -143,15 +137,11 @@ void free_overriddenLabels(overriddenLabels *s);
 int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
-    bool error;
-    Coordinates * manualLabels;
-    size_t manualLabels_len;
-    Coordinates * nativeLabels;
+    NativeLabel * nativeLabels;
     size_t nativeLabels_len;
-    char* svg;
-} graphInfo;
-void free_graphInfo(graphInfo *s);
-int encode_graphInfo(const graphInfo *s);
+} nativeLabels;
+void free_nativeLabels(nativeLabels *s);
+int encode_nativeLabels(const nativeLabels *s);
 
 typedef struct {
     float fontSize;
@@ -166,10 +156,14 @@ void free_renderGraph(renderGraph *s);
 int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 typedef struct {
-    NativeLabel * nativeLabels;
+    bool error;
+    LabelInfo * manualLabels;
+    size_t manualLabels_len;
+    LabelInfo * nativeLabels;
     size_t nativeLabels_len;
-} nativeLabels;
-void free_nativeLabels(nativeLabels *s);
-int encode_nativeLabels(const nativeLabels *s);
+    char* svg;
+} graphInfo;
+void free_graphInfo(graphInfo *s);
+int encode_graphInfo(const graphInfo *s);
 
 #endif
