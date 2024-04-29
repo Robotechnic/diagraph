@@ -1,0 +1,41 @@
+// Those two protocols allow to get the labels that are not overridden by the user
+protocol C overriddenLabels {
+	string labels[];
+	string dot;
+}
+
+struct NativeLabel {
+	string label;
+	bool mathMode;
+}
+
+protocol Typst nativeLabels{
+	NativeLabel nativeLabels[];
+}
+
+// Those two protocols allow to ask the engine to render a graph and get the svg back
+struct SizedLabel {
+	string label;
+	float width;
+	float height;
+}
+
+protocol C renderGraph {
+	point fontSize;
+	string dot;
+	SizedLabel nativeLabels[];
+	SizedLabel manualLabels[];
+	string engine;
+}
+
+struct Coordinates {
+	point x;
+	point y;
+}
+
+protocol Typst graphInfo {
+	bool error;
+	Coordinates manualLabels[];
+	Coordinates nativeLabels[];
+	string svg;
+}
