@@ -212,14 +212,6 @@
 #let encode-overriddenLabels(value) = {
   encode-list(value.at("labels"), encode-string) + encode-string(value.at("dot"))
 }
-#let decode-nativeLabels(bytes) = {
-  let offset = 0
-  let (f_nativeLabels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NativeLabel)
-  offset += size
-  ((
-    nativeLabels: f_nativeLabels,
-  ), offset)
-}
 #let encode-renderGraph(value) = {
   encode-point(value.at("fontSize")) + encode-string(value.at("dot")) + encode-list(value.at("nativeLabels"), encode-SizedLabel) + encode-list(value.at("manualLabels"), encode-SizedLabel) + encode-string(value.at("engine"))
 }
@@ -238,5 +230,13 @@
     manualLabels: f_manualLabels,
     nativeLabels: f_nativeLabels,
     svg: f_svg,
+  ), offset)
+}
+#let decode-nativeLabels(bytes) = {
+  let offset = 0
+  let (f_nativeLabels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NativeLabel)
+  offset += size
+  ((
+    nativeLabels: f_nativeLabels,
   ), offset)
 }

@@ -137,13 +137,6 @@ void free_overriddenLabels(overriddenLabels *s);
 int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
-    NativeLabel * nativeLabels;
-    size_t nativeLabels_len;
-} nativeLabels;
-void free_nativeLabels(nativeLabels *s);
-int encode_nativeLabels(const nativeLabels *s);
-
-typedef struct {
     float fontSize;
     char* dot;
     SizedLabel * nativeLabels;
@@ -165,5 +158,12 @@ typedef struct {
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
+
+typedef struct {
+    NativeLabel * nativeLabels;
+    size_t nativeLabels_len;
+} nativeLabels;
+void free_nativeLabels(nativeLabels *s);
+int encode_nativeLabels(const nativeLabels *s);
 
 #endif
