@@ -149,30 +149,6 @@ int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out) {
     FREE_BUFFER()
     return 0;
 }
-void free_nativeLabels(nativeLabels *s) {
-    for (size_t i = 0; i < s->nativeLabels_len; i++) {
-    free_NativeLabel(&s->nativeLabels[i]);
-    }
-    free(s->nativeLabels);
-}
-size_t nativeLabels_size(const void *s){
-	return TYPST_INT_SIZE + list_size(((nativeLabels*)s)->nativeLabels, ((nativeLabels*)s)->nativeLabels_len, NativeLabel_size, sizeof(*((nativeLabels*)s)->nativeLabels));
-}
-int encode_nativeLabels(const nativeLabels *s) {
-    size_t buffer_len = nativeLabels_size(s);
-    INIT_BUFFER_PACK(buffer_len)
-    int err;
-	(void)err;
-    INT_PACK(s->nativeLabels_len)
-    for (size_t i = 0; i < s->nativeLabels_len; i++) {
-        if ((err = encode_NativeLabel(&s->nativeLabels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-
-    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
-    return 0;
-}
 void free_renderGraph(renderGraph *s) {
     if (s->dot) {
         free(s->dot);
@@ -258,6 +234,30 @@ int encode_graphInfo(const graphInfo *s) {
         }
     }
     STR_PACK(s->svg)
+
+    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
+    return 0;
+}
+void free_nativeLabels(nativeLabels *s) {
+    for (size_t i = 0; i < s->nativeLabels_len; i++) {
+    free_NativeLabel(&s->nativeLabels[i]);
+    }
+    free(s->nativeLabels);
+}
+size_t nativeLabels_size(const void *s){
+	return TYPST_INT_SIZE + list_size(((nativeLabels*)s)->nativeLabels, ((nativeLabels*)s)->nativeLabels_len, NativeLabel_size, sizeof(*((nativeLabels*)s)->nativeLabels));
+}
+int encode_nativeLabels(const nativeLabels *s) {
+    size_t buffer_len = nativeLabels_size(s);
+    INIT_BUFFER_PACK(buffer_len)
+    int err;
+	(void)err;
+    INT_PACK(s->nativeLabels_len)
+    for (size_t i = 0; i < s->nativeLabels_len; i++) {
+        if ((err = encode_NativeLabel(&s->nativeLabels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
+    }
 
     wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
     return 0;
