@@ -122,12 +122,14 @@
   /// default), the background will be transparent.
   background: none,
 ) = {
+  set math.equation(numbering: none)
+
   let manual-labels = labels.values()
   let manual-label-names = labels.keys()
   let manual-label-count = manual-labels.len()
   let native-labels = get-labels(manual-label-names, dot)
   let native-label-count = native-labels.len()
-	
+
 	layout(((width: container-width, height: container-height)) => context {
 		// return (repr((
 		// 	"fontSize": text.size.to-absolute(),
