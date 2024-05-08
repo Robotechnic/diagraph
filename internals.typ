@@ -35,43 +35,67 @@
   result + align(center, row)
 }
 
+/// Convert a number to a string with a fixed number of digits.
+/// The number is padded with zeros on the left if necessary.
+#let int-to-string(n, digits, base: 10) = {
+	let n-str = str(n, base: base)
+	let n-len = n-str.len()
+	let zeros = "0" * (digits - n-len)
+	zeros + n-str
+}
+
 /// Get an array of evaluated labels from a graph.
 #let get-labels(manual-label-names, dot) = {
 	let encoded-labels = plugin.get_labels(encode-overriddenLabels((
 		"labels": manual-label-names,
 		"dot": dot,
 	)))
-	let (labels, size) = decode-nativeLabels(encoded-labels)
-  labels.at("nativeLabels").map(encoded-label => {
-    if encoded-label.at("mathMode") {
-      math.equation(eval(mode: "math", encoded-label.at("label")))
-    } else {
-      parse-string(encoded-label.at("label"))
-    }
+	let (labels, _) = decode-LabelsInfos(encoded-labels)
+  labels.at("labels").map(encoded-label => {
+		let label = ""
+		if encoded-label.at("native") {
+			label = if encoded-label.at("mathMode") {
+					math.equation(eval(mode: "math", encoded-label.at("label")))
+				} else {
+					parse-string(encoded-label.at("label"))
+				}
+		}
+		(
+			..encoded-label,
+			label: label,
+		)
   })
 }
 
+/// Return a formatted label based on its color, font and content.
+#let label-format(color, font, fontsize, label) = [
+	#set text(fill: rgb(int-to-string(color, 8, base: 16)))
+	#set text(size: fontsize) if fontsize != 0
+	#set text(font: font) if font != ""
+	#label
+]
+
 /// Encodes the dimensions of labels into bytes.
-#let encode-label-dimensions(labels, labels-name: ()) = {
-	if labels-name == () {
-		labels.map(label => {
-			let dimensions = measure(label)
+#let encode-label-dimensions(labels, overriden-labels) = {
+	labels.map(label => {
+		if label.at("native") {
+			let dimensions = measure(label-format(label.at("color"), label.at("fontName"), label.at("fontSize"), label.at("label")))
 			(
 				label: "",
+				native: true,
 				width: dimensions.width / 1pt,
 				height: dimensions.height / 1pt,
 			)
-		})
-	} else {
-		labels.zip(labels-name).map((label) => {
-			let dimensions = measure(label.at(0))
+		} else {
+			let dimensions = measure(overriden-labels.at(label.at("label")))
 			(
-				label: label.at(1),
+				label: label.at("label"),
+				native: false,
 				width: dimensions.width / 1pt,
 				height: dimensions.height / 1pt,
 			)
-		})
-	}
+		}
+	})
 }
 
 /// Converts any relative length to an absolute length.
@@ -88,13 +112,6 @@
     return value * container-dimension
   }
   panic("Expected relative length, found " + str(type(value)))
-}
-
-#let int-to-string(n, digits, base: 10) = {
-	let n-str = str(n, base: base)
-	let n-len = n-str.len()
-	let zeros = "0" * (digits - n-len)
-	zeros + n-str
 }
 
 /// Renders a graph with Graphviz.
@@ -122,25 +139,16 @@
   /// default), the background will be transparent.
   background: none,
 ) = {
-  let manual-labels = labels.values()
   let manual-label-names = labels.keys()
-  let manual-label-count = manual-labels.len()
-  let native-labels = get-labels(manual-label-names, dot)
-  let native-label-count = native-labels.len()
+  let labels-infos = get-labels(manual-label-names, dot)
+	// return [#repr(labels-infos)]
+  let labels-info-count = labels-infos.len()
 	
 	layout(((width: container-width, height: container-height)) => context {
-		// return (repr((
-		// 	"fontSize": text.size.to-absolute(),
-		// 	"dot": dot,
-		// 	"nativeLabels": encode-label-dimensions(native-labels),
-		// 	"manualLabels": encode-label-dimensions(manual-labels, labels-name: manual-label-names),
-		// 	"engine": engine,
-		// )))
 		let output = plugin.render(encode-renderGraph((
 			"fontSize": text.size.to-absolute(),
 			"dot": dot,
-			"nativeLabels": encode-label-dimensions(native-labels),
-			"manualLabels": encode-label-dimensions(manual-labels, labels-name: manual-label-names),
+			"labels": encode-label-dimensions(labels-infos, labels),
 			"engine": engine,
 		)))
 
@@ -204,25 +212,20 @@
 			height: svg-height,
 		)
 
-    // Place native labels.
-		for (label, coordinates) in native-labels.zip(output.at("nativeLabels")) {
+    // Place labels.
+		for (label-infos, label-coordinates) in labels-infos.zip(output.at("labels")) {
+			let label = if label-infos.at("native") {
+				label-infos.at("label")
+			} else {
+				labels.at(label-infos.at("label"))
+			}
+			label = label-format(label-infos.at("color"), label-infos.at("fontName"), label-infos.at("fontSize"), label)
 			let label-dimensions = measure(label)
 			place(
 				top + left,
-				dx: coordinates.at("x") - label-dimensions.width / 2,
-				dy: final-height - coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
-				text(fill: rgb(int-to-string(coordinates.at("color"), 8, base: 16)))[#label],
-			)
-		}
-
-    // Place manual labels.
-		for (label, coordinates) in manual-labels.zip(output.at("manualLabels")) {
-			let label-dimensions = measure(label)
-			place(
-				top + left,
-				dx: coordinates.at("x") - label-dimensions.width / 2,
-				dy: final-height - coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
-				label,
+				dx: label-coordinates.at("x") - label-dimensions.width / 2,
+				dy: final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
+				label
 			)
 		}
 	})
