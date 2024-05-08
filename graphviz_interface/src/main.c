@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 char errBuff[1024];
 int vizErrorf(char *str) {
     char *intro = "\1Diagraph error: ";
@@ -68,16 +67,16 @@ int get_labels(size_t buffer_len) {
     }
 
 #ifdef TEST
-        GVC_t *gvc = gvContext();
+    GVC_t *gvc = gvContext();
 #else
-        GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
+    GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
 #endif
     graph_t *g = agmemread(labels.dot);
 
     if (!g) {
         free_overriddenLabels(&labels);
         gvFinalize(gvc);
-		gvFreeContext(gvc);
+        gvFreeContext(gvc);
 
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 1;
@@ -103,53 +102,63 @@ int get_labels(size_t buffer_len) {
         for (int i = 0; i < labels.labels_len; i++) {
             if (strcmp(labels.labels[i], name) == 0) {
                 is_manually_overridden = true;
-				break;
+                break;
             }
         }
 
         const char *label = agget(n, "label");
-        if (!aghtmlstr(label)) {
-            // If there is no explicitely set label for a node, so Graphviz intuitively sets its
-            // "label" attribute to "\\N".
-            bool has_label = strcmp(label, "\\N") != 0;
-            if (!has_label) {
-                label = agnameof(n);
-            }
-            nLabels.labels[label_index].label = malloc(strlen(label) + 1);
-            if (!nLabels.labels[label_index].label) {
-                ERROR("Failed to allocate memory for native labels");
-                free_overriddenLabels(&labels);
-                free_LabelsInfos(&nLabels);
-                gvFreeLayout(gvc, g);
-                agclose(g);
-                return 1;
-            }
-            strcpy(nLabels.labels[label_index].label, label);
-            nLabels.labels[label_index].label[strlen(label)] = '\0';
-            nLabels.labels[label_index].mathMode = !has_label && is_math(label);
-        } else {
-            nLabels.labels[label_index].label = malloc(strlen(name) + 1);
-			if (!nLabels.labels[label_index].label) {
-				ERROR("Failed to allocate memory for label name");
-				free_overriddenLabels(&labels);
-				free_LabelsInfos(&nLabels);
-				gvFreeLayout(gvc, g);
-				agclose(g);
-				return 1;
-			}
-			strcpy(nLabels.labels[label_index].label, name);
-			nLabels.labels[label_index].label[strlen(name)] = '\0';
+        if (aghtmlstr(label)) {
+            nLabels.labels[label_index].html = true;
+            nLabels.labels[label_index].label = NULL;
             nLabels.labels[label_index].mathMode = false;
-        }
-		nLabels.labels[label_index].native = !is_manually_overridden;
-        nLabels.labels[label_index].color = color_to_int(agget(n, "fontcolor"));
-        nLabels.labels[label_index].fontSize = atof(agget(n, "fontsize"));
-        char *fn = agget(n, "fontname");
-        if (fn) {
-            nLabels.labels[label_index].fontName = malloc(strlen(fn) + 1);
-            strcpy(nLabels.labels[label_index].fontName, fn);
-        } else {
+            nLabels.labels[label_index].fontSize = 0;
             nLabels.labels[label_index].fontName = NULL;
+
+        } else {
+            nLabels.labels[label_index].html = false;
+            if (!is_manually_overridden) {
+                // If there is no explicitely set label for a node, so Graphviz intuitively sets its
+                // "label" attribute to "\\N".
+                bool has_label = strcmp(label, "\\N") != 0;
+                if (!has_label) {
+                    label = agnameof(n);
+                }
+                nLabels.labels[label_index].label = malloc(strlen(label) + 1);
+                if (!nLabels.labels[label_index].label) {
+                    ERROR("Failed to allocate memory for native labels");
+                    free_overriddenLabels(&labels);
+                    free_LabelsInfos(&nLabels);
+                    gvFreeLayout(gvc, g);
+                    agclose(g);
+                    return 1;
+                }
+                strcpy(nLabels.labels[label_index].label, label);
+                nLabels.labels[label_index].label[strlen(label)] = '\0';
+                nLabels.labels[label_index].mathMode = !has_label && is_math(label);
+            } else {
+                nLabels.labels[label_index].label = malloc(strlen(name) + 1);
+                if (!nLabels.labels[label_index].label) {
+                    ERROR("Failed to allocate memory for label name");
+                    free_overriddenLabels(&labels);
+                    free_LabelsInfos(&nLabels);
+                    gvFreeLayout(gvc, g);
+                    agclose(g);
+                    return 1;
+                }
+                strcpy(nLabels.labels[label_index].label, name);
+                nLabels.labels[label_index].label[strlen(name)] = '\0';
+                nLabels.labels[label_index].mathMode = false;
+            }
+            nLabels.labels[label_index].native = !is_manually_overridden;
+            nLabels.labels[label_index].color = color_to_int(agget(n, "fontcolor"));
+            nLabels.labels[label_index].fontSize = atof(agget(n, "fontsize"));
+            char *fn = agget(n, "fontname");
+            if (fn) {
+                nLabels.labels[label_index].fontName = malloc(strlen(fn) + 1);
+                strcpy(nLabels.labels[label_index].fontName, fn);
+            } else {
+                nLabels.labels[label_index].fontName = NULL;
+            }
         }
         label_index++;
     }
@@ -195,9 +204,11 @@ void override_labels(graph_t *g, const renderGraph *renderInfo) {
     int label_index = 0;
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-        agset(n, "label",
-              create_label_for_dimension(g, renderInfo->labels[label_index].width,
-                                         renderInfo->labels[label_index].height));
+        if (renderInfo->labels[label_index].override) {
+            agset(n, "label",
+                  create_label_for_dimension(g, renderInfo->labels[label_index].width,
+                                             renderInfo->labels[label_index].height));
+        }
         label_index++;
     }
 }
@@ -209,8 +220,8 @@ void get_label_coordinates(graph_t *g, double pad, Coordinates *output) {
     int label_index = 0;
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-		output[label_index].x = (float)ND_coord(n).x + pad;
-		output[label_index].y = (float)ND_coord(n).y + pad;
+        output[label_index].x = (float)ND_coord(n).x + pad;
+        output[label_index].y = (float)ND_coord(n).y + pad;
         label_index++;
     }
 }
@@ -267,11 +278,11 @@ int render(size_t buffer_len) {
     agattr(NULL, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
 
 #ifdef TEST
-        GVC_t *gvc = gvContext();
+    GVC_t *gvc = gvContext();
 #else
-        GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
+    GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
 #endif
-    
+
     graph_t *g = agmemread(renderInfo.dot);
 
     if (!g) {
@@ -336,12 +347,12 @@ int render(size_t buffer_len) {
 
     agclose(g);
     gvFinalize(gvc);
-	free_renderGraph(&renderInfo);
+    free_renderGraph(&renderInfo);
 
     // Generate output.
     if ((res = encode_graphInfo(&g_render))) {
         free_graphInfo(&g_render);
-		
+
         if (res == 1) {
             ERROR("Failed to allocate memory for graph info");
         } else if (res == 2) {

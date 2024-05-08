@@ -52,13 +52,14 @@
 	)))
 	let (labels, _) = decode-LabelsInfos(encoded-labels)
   labels.at("labels").map(encoded-label => {
-		let label = ""
-		if encoded-label.at("native") {
-			label = if encoded-label.at("mathMode") {
-					math.equation(eval(mode: "math", encoded-label.at("label")))
-				} else {
-					parse-string(encoded-label.at("label"))
-				}
+		let label = if encoded-label.at("native") {
+			if encoded-label.at("mathMode") {
+				math.equation(eval(mode: "math", encoded-label.at("label")))
+			} else {
+				parse-string(encoded-label.at("label"))
+			}
+		} else {
+			encoded-label.at("label")
 		}
 		(
 			..encoded-label,
@@ -70,27 +71,31 @@
 /// Return a formatted label based on its color, font and content.
 #let label-format(color, font, fontsize, label) = [
 	#set text(fill: rgb(int-to-string(color, 8, base: 16)))
-	#set text(size: fontsize) if fontsize != 0
+	#set text(size: fontsize) if fontsize.pt() != 0
 	#set text(font: font) if font != ""
-	#label
+	#text(label)
 ]
 
 /// Encodes the dimensions of labels into bytes.
 #let encode-label-dimensions(labels, overriden-labels) = {
 	labels.map(label => {
-		if label.at("native") {
+		if label.at("html") {
+			(
+				override: false,
+				width: 0,
+				height: 0,
+			)
+		} else if label.at("native") {
 			let dimensions = measure(label-format(label.at("color"), label.at("fontName"), label.at("fontSize"), label.at("label")))
 			(
-				label: "",
-				native: true,
+				override: true,
 				width: dimensions.width / 1pt,
 				height: dimensions.height / 1pt,
 			)
 		} else {
 			let dimensions = measure(overriden-labels.at(label.at("label")))
 			(
-				label: label.at("label"),
-				native: false,
+				override: true,
 				width: dimensions.width / 1pt,
 				height: dimensions.height / 1pt,
 			)
@@ -142,10 +147,29 @@
   set math.equation(numbering: none)
   let manual-label-names = labels.keys()
   let labels-infos = get-labels(manual-label-names, dot)
-	// return [#repr(labels-infos)]
   let labels-info-count = labels-infos.len()
 	
 	layout(((width: container-width, height: container-height)) => context {
+		// replace invalid font sizes with the current text size
+
+		let labels-infos = labels-infos.map((label) => {
+			let fontSize = text.size
+			if label.at("fontSize").pt() != 0 {
+				fontSize = label.at("fontSize")
+			}
+			(
+				..label,
+				fontSize: fontSize,
+			)
+		})
+		// return [#repr(labels-infos)]
+
+		// return [#repr((
+		// 	"fontSize": text.size.to-absolute(),
+		// 	"dot": dot,
+		// 	"labels": encode-label-dimensions(labels-infos, labels),
+		// 	"engine": engine,
+		// )))]
 		let output = plugin.render(encode-renderGraph((
 			"fontSize": text.size.to-absolute(),
 			"dot": dot,
@@ -196,6 +220,7 @@
 
     set align(top + left)
 
+
 		show: scale.with(
       origin: top + left,
       x: final-width / svg-width * 100%,
@@ -215,12 +240,15 @@
 
     // Place labels.
 		for (label-infos, label-coordinates) in labels-infos.zip(output.at("labels")) {
+			if label-infos.at("html") {
+				continue
+			}
 			let label = if label-infos.at("native") {
 				label-infos.at("label")
 			} else {
 				labels.at(label-infos.at("label"))
 			}
-			label = label-format(label-infos.at("color"), label-infos.at("fontName"), label-infos.at("fontSize"), label)
+			let label = label-format(label-infos.at("color"), label-infos.at("fontName"), label-infos.at("fontSize"), label)
 			let label-dimensions = measure(label)
 			place(
 				top + left,
