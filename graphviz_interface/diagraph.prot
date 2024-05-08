@@ -4,19 +4,23 @@ protocol C overriddenLabels {
 	string dot;
 }
 
-struct NativeLabel {
+struct LabelInfo {
+	bool native;
 	string label;
 	bool mathMode;
+	int color;
+	string fontName;
+	point fontSize;
 }
 
-
-protocol Typst nativeLabels{
-	NativeLabel nativeLabels[];
+protocol Typst LabelsInfos {
+	LabelInfo labels[];
 }
 
 // Those two protocols allow to ask the engine to render a graph and get the svg back
 struct SizedLabel {
 	string label;
+	bool native;
 	float width;
 	float height;
 }
@@ -24,23 +28,17 @@ struct SizedLabel {
 protocol C renderGraph {
 	point fontSize;
 	string dot;
-	SizedLabel nativeLabels[];
-	SizedLabel manualLabels[];
+	SizedLabel labels[];
 	string engine;
 }
 
-struct LabelInfo {
+struct Coordinates {
 	point x;
 	point y;
-	
-	int color;
-	string fontName;
-	point fontSize;
 }
 
 protocol Typst graphInfo {
 	bool error;
-	LabelInfo manualLabels[];
-	LabelInfo nativeLabels[];
+	Coordinates labels[];
 	string svg;
 }

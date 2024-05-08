@@ -176,24 +176,26 @@
 	(result, offset)
 }
 #let encode-SizedLabel(value) = {
-  encode-string(value.at("label")) + encode-float(value.at("width")) + encode-float(value.at("height"))
+  encode-string(value.at("label")) + encode-bool(value.at("native")) + encode-float(value.at("width")) + encode-float(value.at("height"))
 }
-#let decode-NativeLabel(bytes) = {
-  let offset = 0
-  let (f_label, size) = decode-string(bytes.slice(offset, bytes.len()))
-  offset += size
-  let (f_mathMode, size) = decode-bool(bytes.slice(offset, bytes.len()))
-  offset += size
-  ((
-    label: f_label,
-    mathMode: f_mathMode,
-  ), offset)
-}
-#let decode-LabelInfo(bytes) = {
+#let decode-Coordinates(bytes) = {
   let offset = 0
   let (f_x, size) = decode-point(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_y, size) = decode-point(bytes.slice(offset, bytes.len()))
+  offset += size
+  ((
+    x: f_x,
+    y: f_y,
+  ), offset)
+}
+#let decode-LabelInfo(bytes) = {
+  let offset = 0
+  let (f_native, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_label, size) = decode-string(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_mathMode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_color, size) = decode-int(bytes.slice(offset, bytes.len()))
   offset += size
@@ -202,41 +204,39 @@
   let (f_fontSize, size) = decode-point(bytes.slice(offset, bytes.len()))
   offset += size
   ((
-    x: f_x,
-    y: f_y,
+    native: f_native,
+    label: f_label,
+    mathMode: f_mathMode,
     color: f_color,
     fontName: f_fontName,
     fontSize: f_fontSize,
   ), offset)
 }
+#let encode-renderGraph(value) = {
+  encode-point(value.at("fontSize")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedLabel) + encode-string(value.at("engine"))
+}
 #let encode-overriddenLabels(value) = {
   encode-list(value.at("labels"), encode-string) + encode-string(value.at("dot"))
 }
-#let decode-nativeLabels(bytes) = {
+#let decode-LabelsInfos(bytes) = {
   let offset = 0
-  let (f_nativeLabels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NativeLabel)
+  let (f_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-LabelInfo)
   offset += size
   ((
-    nativeLabels: f_nativeLabels,
+    labels: f_labels,
   ), offset)
-}
-#let encode-renderGraph(value) = {
-  encode-point(value.at("fontSize")) + encode-string(value.at("dot")) + encode-list(value.at("nativeLabels"), encode-SizedLabel) + encode-list(value.at("manualLabels"), encode-SizedLabel) + encode-string(value.at("engine"))
 }
 #let decode-graphInfo(bytes) = {
   let offset = 0
   let (f_error, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
-  let (f_manualLabels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-LabelInfo)
-  offset += size
-  let (f_nativeLabels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-LabelInfo)
+  let (f_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-Coordinates)
   offset += size
   let (f_svg, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   ((
     error: f_error,
-    manualLabels: f_manualLabels,
-    nativeLabels: f_nativeLabels,
+    labels: f_labels,
     svg: f_svg,
   ), offset)
 }

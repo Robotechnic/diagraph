@@ -83,10 +83,10 @@ int get_labels(size_t buffer_len) {
         return 1;
     }
 
-    nativeLabels nLabels = {0};
-    nLabels.nativeLabels_len = get_total_label_count(g);
-    nLabels.nativeLabels = malloc(nLabels.nativeLabels_len * sizeof(NativeLabel));
-    if (!nLabels.nativeLabels) {
+    LabelsInfos nLabels = {0};
+    nLabels.labels_len = get_total_label_count(g);
+    nLabels.labels = malloc(nLabels.labels_len * sizeof(LabelInfo));
+    if (!nLabels.labels) {
         ERROR("Failed to allocate memory for native labels");
         free_overriddenLabels(&labels);
         gvFinalize(gvc);
@@ -103,41 +103,62 @@ int get_labels(size_t buffer_len) {
         for (int i = 0; i < labels.labels_len; i++) {
             if (strcmp(labels.labels[i], name) == 0) {
                 is_manually_overridden = true;
+				break;
             }
         }
-        char *label = agget(n, "label");
-        if (!aghtmlstr(label) && !is_manually_overridden) {
+
+        const char *label = agget(n, "label");
+        if (!aghtmlstr(label)) {
             // If there is no explicitely set label for a node, so Graphviz intuitively sets its
             // "label" attribute to "\\N".
             bool has_label = strcmp(label, "\\N") != 0;
             if (!has_label) {
                 label = agnameof(n);
             }
-            nLabels.nativeLabels[label_index].label = malloc(strlen(label) + 1);
-            if (!nLabels.nativeLabels[label_index].label) {
+            nLabels.labels[label_index].label = malloc(strlen(label) + 1);
+            if (!nLabels.labels[label_index].label) {
                 ERROR("Failed to allocate memory for native labels");
                 free_overriddenLabels(&labels);
-                free_nativeLabels(&nLabels);
+                free_LabelsInfos(&nLabels);
                 gvFreeLayout(gvc, g);
                 agclose(g);
                 return 1;
             }
-            strcpy(nLabels.nativeLabels[label_index].label, label);
-            nLabels.nativeLabels[label_index].label[strlen(label)] = '\0';
-            nLabels.nativeLabels[label_index].mathMode = !has_label && is_math(label);
-            label_index++;
+            strcpy(nLabels.labels[label_index].label, label);
+            nLabels.labels[label_index].label[strlen(label)] = '\0';
+            nLabels.labels[label_index].mathMode = !has_label && is_math(label);
         } else {
-            nLabels.nativeLabels[label_index].label = NULL;
-            nLabels.nativeLabels[label_index].mathMode = false;
-            label_index++;
+            nLabels.labels[label_index].label = malloc(strlen(name) + 1);
+			if (!nLabels.labels[label_index].label) {
+				ERROR("Failed to allocate memory for label name");
+				free_overriddenLabels(&labels);
+				free_LabelsInfos(&nLabels);
+				gvFreeLayout(gvc, g);
+				agclose(g);
+				return 1;
+			}
+			strcpy(nLabels.labels[label_index].label, name);
+			nLabels.labels[label_index].label[strlen(name)] = '\0';
+            nLabels.labels[label_index].mathMode = false;
         }
+		nLabels.labels[label_index].native = !is_manually_overridden;
+        nLabels.labels[label_index].color = color_to_int(agget(n, "fontcolor"));
+        nLabels.labels[label_index].fontSize = atof(agget(n, "fontsize"));
+        char *fn = agget(n, "fontname");
+        if (fn) {
+            nLabels.labels[label_index].fontName = malloc(strlen(fn) + 1);
+            strcpy(nLabels.labels[label_index].fontName, fn);
+        } else {
+            nLabels.labels[label_index].fontName = NULL;
+        }
+        label_index++;
     }
 
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFinalize(gvc);
 
-    if ((err = encode_nativeLabels(&nLabels))) {
+    if ((err = encode_LabelsInfos(&nLabels))) {
         if (err == 1) {
             ERROR("Failed to allocate memory for native labels");
         } else if (err == 2) {
@@ -146,12 +167,12 @@ int get_labels(size_t buffer_len) {
             ERROR("Failled to encode native labels");
         }
         free_overriddenLabels(&labels);
-        free_nativeLabels(&nLabels);
+        free_LabelsInfos(&nLabels);
         return 1;
     }
 
     free_overriddenLabels(&labels);
-    free_nativeLabels(&nLabels);
+    free_LabelsInfos(&nLabels);
     return 0;
 }
 
@@ -168,50 +189,15 @@ char *create_label_for_dimension(graph_t *g, double width, double height) {
 }
 
 /**
- * Replaces labels for nodes whose name corresponds to a label name with invisible labels that have
- * specific dimensions. For each node whose label is manually overridden, writes the index of the
- * new label in the corresponding cell in `manual_override_indices`. Writes `-1` in
- * `manual_override_indices` for other nodes.
+ * Replaces labels for each nodes with invisible labels that have specific dimensions.
  */
-void manually_override_labels(graph_t *g, const renderGraph *renderInfo,
-                              int *manual_override_indices) {
+void override_labels(graph_t *g, const renderGraph *renderInfo) {
     int label_index = 0;
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-        manual_override_indices[label_index] = -1;
-        for (int i = 0; i < renderInfo->nativeLabels_len; i++) {
-            if (strcmp(renderInfo->manualLabels[i].label, agnameof(n)) == 0) {
-                agset(n, "label",
-                      create_label_for_dimension(g, renderInfo->manualLabels[i].width,
-                                                 renderInfo->manualLabels[i].height));
-                manual_override_indices[label_index] = i;
-                break;
-            }
-        }
-        label_index++;
-    }
-}
-
-/**
- * Replaces non-HTML and non-already overridden labels in a graph with invisible labels that have
- * specific dimensions. For each label that is overridden, writes `true` in the corresponding cell
- * in `is_label_overridden`. Writes `false` for other labels.
- */
-void override_native_labels(graph_t *g, const renderGraph *renderInfo, bool *is_label_overridden,
-                            const int *manual_override_indices) {
-    int label_index = 0;
-    int native_override_chain_index = 0;
-
-    for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-        is_label_overridden[label_index] = false;
-        if (manual_override_indices[label_index] == -1 && !aghtmlstr(agget(n, "label"))) {
-            agset(n, "label",
-                  create_label_for_dimension(
-                      g, renderInfo->nativeLabels[native_override_chain_index].width,
-                      renderInfo->nativeLabels[native_override_chain_index].height));
-            is_label_overridden[label_index] = true;
-            native_override_chain_index++;
-        }
+        agset(n, "label",
+              create_label_for_dimension(g, renderInfo->labels[label_index].width,
+                                         renderInfo->labels[label_index].height));
         label_index++;
     }
 }
@@ -219,25 +205,12 @@ void override_native_labels(graph_t *g, const renderGraph *renderInfo, bool *is_
 /**
  * Encodes the position of considered labels in the output buffer.
  */
-void get_label_info(graph_t *g, double pad, const bool *consider, LabelInfo *output) {
+void get_label_coordinates(graph_t *g, double pad, Coordinates *output) {
     int label_index = 0;
-    int considered_count = 0;
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-        if (consider[label_index]) {
-            output[considered_count].x = (float)ND_coord(n).x + pad;
-            output[considered_count].y = (float)ND_coord(n).y + pad;
-            output[considered_count].color = color_to_int(agget(n, "fontcolor"));
-            output[considered_count].fontSize = atof(agget(n, "fontsize"));
-			char* fn = agget(n, "fontname");
-			if (fn) {
-				output[considered_count].fontName = malloc(strlen(fn) + 1);
-				strcpy(output[considered_count].fontName, fn);
-			} else {
-				output[considered_count].fontName = NULL;
-			}
-            considered_count++;
-        }
+		output[label_index].x = (float)ND_coord(n).x + pad;
+		output[label_index].y = (float)ND_coord(n).y + pad;
         label_index++;
     }
 }
@@ -280,20 +253,12 @@ int render(size_t buffer_len) {
         return 1;
     }
 
-    DEBUG("Got %d native labels and %d manual labels\n", renderInfo.nativeLabels_len,
-          renderInfo.manualLabels_len);
+    DEBUG("Got %d labels\n", renderInfo.labels_len);
 
-    g_render.nativeLabels_len = renderInfo.nativeLabels_len;
-    g_render.nativeLabels = calloc(g_render.nativeLabels_len, sizeof(LabelInfo));
-    if (!g_render.nativeLabels) {
+    g_render.labels_len = renderInfo.labels_len;
+    g_render.labels = calloc(g_render.labels_len, sizeof(LabelInfo));
+    if (!g_render.labels) {
         ERROR("Failed to allocate memory for native labels");
-        free_renderGraph(&renderInfo);
-        return 1;
-    }
-    g_render.manualLabels_len = renderInfo.manualLabels_len;
-    g_render.manualLabels = calloc(g_render.manualLabels_len, sizeof(LabelInfo));
-    if (!g_render.manualLabels) {
-        ERROR("Failed to allocate memory for manual labels");
         free_renderGraph(&renderInfo);
         return 1;
     }
@@ -329,17 +294,10 @@ int render(size_t buffer_len) {
         agattr(NULL, AGEDGE, "fontsize", font_size_string);
     }
 
-    int total_label_count = get_total_label_count(g);
+    DEBUG("Total label count: %d\n", get_total_label_count(g));
 
-    DEBUG("Total label count: %d\n", total_label_count);
-
-    // Handle manually overridden labels.
-    int manual_override_indices[total_label_count];
-    manually_override_labels(g, &renderInfo, manual_override_indices);
-
-    // Override native labels.
-    bool is_native_label_overridden[total_label_count];
-    override_native_labels(g, &renderInfo, is_native_label_overridden, manual_override_indices);
+    // Override labels with invisible labels that have specific dimensions.
+    override_labels(g, &renderInfo);
 
     // Layout graph.
     // FIXME: The call to `gvLayout` causes to reach an `unreachable` instruction if a (user-made)
@@ -374,13 +332,7 @@ int render(size_t buffer_len) {
     }
 
     // Get native label positions.
-    get_label_info(g, pad, is_native_label_overridden, g_render.nativeLabels);
-
-    // Get manual label positions.
-    for (int i = 0; i < total_label_count; i++) {
-        is_native_label_overridden[i] = !is_native_label_overridden[i];
-    }
-    get_label_info(g, pad, is_native_label_overridden, g_render.manualLabels);
+    get_label_coordinates(g, pad, g_render.labels);
 
     agclose(g);
     gvFinalize(gvc);
