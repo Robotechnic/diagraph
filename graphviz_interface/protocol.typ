@@ -125,6 +125,9 @@
 }
 
 #let int-to-float(value) = {
+	if value == 0 {
+		return 0.0
+	}
 	let sign = if value >= calc.pow(2, 31) {
 		value -= calc.pow(2, 31)
 		 -1 
@@ -142,7 +145,7 @@
 }
 
 #let encode-point(value) = {
-	encode-float(value / 1pt)
+	encode-float(value.pt())
 }
 
 /// Decodes a float from the given bytes
@@ -175,23 +178,11 @@
 	}
 	(result, offset)
 }
-#let encode-SizedLabel(value) = {
-  encode-string(value.at("label")) + encode-bool(value.at("native")) + encode-float(value.at("width")) + encode-float(value.at("height"))
-}
-#let decode-Coordinates(bytes) = {
-  let offset = 0
-  let (f_x, size) = decode-point(bytes.slice(offset, bytes.len()))
-  offset += size
-  let (f_y, size) = decode-point(bytes.slice(offset, bytes.len()))
-  offset += size
-  ((
-    x: f_x,
-    y: f_y,
-  ), offset)
-}
 #let decode-LabelInfo(bytes) = {
   let offset = 0
   let (f_native, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_html, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_label, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
@@ -205,6 +196,7 @@
   offset += size
   ((
     native: f_native,
+    html: f_html,
     label: f_label,
     mathMode: f_mathMode,
     color: f_color,
@@ -212,11 +204,19 @@
     fontSize: f_fontSize,
   ), offset)
 }
-#let encode-renderGraph(value) = {
-  encode-point(value.at("fontSize")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedLabel) + encode-string(value.at("engine"))
+#let decode-Coordinates(bytes) = {
+  let offset = 0
+  let (f_x, size) = decode-point(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_y, size) = decode-point(bytes.slice(offset, bytes.len()))
+  offset += size
+  ((
+    x: f_x,
+    y: f_y,
+  ), offset)
 }
-#let encode-overriddenLabels(value) = {
-  encode-list(value.at("labels"), encode-string) + encode-string(value.at("dot"))
+#let encode-SizedLabel(value) = {
+  encode-bool(value.at("override")) + encode-float(value.at("width")) + encode-float(value.at("height"))
 }
 #let decode-LabelsInfos(bytes) = {
   let offset = 0
@@ -225,6 +225,9 @@
   ((
     labels: f_labels,
   ), offset)
+}
+#let encode-overriddenLabels(value) = {
+  encode-list(value.at("labels"), encode-string) + encode-string(value.at("dot"))
 }
 #let decode-graphInfo(bytes) = {
   let offset = 0
@@ -239,4 +242,7 @@
     labels: f_labels,
     svg: f_svg,
   ), offset)
+}
+#let encode-renderGraph(value) = {
+  encode-point(value.at("fontSize")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedLabel) + encode-string(value.at("engine"))
 }

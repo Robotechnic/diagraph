@@ -107,21 +107,8 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
         __buffer_offset += __str_len + 1;                                                          \
     }
 typedef struct {
-    char* label;
     bool native;
-    float width;
-    float height;
-} SizedLabel;
-void free_SizedLabel(SizedLabel *s);
-
-typedef struct {
-    float x;
-    float y;
-} Coordinates;
-void free_Coordinates(Coordinates *s);
-
-typedef struct {
-    bool native;
+    bool html;
     char* label;
     bool mathMode;
     int color;
@@ -131,14 +118,24 @@ typedef struct {
 void free_LabelInfo(LabelInfo *s);
 
 typedef struct {
-    float fontSize;
-    char* dot;
-    SizedLabel * labels;
+    float x;
+    float y;
+} Coordinates;
+void free_Coordinates(Coordinates *s);
+
+typedef struct {
+    bool override;
+    float width;
+    float height;
+} SizedLabel;
+void free_SizedLabel(SizedLabel *s);
+
+typedef struct {
+    LabelInfo * labels;
     size_t labels_len;
-    char* engine;
-} renderGraph;
-void free_renderGraph(renderGraph *s);
-int decode_renderGraph(size_t buffer_len, renderGraph *out);
+} LabelsInfos;
+void free_LabelsInfos(LabelsInfos *s);
+int encode_LabelsInfos(const LabelsInfos *s);
 
 typedef struct {
     char* * labels;
@@ -149,13 +146,6 @@ void free_overriddenLabels(overriddenLabels *s);
 int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
-    LabelInfo * labels;
-    size_t labels_len;
-} LabelsInfos;
-void free_LabelsInfos(LabelsInfos *s);
-int encode_LabelsInfos(const LabelsInfos *s);
-
-typedef struct {
     bool error;
     Coordinates * labels;
     size_t labels_len;
@@ -163,5 +153,15 @@ typedef struct {
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
+
+typedef struct {
+    float fontSize;
+    char* dot;
+    SizedLabel * labels;
+    size_t labels_len;
+    char* engine;
+} renderGraph;
+void free_renderGraph(renderGraph *s);
+int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 #endif

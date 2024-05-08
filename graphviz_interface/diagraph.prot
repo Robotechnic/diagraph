@@ -6,6 +6,7 @@ protocol C overriddenLabels {
 
 struct LabelInfo {
 	bool native;
+	bool html;
 	string label;
 	bool mathMode;
 	int color;
@@ -19,8 +20,7 @@ protocol Typst LabelsInfos {
 
 // Those two protocols allow to ask the engine to render a graph and get the svg back
 struct SizedLabel {
-	string label;
-	bool native;
+	bool override;
 	float width;
 	float height;
 }
