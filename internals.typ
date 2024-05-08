@@ -139,6 +139,7 @@
   /// default), the background will be transparent.
   background: none,
 ) = {
+  set math.equation(numbering: none)
   let manual-label-names = labels.keys()
   let labels-infos = get-labels(manual-label-names, dot)
 	// return [#repr(labels-infos)]
