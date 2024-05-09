@@ -1,5 +1,5 @@
 #import "graphviz_interface/protocol.typ": *
-#let plugin = plugin("diagraph.wasm")
+#let plugin = plugin("graphviz_interface/diagraph.wasm")
 
 
 /// Converts a string containing escape sequences to content.

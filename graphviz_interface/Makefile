@@ -17,7 +17,7 @@ all: build
 build: $(SOURCES) $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz src/protocol/protocol.c
 	$(CC) $(CFLAGS) $(SOURCES) -o diagraph.wasm $(INCLUDE_FLAGS)
 	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./diagraph.wasm
-	mv ./"diagraph - stubbed.wasm" ../diagraph.wasm
+	mv ./"diagraph - stubbed.wasm" ./diagraph.wasm
 
 protocol src/protocol/protocol.c src/protocol/protocol.h: diagraph.prot
 	wasmpg diagraph.prot -t . -c src/protocol

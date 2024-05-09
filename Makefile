@@ -15,7 +15,9 @@ link :
 
 module :
 	mkdir -p ./diagraph
-	cp ./diagraph.wasm ./diagraph/diagraph.wasm
+	mkdir -p ./diagraph/graphviz_interface
+	cp ./graphviz_interface/diagraph.wasm ./diagraph/graphviz_interface/diagraph.wasm
+	cp ./graphviz_interface/protocol.typ ./diagraph/graphviz_interface/protocol.typ
 	cp ./internals.typ ./diagraph/internals.typ
 	cp ./lib.typ ./diagraph/lib.typ
 	cp ./README.md ./diagraph/README.md
