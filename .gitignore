@@ -58,7 +58,6 @@ graphviz_interface/graphiz-src/*
 graphviz_interface/expat-src/*
 graphviz_interface/install/*
 graphviz_interface/*.gz
-graphviz_interface/*.wasm
 graphviz_interface/build
 graphviz_interface/compile_commands.json
 
