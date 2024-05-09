@@ -107,17 +107,6 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
         __buffer_offset += __str_len + 1;                                                          \
     }
 typedef struct {
-    bool native;
-    bool html;
-    char* label;
-    bool mathMode;
-    int color;
-    char* fontName;
-    float fontSize;
-} LabelInfo;
-void free_LabelInfo(LabelInfo *s);
-
-typedef struct {
     float x;
     float y;
 } Coordinates;
@@ -131,6 +120,17 @@ typedef struct {
 void free_SizedLabel(SizedLabel *s);
 
 typedef struct {
+    bool native;
+    bool html;
+    char* label;
+    bool mathMode;
+    int color;
+    char* fontName;
+    float fontSize;
+} LabelInfo;
+void free_LabelInfo(LabelInfo *s);
+
+typedef struct {
     LabelInfo * labels;
     size_t labels_len;
 } LabelsInfos;
@@ -138,12 +138,14 @@ void free_LabelsInfos(LabelsInfos *s);
 int encode_LabelsInfos(const LabelsInfos *s);
 
 typedef struct {
-    char* * labels;
-    size_t labels_len;
+    float fontSize;
     char* dot;
-} overriddenLabels;
-void free_overriddenLabels(overriddenLabels *s);
-int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
+    SizedLabel * labels;
+    size_t labels_len;
+    char* engine;
+} renderGraph;
+void free_renderGraph(renderGraph *s);
+int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 typedef struct {
     bool error;
@@ -155,13 +157,11 @@ void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
 
 typedef struct {
-    float fontSize;
-    char* dot;
-    SizedLabel * labels;
+    char* * labels;
     size_t labels_len;
-    char* engine;
-} renderGraph;
-void free_renderGraph(renderGraph *s);
-int decode_renderGraph(size_t buffer_len, renderGraph *out);
+    char* dot;
+} overriddenLabels;
+void free_overriddenLabels(overriddenLabels *s);
+int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 #endif

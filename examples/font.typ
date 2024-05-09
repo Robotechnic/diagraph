@@ -4,14 +4,14 @@
 #raw-render(```
 	digraph G {
  		redFiraSans [
-			label = "Red\nFiraSans",
+			label = "Red\nFiraSans\n20pt",
 			color = red,
 			fontcolor=red,
 			fontsize=20
 			fontname="Fira Sans",
 		]
 		blueDejaVuSans [
-			label = "Blue\nDejaVuSans",
+			label = "Blue\nDejaVuSans\n10pt",
 			color = blue,
 			fontcolor=blue,
 			fontsize=10
@@ -19,15 +19,15 @@
 		]
 		redFiraSans -> blueDejaVuSans[color = red]
 		purpleTimesNewRoman [
-			label = "Purple\nTimesNewRoman",
+			label = "Purple\nTimesNewRoman\n8pt",
 			color = purple,
-			fontsize=5
+			fontsize=8
 			fontcolor=purple,
 			fontname="Times New Roman",
 		]
 		blueDejaVuSans -> purpleTimesNewRoman[color = blue]
 		orangeredCourier [
-			label = "Orangered\nCourier",
+			label = "Orangered\nCourier\n32pt",
 			color = orangered,
 			fontsize=32
 			fontcolor=orangered,
@@ -35,7 +35,7 @@
 		]
 		purpleTimesNewRoman -> orangeredCourier[color = purple]
 		limeComicSans [
-			label = "Lime\nComicSans",
+			label = "Lime\nComicSans\n15pt",
 			color = lime,
 			fontsize=15
 			fontcolor=lime,
@@ -43,7 +43,7 @@
 		]
 		orangeredCourier -> limeComicSans[color = orangered]
 		efefefArial [
-			label = "efefef\nArial",
+			label = "efefef\nArial\n20pt",
 			color = efefef,
 			fontsize=20
 			fontcolor=efefef,
@@ -51,7 +51,7 @@
 		]
 		limeComicSans -> efefefArial[color = lime]
 		yellowVerdana [
-			label = "Yellow\nVerdana",
+			label = "Yellow\nVerdana\n10pt",
 			color = yellow,
 			fontsize=10
 			fontcolor=yellow,
@@ -59,7 +59,7 @@
 		]
 		efefefArial -> yellowVerdana[color = efefef]
 		cyanGeorgia [
-			label = "Cyan\nGeorgia",
+			label = "Cyan\nGeorgia\n15pt",
 			color = cyan,
 			fontsize=15
 			fontcolor=cyan,
@@ -67,7 +67,7 @@
 		]
 		yellowVerdana -> cyanGeorgia[color = yellow]
 		blueImpact [
-			label = "Blue\nImpact",
+			label = "Blue\nImpact\n20pt",
 			color = blue,
 			fontsize=20
 			fontcolor=blue,

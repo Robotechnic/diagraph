@@ -3,6 +3,7 @@
 
 #set heading(numbering: (..nums) => [Graph #numbering("1", ..nums):])
 
+
 #let render-example(dot, ..args) = style(styles => {
   let code = raw(dot.text, lang: "dot")
   let graph = render(dot.text, ..args)
@@ -16,8 +17,8 @@
   )
 })
 
-
 = Test
+
 
 #render-example(
   ```
@@ -168,7 +169,6 @@ See http://www.graphviz.org/content/cluster.
 
 
 = HTML
-
 #render-example(
   ```
   digraph structs {
@@ -207,18 +207,8 @@ See http://www.graphviz.org/content/cluster.
 
 Labels for nodes `big` and `sum` are overridden.
 
-```dot
-digraph {
-	rankdir=LR
-	node[shape=circle]
-	Hmm -> a_0
-	Hmm -> big
-	a_0 -> "a'" -> big [style="dashed"]
-	big -> sum
-}
-```
 
-#raw-render(
+#render-example(
   ```
   digraph {
     rankdir=LR
@@ -253,64 +243,3 @@ digraph {
 	}
 	```
 )
-
-#raw-render(```
-		digraph {
-			rankdir=LR
-			node[shape=none]
-			{
-				rank=same
-				nx11[fontcolor=yellow]
-				x42[fontcolor=yellow]
-				nx63[fontcolor=yellow]
-				nx84[fontcolor=yellow]
-			}
-			{
-				rank=same
-				x21
-				nx52
-				nx94
-			}
-			{
-				rank=same
-				nx31
-				x73
-			}
-			nx11->x21[label=<&alpha;>]
-			x21 -> nx31[label=<&beta;>]
-			nx31 -> nx121[label=<&gamma;>]
-			nx121 -> x151[label="X"]
-			x42 -> nx52[label=<&delta;>]
-			x21 -> nx52[label=<&delta;>]
-			nx63 -> x73[label=<&epsilon;>]
-			nx52 -> x73[label=<&epsilon;>]
-			nx31 -> x73[label=<&epsilon;>]
-			nx84 -> nx94[label=<&theta;>]
-			x73 -> nx94[label=<&theta;>]
-			nx94 -> x104[label=<&lambda;>]
-			x73 -> x104[label=<&lambda;>]
-			nx63 -> x104[label=<&lambda;>]
-			x104 -> x114[label=<&mu;>]
-			nx84 -> x114[label=<&mu;>]
-			x73 -> x114[label=<&mu;>]
-			x114 -> nx134[label=<&nu;>]
-			x114 -> nx144[label=<&tau;>]
-		}
-	```, labels:(
-		nx114: $not x_11 @4$,
-		nx84: $not x_8 @4$,
-		nx63: $not x_6 @3$,
-		x21: $x_2 @1$,
-		x42: $x_4 @2$,
-		nx31: $not x_3 @1$,
-		nx11: $not x_1 @1$,
-		nx52: $not x_5 @2$,
-		nx94: $not x_9 @4$,
-		x151: $x_15 @1$,
-		nx121: $not x_12 @1$,
-		x73: $x_7 @3$,
-		x104: $x_10 @4$,
-		nx134: $not x_13 @4$,
-		nx144: $not x_14 @4$,
-		x114: $x_11 @4$
-	), width: 100%)
