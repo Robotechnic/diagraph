@@ -76,6 +76,11 @@
 	#text(label)
 ]
 
+#let label-dimensions(color, font, fontsize, label) = {
+	let label = label-format(color, font, fontsize, label)
+	measure(label)
+}
+
 /// Encodes the dimensions of labels into bytes.
 #let encode-label-dimensions(labels, overriden-labels) = {
 	labels.map(label => {
@@ -86,7 +91,7 @@
 				height: 0,
 			)
 		} else if label.at("native") {
-			let dimensions = measure(label-format(label.at("color"), label.at("fontName"), label.at("fontSize"), label.at("label")))
+			let dimensions = label-dimensions(label.at("color"), label.at("fontName"), label.at("fontSize"), label.at("label"))
 			(
 				override: true,
 				width: dimensions.width / 1pt,
@@ -164,18 +169,16 @@
 		})
 		// return [#repr(labels-infos)]
 
-		// return [#repr((
-		// 	"fontSize": text.size.to-absolute(),
-		// 	"dot": dot,
-		// 	"labels": encode-label-dimensions(labels-infos, labels),
-		// 	"engine": engine,
-		// )))]
-		let output = plugin.render(encode-renderGraph((
+		let encoded-data = (
 			"fontSize": text.size.to-absolute(),
 			"dot": dot,
 			"labels": encode-label-dimensions(labels-infos, labels),
 			"engine": engine,
-		)))
+		)
+		// return [#repr(encoded-data)]
+		// return [#((array(encode-renderGraph(encoded-data)).map(x => "0x" + int-to-string(x, 2, base: 16))).join(", "))]
+
+		let output = plugin.render(encode-renderGraph(encoded-data))
 
 		if output.at(0) != 0 {
 			return {
@@ -220,7 +223,6 @@
 
     set align(top + left)
 
-
 		show: scale.with(
       origin: top + left,
       x: final-width / svg-width * 100%,
@@ -256,6 +258,12 @@
 				dy: final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
 				label
 			)
+			// place(
+			// 	top + left,
+			// 	dx: label-coordinates.at("x") - label-dimensions.width / 2,
+			// 	dy: final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
+			// 	rect(height: label-dimensions.height, width: label-dimensions.width, fill: none)
+			// )
 		}
 	})
 }

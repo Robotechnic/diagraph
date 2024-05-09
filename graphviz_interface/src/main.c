@@ -191,7 +191,7 @@ int get_labels(size_t buffer_len) {
 char *create_label_for_dimension(graph_t *g, double width, double height) {
     char label[2048];
     snprintf(label, sizeof(label),
-             "<TABLE BORDER=\"0\" FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
+             "<TABLE BORDER=\"0\"  FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
              "HEIGHT=\"%lf\"><TR><TD></TD></TR></TABLE>",
              width, height);
     return agstrdup_html(g, label);
@@ -274,9 +274,6 @@ int render(size_t buffer_len) {
         return 1;
     }
 
-    // Passing `NULL` sets a default value for the next graphs.
-    agattr(NULL, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
-
 #ifdef TEST
     GVC_t *gvc = gvContext();
 #else
@@ -284,6 +281,9 @@ int render(size_t buffer_len) {
 #endif
 
     graph_t *g = agmemread(renderInfo.dot);
+
+    // Passing `NULL` sets a default value for the next graphs.
+    agattr(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
 
     if (!g) {
         free_renderGraph(&renderInfo);
@@ -300,9 +300,9 @@ int render(size_t buffer_len) {
     {
         char font_size_string[128];
         snprintf(font_size_string, 128, "%fpt", renderInfo.fontSize);
-        agattr(NULL, AGRAPH, "fontsize", font_size_string);
-        agattr(NULL, AGNODE, "fontsize", font_size_string);
-        agattr(NULL, AGEDGE, "fontsize", font_size_string);
+        agattr(g, AGRAPH, "fontsize", font_size_string);
+        agattr(g, AGNODE, "fontsize", font_size_string);
+        agattr(g, AGEDGE, "fontsize", font_size_string);
     }
 
     DEBUG("Total label count: %d\n", get_total_label_count(g));
