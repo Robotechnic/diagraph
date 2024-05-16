@@ -75,7 +75,7 @@ If you want a node label to contain a more complex mathematical equation, or mor
   ),
 )
 ````
-![labels](https://github.com/Robotechnic/diagraph/tree/main/images/labels.svg)
+![labels](https://raw.githubusercontent.com/Robotechnic/diagraph/main/imageslabels1.svg)
 
 See [`examples/`](https://github.com/Robotechnic/diagraph/tree/main/examples) for the rendered graph.
 

@@ -12,7 +12,7 @@ BEGIN {
 
 {
 	if (create_image_tag) {
-		print "![" name "](https://github.com/Robotechnic/diagraph/tree/main/images/" name ".svg)"
+		print "![" name "](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images" name "1.svg)"
 		create_image_tag = 0
 	}
 	print
@@ -28,6 +28,8 @@ match($0,/^<!--EXAMPLE\((.*)\)-->$/,group) {
     if (in_example) {
         capturing = 1
 		print "#import \"@preview/diagraph:0.2.3\": *" > "images/" name ".typ"
+		print "#context{" >> "images/" name ".typ"
+		print "let render = [" >> "images/" name ".typ"
         next
     }
 }
@@ -36,7 +38,12 @@ match($0,/^<!--EXAMPLE\((.*)\)-->$/,group) {
     if (capturing) {
         capturing = 0
         in_example = 0
-		system("typst compile -f svg \"images/" name ".typ\"")
+		print "]" >> "images/" name ".typ"
+		print "let dimensions = measure(render)" >> "images/" name ".typ"
+		print "set page(width: dimensions.width, height: dimensions.height, margin: 0cm)" >> "images/" name ".typ"
+		print "render" >> "images/" name ".typ"
+		print "}" >> "images/" name ".typ"
+		system("typst compile -f svg \"images/" name ".typ\" \"images/" name "{n}.svg\"")
 		create_image_tag = 1
         next
     }
