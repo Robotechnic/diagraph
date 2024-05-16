@@ -12,7 +12,7 @@ BEGIN {
 
 {
 	if (create_image_tag) {
-		print "![" name "](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/" name "1.svg)"
+		print "![" name "](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/" name "1.png)"
 		create_image_tag = 0
 	}
 	print
@@ -43,7 +43,7 @@ match($0,/^<!--EXAMPLE\((.*)\)-->$/,group) {
 		print "set page(width: dimensions.width, height: dimensions.height, margin: 0cm, fill: white)" >> "images/" name ".typ"
 		print "render" >> "images/" name ".typ"
 		print "}" >> "images/" name ".typ"
-		system("typst compile -f svg \"images/" name ".typ\" \"images/" name "{n}.svg\"")
+		system("typst compile -f png \"images/" name ".typ\" \"images/" name "{n}.png\"")
 		create_image_tag = 1
         next
     }
