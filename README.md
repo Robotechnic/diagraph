@@ -22,6 +22,7 @@ You can render a Graphviz Dot string to a SVG image using the `render` function:
 
 Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
 
+<!--EXAMPLE(raw-render)-->
 ````typ
 #raw-render(
   ```dot
@@ -31,6 +32,7 @@ Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
   ```
 )
 ````
+![raw-render](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/raw-render1.png)
 
 You can see an example of this in [`examples/`](https://github.com/Robotechnic/diagraph/tree/main/examples).
 
@@ -96,6 +98,11 @@ There are also some other make commands:
 ### Wasi stub
 
 Somme functions need to be stubbed to work with the webassembly plugin system. The `wasi-stub` executable is a spetial one fitting the needs of the typst plugin system. You can find the source code [here](https://github.com/astrale-sharp/wasm-minimal-protocol/tree/master). It is important to use this one as the default subbed functions are not the same and the makefile is suited for this one.
+
+### Protocol generator
+
+This package also uses a protocol generator to generate the wasm interface. You can find the source code [here](https://github.com/Robotechnic/WebAssembly-protocol-generator). It is a required dependency to build this project.
+
 <!--END-->
 
 ## License
