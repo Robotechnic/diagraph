@@ -1,10 +1,13 @@
 <svg class="typst-doc" viewBox="0 0 447 128" width="447pt" height="128pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:h5="http://www.w3.org/1999/xhtml">
     <g>
         <g transform="translate(0 0)">
+            <path class="typst-shape" fill="#ffffff" d="M 0 0 L 0 128 L 447 128 L 447 0 Z "/>
+        </g>
+        <g transform="translate(0 0)">
             <g class="typst-group">
                 <g>
                     <g transform="translate(0 0)">
-                        <g class="typst-group" clip-path="url(#cF72439C5AC65F0AE5D0593FBAC454A50)">
+                        <g class="typst-group" clip-path="url(#cCFB701852B5296CA35CB95993613E89C)">
                             <g>
                                 <g transform="translate(0 0)">
                                     <g class="typst-group">
@@ -218,7 +221,7 @@
         </symbol>
     </defs>
     <defs id="clip-path">
-        <clipPath id="cF72439C5AC65F0AE5D0593FBAC454A50">
+        <clipPath id="cCFB701852B5296CA35CB95993613E89C">
             <path d="M 0 0 L 447 0 L 447 128 L 0 128 Z "/>
         </clipPath>
     </defs>

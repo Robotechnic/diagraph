@@ -40,7 +40,7 @@ match($0,/^<!--EXAMPLE\((.*)\)-->$/,group) {
         in_example = 0
 		print "]" >> "images/" name ".typ"
 		print "let dimensions = measure(render)" >> "images/" name ".typ"
-		print "set page(width: dimensions.width, height: dimensions.height, margin: 0cm)" >> "images/" name ".typ"
+		print "set page(width: dimensions.width, height: dimensions.height, margin: 0cm, fill: white)" >> "images/" name ".typ"
 		print "render" >> "images/" name ".typ"
 		print "}" >> "images/" name ".typ"
 		system("typst compile -f svg \"images/" name ".typ\" \"images/" name "{n}.svg\"")
