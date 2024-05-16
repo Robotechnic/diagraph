@@ -12,7 +12,7 @@ BEGIN {
 
 {
 	if (create_image_tag) {
-		print "![" name "](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images" name "1.svg)"
+		print "![" name "](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/" name "1.svg)"
 		create_image_tag = 0
 	}
 	print
