@@ -10,7 +10,7 @@ A simple Graphviz binding for Typst using the WebAssembly plugin system.
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/diagraph:0.2.3": *
+#import "@preview/diagraph:0.2.4": *
 ```
 <!--END-->
 
@@ -33,8 +33,6 @@ Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
 )
 ````
 ![raw-render](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/raw-render1.png)
-
-You can see an example of this in [`examples/`](https://github.com/Robotechnic/diagraph/tree/main/examples).
 
 For more information about the Graphviz Dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 

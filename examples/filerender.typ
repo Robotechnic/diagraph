@@ -1,3 +1,3 @@
-#import "@preview/diagraph:0.2.3": *
+#import "@preview/diagraph:0.2.4": *
 
 #render(read("./filerender.dot"))
