@@ -107,38 +107,47 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
         __buffer_offset += __str_len + 1;                                                          \
     }
 typedef struct {
-    float x;
-    float y;
-} Coordinates;
-void free_Coordinates(Coordinates *s);
-
-typedef struct {
     bool override;
+    bool xoverride;
     float width;
     float height;
+    float xwidth;
+    float xheight;
 } SizedLabel;
 void free_SizedLabel(SizedLabel *s);
 
 typedef struct {
+    char* label;
+    bool content;
+    bool xlabel;
+} OverrideLabel;
+void free_OverrideLabel(OverrideLabel *s);
+
+typedef struct {
+    float x;
+    float y;
+    float xx;
+    float xy;
+} Coordinates;
+void free_Coordinates(Coordinates *s);
+
+typedef struct {
     bool native;
     bool html;
+    bool override_xlabel;
+    char* name;
     char* label;
-    bool mathMode;
+    char* xlabel;
+    bool math_mode;
+    bool xlabel_math_mode;
     int color;
-    char* fontName;
-    float fontSize;
+    char* font_name;
+    float font_size;
 } LabelInfo;
 void free_LabelInfo(LabelInfo *s);
 
 typedef struct {
-    LabelInfo * labels;
-    size_t labels_len;
-} LabelsInfos;
-void free_LabelsInfos(LabelsInfos *s);
-int encode_LabelsInfos(const LabelsInfos *s);
-
-typedef struct {
-    float fontSize;
+    float font_size;
     char* dot;
     SizedLabel * labels;
     size_t labels_len;
@@ -148,6 +157,21 @@ void free_renderGraph(renderGraph *s);
 int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 typedef struct {
+    OverrideLabel * labels;
+    size_t labels_len;
+    char* dot;
+} overriddenLabels;
+void free_overriddenLabels(overriddenLabels *s);
+int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
+
+typedef struct {
+    LabelInfo * labels;
+    size_t labels_len;
+} LabelsInfos;
+void free_LabelsInfos(LabelsInfos *s);
+int encode_LabelsInfos(const LabelsInfos *s);
+
+typedef struct {
     bool error;
     Coordinates * labels;
     size_t labels_len;
@@ -155,13 +179,5 @@ typedef struct {
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
-
-typedef struct {
-    char* * labels;
-    size_t labels_len;
-    char* dot;
-} overriddenLabels;
-void free_overriddenLabels(overriddenLabels *s);
-int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 #endif

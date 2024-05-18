@@ -63,10 +63,40 @@ size_t string_size(const void *elem) {
     return strlen((char *)elem) + 1;
 }
 
+void free_SizedLabel(SizedLabel *s) {
+}
+int decode_SizedLabel(uint8_t *__input_buffer, size_t buffer_len, SizedLabel *out, size_t *buffer_offset) {
+    size_t __buffer_offset = 0;
+    int err;
+    (void)err;
+    NEXT_CHAR(out->override)
+    NEXT_CHAR(out->xoverride)
+    NEXT_FLOAT(out->width)
+    NEXT_FLOAT(out->height)
+    NEXT_FLOAT(out->xwidth)
+    NEXT_FLOAT(out->xheight)
+    *buffer_offset += __buffer_offset;
+    return 0;
+}
+void free_OverrideLabel(OverrideLabel *s) {
+    if (s->label) {
+        free(s->label);
+    }
+}
+int decode_OverrideLabel(uint8_t *__input_buffer, size_t buffer_len, OverrideLabel *out, size_t *buffer_offset) {
+    size_t __buffer_offset = 0;
+    int err;
+    (void)err;
+    NEXT_STR(out->label)
+    NEXT_CHAR(out->content)
+    NEXT_CHAR(out->xlabel)
+    *buffer_offset += __buffer_offset;
+    return 0;
+}
 void free_Coordinates(Coordinates *s) {
 }
 size_t Coordinates_size(const void *s){
-	return TYPST_INT_SIZE + TYPST_INT_SIZE;
+	return TYPST_INT_SIZE + TYPST_INT_SIZE + TYPST_INT_SIZE + TYPST_INT_SIZE;
 }
 int encode_Coordinates(const Coordinates *s, uint8_t *__input_buffer, size_t *buffer_len, size_t *buffer_offset) {
     size_t __buffer_offset = 0;    size_t s_size = Coordinates_size(s);
@@ -77,32 +107,28 @@ int encode_Coordinates(const Coordinates *s, uint8_t *__input_buffer, size_t *bu
 	(void)err;
     FLOAT_PACK(s->x)
     FLOAT_PACK(s->y)
+    FLOAT_PACK(s->xx)
+    FLOAT_PACK(s->xy)
 
     *buffer_offset += __buffer_offset;
     return 0;
 }
-void free_SizedLabel(SizedLabel *s) {
-}
-int decode_SizedLabel(uint8_t *__input_buffer, size_t buffer_len, SizedLabel *out, size_t *buffer_offset) {
-    size_t __buffer_offset = 0;
-    int err;
-    (void)err;
-    NEXT_CHAR(out->override)
-    NEXT_FLOAT(out->width)
-    NEXT_FLOAT(out->height)
-    *buffer_offset += __buffer_offset;
-    return 0;
-}
 void free_LabelInfo(LabelInfo *s) {
+    if (s->name) {
+        free(s->name);
+    }
     if (s->label) {
         free(s->label);
     }
-    if (s->fontName) {
-        free(s->fontName);
+    if (s->xlabel) {
+        free(s->xlabel);
+    }
+    if (s->font_name) {
+        free(s->font_name);
     }
 }
 size_t LabelInfo_size(const void *s){
-	return 1 + 1 + strlen(((LabelInfo*)s)->label) + 1 + 1 + TYPST_INT_SIZE + strlen(((LabelInfo*)s)->fontName) + 1 + TYPST_INT_SIZE;
+	return 1 + 1 + 1 + strlen(((LabelInfo*)s)->name) + 1 + strlen(((LabelInfo*)s)->label) + 1 + strlen(((LabelInfo*)s)->xlabel) + 1 + 1 + 1 + TYPST_INT_SIZE + strlen(((LabelInfo*)s)->font_name) + 1 + TYPST_INT_SIZE;
 }
 int encode_LabelInfo(const LabelInfo *s, uint8_t *__input_buffer, size_t *buffer_len, size_t *buffer_offset) {
     size_t __buffer_offset = 0;    size_t s_size = LabelInfo_size(s);
@@ -113,13 +139,80 @@ int encode_LabelInfo(const LabelInfo *s, uint8_t *__input_buffer, size_t *buffer
 	(void)err;
     CHAR_PACK(s->native)
     CHAR_PACK(s->html)
+    CHAR_PACK(s->override_xlabel)
+    STR_PACK(s->name)
     STR_PACK(s->label)
-    CHAR_PACK(s->mathMode)
+    STR_PACK(s->xlabel)
+    CHAR_PACK(s->math_mode)
+    CHAR_PACK(s->xlabel_math_mode)
     INT_PACK(s->color)
-    STR_PACK(s->fontName)
-    FLOAT_PACK(s->fontSize)
+    STR_PACK(s->font_name)
+    FLOAT_PACK(s->font_size)
 
     *buffer_offset += __buffer_offset;
+    return 0;
+}
+void free_renderGraph(renderGraph *s) {
+    if (s->dot) {
+        free(s->dot);
+    }
+    for (size_t i = 0; i < s->labels_len; i++) {
+    free_SizedLabel(&s->labels[i]);
+    }
+    free(s->labels);
+    if (s->engine) {
+        free(s->engine);
+    }
+}
+int decode_renderGraph(size_t buffer_len, renderGraph *out) {
+    INIT_BUFFER_UNPACK(buffer_len)
+    int err;
+    (void)err;
+    NEXT_FLOAT(out->font_size)
+    NEXT_STR(out->dot)
+    NEXT_INT(out->labels_len)
+    if (out->labels_len == 0) {
+        out->labels = NULL;
+    } else {
+        out->labels = malloc(out->labels_len * sizeof(SizedLabel));
+        if (!out->labels){
+            return 1;
+        }
+        for (size_t i = 0; i < out->labels_len; i++) {
+    if ((err = decode_SizedLabel(__input_buffer + __buffer_offset, buffer_len - __buffer_offset, &out->labels[i], &__buffer_offset))){return err;}
+        }
+    }
+    NEXT_STR(out->engine)
+    FREE_BUFFER()
+    return 0;
+}
+void free_overriddenLabels(overriddenLabels *s) {
+    for (size_t i = 0; i < s->labels_len; i++) {
+    free_OverrideLabel(&s->labels[i]);
+    }
+    free(s->labels);
+    if (s->dot) {
+        free(s->dot);
+    }
+}
+int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out) {
+    INIT_BUFFER_UNPACK(buffer_len)
+    int err;
+    (void)err;
+    NEXT_INT(out->labels_len)
+    if (out->labels_len == 0) {
+        out->labels = NULL;
+    } else {
+        out->labels = malloc(out->labels_len * sizeof(OverrideLabel));
+        if (!out->labels){
+            return 1;
+        }
+        for (size_t i = 0; i < out->labels_len; i++) {
+    if ((err = decode_OverrideLabel(__input_buffer + __buffer_offset, buffer_len - __buffer_offset, &out->labels[i], &__buffer_offset))){return err;}
+        }
+    }
+    NEXT_STR(out->dot)
+    FREE_BUFFER()
     return 0;
 }
 void free_LabelsInfos(LabelsInfos *s) {
@@ -144,40 +237,6 @@ int encode_LabelsInfos(const LabelsInfos *s) {
     }
 
     wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
-    return 0;
-}
-void free_renderGraph(renderGraph *s) {
-    if (s->dot) {
-        free(s->dot);
-    }
-    for (size_t i = 0; i < s->labels_len; i++) {
-    free_SizedLabel(&s->labels[i]);
-    }
-    free(s->labels);
-    if (s->engine) {
-        free(s->engine);
-    }
-}
-int decode_renderGraph(size_t buffer_len, renderGraph *out) {
-    INIT_BUFFER_UNPACK(buffer_len)
-    int err;
-    (void)err;
-    NEXT_FLOAT(out->fontSize)
-    NEXT_STR(out->dot)
-    NEXT_INT(out->labels_len)
-    if (out->labels_len == 0) {
-        out->labels = NULL;
-    } else {
-        out->labels = malloc(out->labels_len * sizeof(SizedLabel));
-        if (!out->labels){
-            return 1;
-        }
-        for (size_t i = 0; i < out->labels_len; i++) {
-    if ((err = decode_SizedLabel(__input_buffer + __buffer_offset, buffer_len - __buffer_offset, &out->labels[i], &__buffer_offset))){return err;}
-        }
-    }
-    NEXT_STR(out->engine)
-    FREE_BUFFER()
     return 0;
 }
 void free_graphInfo(graphInfo *s) {
@@ -207,36 +266,5 @@ int encode_graphInfo(const graphInfo *s) {
     STR_PACK(s->svg)
 
     wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
-    return 0;
-}
-void free_overriddenLabels(overriddenLabels *s) {
-    for (size_t i = 0; i < s->labels_len; i++) {
-    if (s->labels[i]) {
-        free(s->labels[i]);
-    }
-    }
-    free(s->labels);
-    if (s->dot) {
-        free(s->dot);
-    }
-}
-int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out) {
-    INIT_BUFFER_UNPACK(buffer_len)
-    int err;
-    (void)err;
-    NEXT_INT(out->labels_len)
-    if (out->labels_len == 0) {
-        out->labels = NULL;
-    } else {
-        out->labels = malloc(out->labels_len * sizeof(char*));
-        if (!out->labels){
-            return 1;
-        }
-        for (size_t i = 0; i < out->labels_len; i++) {
-    NEXT_STR(out->labels[i])
-        }
-    }
-    NEXT_STR(out->dot)
-    FREE_BUFFER()
     return 0;
 }

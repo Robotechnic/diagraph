@@ -50,6 +50,8 @@ For more information about the Graphviz Dot language, you can check the [officia
 
 - `labels` (`dict`) is a list of labels to use to override the defaults labels. This is discussed in depth in the next section. Defaults to `(:)`.
 
+- `xlabels` (`dict`) is a list of labels to use to override the defaults xlabels. This is discussed in depth in the next section. Defaults to `(:)`.
+
 ### Labels
 
 By default, all node labels are rendered by Typst. If a node has no explicitly set label (using the `[label="..."]` syntax), its name is used as its label, and interpreted as math if possible. This means a node named `n_0` will render as 𝑛<sub>0</sub>.
