@@ -79,6 +79,31 @@ If you want a node label to contain a more complex mathematical equation, or mor
 ````
 ![labels](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/labels1.png)
 
+### Xlabels
+
+Like labels, all xlabels are rendered by Typst. If you want a xlabel to contain a more complex mathematical equation, or more complex markup, you can use the `xlabels` argument: pass a dictionary that maps edge names to Typst `content`. Each node with a name within the dictionary will have its xlabel overridden by the corresponding content.
+
+<!--EXAMPLE(xlabels)-->
+````typ
+#raw-render(```
+  graph {
+    simplexlabel[xlabel="simple"]
+    simplexlabel -- limitxlabel
+    simplexlabel -- longxlabel
+    longxlabel[xlabel="long xlabel --------------------------------------"]
+    "alpha xlabel"[xlabel="alpha"]
+    simplexlabel -- "alpha xlabel"
+    limitxlabel[xlabel="limit"]
+    formulaxlabel -- "alpha xlabel"
+  }
+  ```, 
+  xlabels: (
+    formulaxlabel: $ sum_(i=0)^n 1/i $
+  )
+)
+````
+![xlabels](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/xlabels1.png)
+
 <!--EXCLUDE-->
 ## Build
 
