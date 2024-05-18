@@ -1,17 +1,27 @@
 // Those two protocols allow to get the labels that are not overridden by the user
+struct OverrideLabel {
+	string label;
+	bool content;
+	bool xlabel;
+}
+
 protocol C overriddenLabels {
-	string labels[];
+	OverrideLabel labels[];
 	string dot;
 }
 
 struct LabelInfo {
 	bool native;
 	bool html;
+	bool override_xlabel;
+	string name;
 	string label;
-	bool mathMode;
+	string xlabel;
+	bool math_mode;
+	bool xlabel_math_mode;
 	int color;
-	string fontName;
-	point fontSize;
+	string font_name;
+	point font_size;
 }
 
 protocol Typst LabelsInfos {
@@ -21,12 +31,15 @@ protocol Typst LabelsInfos {
 // Those two protocols allow to ask the engine to render a graph and get the svg back
 struct SizedLabel {
 	bool override;
-	float width;
-	float height;
+	bool xoverride;
+	point width;
+	point height;
+	point xwidth;
+	point xheight;
 }
 
 protocol C renderGraph {
-	point fontSize;
+	point font_size;
 	string dot;
 	SizedLabel labels[];
 	string engine;
@@ -35,6 +48,8 @@ protocol C renderGraph {
 struct Coordinates {
 	point x;
 	point y;
+	point xx;
+	point xy;
 }
 
 protocol Typst graphInfo {

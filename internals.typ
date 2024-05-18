@@ -45,15 +45,29 @@
 }
 
 /// Get an array of evaluated labels from a graph.
-#let get-labels(manual-label-names, dot) = {
+#let get-labels(manual-label-names, manual-xlabel-names, dot) = {
+	let labels = manual-label-names.map(label => {
+		(
+			label: label,
+			content: true,
+			xlabel: manual-xlabel-names.contains(label),
+		)
+	});
+	let labels = labels + manual-xlabel-names.filter(label => not manual-label-names.contains(label)).map(label => {
+		(
+			label: label,
+			content: false,
+			xlabel: true,
+		)
+	});
 	let encoded-labels = plugin.get_labels(encode-overriddenLabels((
-		"labels": manual-label-names,
+		"labels": labels,
 		"dot": dot,
 	)))
 	let (labels, _) = decode-LabelsInfos(encoded-labels)
   labels.at("labels").map(encoded-label => {
 		let label = if encoded-label.at("native") {
-			if encoded-label.at("mathMode") {
+			if encoded-label.at("math_mode") {
 				math.equation(eval(mode: "math", encoded-label.at("label")))
 			} else {
 				parse-string(encoded-label.at("label"))
@@ -61,11 +75,27 @@
 		} else {
 			encoded-label.at("label")
 		}
+		let xlabel = if encoded-label.at("xlabel") != "" {
+			if encoded-label.at("xlabel_math_mode") {
+				math.equation(eval(mode: "math", encoded-label.at("xlabel")))
+			} else {
+				parse-string(encoded-label.at("xlabel"))
+			}
+		} else {
+			""
+		}
+		let font_size = text.size
+		if encoded-label.at("font_size").pt() != 0 {
+			font_size = encoded-label.at("font_size")
+		}
 		(
 			..encoded-label,
 			label: label,
+			font_size: font_size,
+			xlabel: xlabel,
 		)
   })
+	
 }
 
 /// Return a formatted label based on its color, font and content.
@@ -82,27 +112,37 @@
 }
 
 /// Encodes the dimensions of labels into bytes.
-#let encode-label-dimensions(labels, overriden-labels) = {
+#let encode-label-dimensions(labels, overridden-labels, overridden-xlabels) = {
 	labels.map(label => {
 		if label.at("html") {
 			(
 				override: false,
+				xoverride: false,
 				width: 0,
 				height: 0,
-			)
-		} else if label.at("native") {
-			let dimensions = label-dimensions(label.at("color"), label.at("fontName"), label.at("fontSize"), label.at("label"))
-			(
-				override: true,
-				width: dimensions.width / 1pt,
-				height: dimensions.height / 1pt,
+				xwidth: 0,
+				xheight: 0,
 			)
 		} else {
-			let dimensions = measure(overriden-labels.at(label.at("label")))
+			let dimensions = if label.at("native") {
+				label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("label"))
+			} else {
+				measure(overridden-labels.at(label.at("name")))
+			}
+			let xdimensions = if label.at("override_xlabel") {
+				measure(overridden-xlabels.at(label.at("name")))
+			} else if label.at("xlabel") != "" {
+				label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("xlabel"))
+			} else {
+				(width: 0pt, height: 0pt)
+			}
 			(
 				override: true,
-				width: dimensions.width / 1pt,
-				height: dimensions.height / 1pt,
+				xoverride: label.at("xlabel") != "" or label.at("override_xlabel"),
+				width: dimensions.width,
+				height: dimensions.height,
+				xwidth: xdimensions.width,
+				xheight: xdimensions.height,
 			)
 		}
 	})
@@ -124,6 +164,15 @@
   panic("Expected relative length, found " + str(type(value)))
 }
 
+#let debug-rectangle(x, y, width, height) = {
+	place(
+		top + left,
+		dx: x,
+		dy: y,
+		rect(height: height, width: width, fill: none, stroke:red)
+	)
+}
+
 /// Renders a graph with Graphviz.
 #let render(
   /// A string containing Dot code.
@@ -132,6 +181,10 @@
   /// overridden with the corresponding content. Defaults to an empty
   /// dictionary.
   labels: (:),
+	/// Nodes whose name appear in this dictionary will have their xlabel
+	/// overridden with the corresponding content. Defaults to an empty
+	/// dictionary.
+	xlabels: (:),
   /// The name of the engine to generate the graph with. Defaults to `"dot"`.
 	engine: "dot",
   /// The width of the image to display. If set to `auto` (the default), will be
@@ -151,28 +204,17 @@
 ) = {
   set math.equation(numbering: none)
   let manual-label-names = labels.keys()
-  let labels-infos = get-labels(manual-label-names, dot)
-  let labels-info-count = labels-infos.len()
+	let manual-xlabel-names = xlabels.keys()
 	
 	layout(((width: container-width, height: container-height)) => context {
-		// replace invalid font sizes with the current text size
-
-		let labels-infos = labels-infos.map((label) => {
-			let fontSize = text.size
-			if label.at("fontSize").pt() != 0 {
-				fontSize = label.at("fontSize")
-			}
-			(
-				..label,
-				fontSize: fontSize,
-			)
-		})
+		let labels-infos = get-labels(manual-label-names, manual-xlabel-names, dot)
+  	let labels-info-count = labels-infos.len()
 		// return [#repr(labels-infos)]
 
 		let encoded-data = (
-			"fontSize": text.size.to-absolute(),
+			"font_size": text.size.to-absolute(),
 			"dot": dot,
-			"labels": encode-label-dimensions(labels-infos, labels),
+			"labels": encode-label-dimensions(labels-infos, labels, xlabels),
 			"engine": engine,
 		)
 		// return [#repr(encoded-data)]
@@ -248,9 +290,9 @@
 			let label = if label-infos.at("native") {
 				label-infos.at("label")
 			} else {
-				labels.at(label-infos.at("label"))
+				labels.at(label-infos.at("name"))
 			}
-			let label = label-format(label-infos.at("color"), label-infos.at("fontName"), label-infos.at("fontSize"), label)
+			let label = label-format(label-infos.at("color"), label-infos.at("font_name"), label-infos.at("font_size"), label)
 			let label-dimensions = measure(label)
 			place(
 				top + left,
@@ -258,11 +300,35 @@
 				dy: final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
 				label
 			)
-			// place(
-			// 	top + left,
-			// 	dx: label-coordinates.at("x") - label-dimensions.width / 2,
-			// 	dy: final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
-			// 	rect(height: label-dimensions.height, width: label-dimensions.width, fill: none)
+
+			// debug-rectangle(
+			// 	label-coordinates.at("x") - label-dimensions.width / 2,
+			// 	final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
+			// 	label-dimensions.width,
+			// 	label-dimensions.height
+			// )
+
+			let xlabel = if label-infos.at("override_xlabel") {
+				xlabels.at(label-infos.at("name"))
+			} else if label-infos.at("xlabel") != "" {
+				label-infos.at("xlabel")
+			} else {
+				continue
+			}
+
+			let xlabel = label-format(label-infos.at("color"), label-infos.at("font_name"), label-infos.at("font_size"), xlabel)
+			let xlabel-dimensions = measure(xlabel)
+			place(
+				top + left,
+				dx: label-coordinates.at("xx") - xlabel-dimensions.width / 2,
+				dy: final-height - label-coordinates.at("xy") - xlabel-dimensions.height / 2 - (final-height - svg-height),
+				xlabel
+			)
+			// debug-rectangle(
+			// 	label-coordinates.at("xx") - xlabel-dimensions.width / 2,
+			// 	final-height - label-coordinates.at("xy") - xlabel-dimensions.height / 2 - (final-height - svg-height),
+			// 	xlabel-dimensions.width,
+			// 	xlabel-dimensions.height
 			// )
 		}
 	})

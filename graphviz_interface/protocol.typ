@@ -178,19 +178,28 @@
 	}
 	(result, offset)
 }
+#let encode-SizedLabel(value) = {
+  encode-bool(value.at("override")) + encode-bool(value.at("xoverride")) + encode-point(value.at("width")) + encode-point(value.at("height")) + encode-point(value.at("xwidth")) + encode-point(value.at("xheight"))
+}
+#let encode-OverrideLabel(value) = {
+  encode-string(value.at("label")) + encode-bool(value.at("content")) + encode-bool(value.at("xlabel"))
+}
 #let decode-Coordinates(bytes) = {
   let offset = 0
   let (f_x, size) = decode-point(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_y, size) = decode-point(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_xx, size) = decode-point(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_xy, size) = decode-point(bytes.slice(offset, bytes.len()))
+  offset += size
   ((
     x: f_x,
     y: f_y,
+    xx: f_xx,
+    xy: f_xy,
   ), offset)
-}
-#let encode-SizedLabel(value) = {
-  encode-bool(value.at("override")) + encode-float(value.at("width")) + encode-float(value.at("height"))
 }
 #let decode-LabelInfo(bytes) = {
   let offset = 0
@@ -198,25 +207,43 @@
   offset += size
   let (f_html, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_override_xlabel, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_name, size) = decode-string(bytes.slice(offset, bytes.len()))
+  offset += size
   let (f_label, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
-  let (f_mathMode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  let (f_xlabel, size) = decode-string(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_xlabel_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_color, size) = decode-int(bytes.slice(offset, bytes.len()))
   offset += size
-  let (f_fontName, size) = decode-string(bytes.slice(offset, bytes.len()))
+  let (f_font_name, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
-  let (f_fontSize, size) = decode-point(bytes.slice(offset, bytes.len()))
+  let (f_font_size, size) = decode-point(bytes.slice(offset, bytes.len()))
   offset += size
   ((
     native: f_native,
     html: f_html,
+    override_xlabel: f_override_xlabel,
+    name: f_name,
     label: f_label,
-    mathMode: f_mathMode,
+    xlabel: f_xlabel,
+    math_mode: f_math_mode,
+    xlabel_math_mode: f_xlabel_math_mode,
     color: f_color,
-    fontName: f_fontName,
-    fontSize: f_fontSize,
+    font_name: f_font_name,
+    font_size: f_font_size,
   ), offset)
+}
+#let encode-renderGraph(value) = {
+  encode-point(value.at("font_size")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedLabel) + encode-string(value.at("engine"))
+}
+#let encode-overriddenLabels(value) = {
+  encode-list(value.at("labels"), encode-OverrideLabel) + encode-string(value.at("dot"))
 }
 #let decode-LabelsInfos(bytes) = {
   let offset = 0
@@ -225,9 +252,6 @@
   ((
     labels: f_labels,
   ), offset)
-}
-#let encode-renderGraph(value) = {
-  encode-point(value.at("fontSize")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedLabel) + encode-string(value.at("engine"))
 }
 #let decode-graphInfo(bytes) = {
   let offset = 0
@@ -242,7 +266,4 @@
     labels: f_labels,
     svg: f_svg,
   ), offset)
-}
-#let encode-overriddenLabels(value) = {
-  encode-list(value.at("labels"), encode-string) + encode-string(value.at("dot"))
 }
