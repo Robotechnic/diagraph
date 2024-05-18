@@ -100,7 +100,7 @@
 
 /// Return a formatted label based on its color, font and content.
 #let label-format(color, font, fontsize, label) = [
-	#set text(fill: rgb(int-to-string(color, 8, base: 16)))
+	#set text(fill: rgb(int-to-string(color, 8, base: 16)), bottom-edge: "bounds")
 	#set text(size: fontsize) if fontsize.pt() != 0
 	#set text(font: font) if font != ""
 	#text(label)
@@ -118,10 +118,10 @@
 			(
 				override: false,
 				xoverride: false,
-				width: 0,
-				height: 0,
-				xwidth: 0,
-				xheight: 0,
+				width: 0pt,
+				height: 0pt,
+				xwidth: 0pt,
+				xheight: 0pt,
 			)
 		} else {
 			let dimensions = if label.at("native") {
