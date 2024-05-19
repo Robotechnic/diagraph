@@ -1,3 +1,3 @@
 #import "@preview/diagraph:0.2.4": *
 
-#render(read("./filerender.dot"))
+#render(read("./VERYlargegraph.txt"), width: 100%)

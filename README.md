@@ -134,6 +134,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.2.4
+
+- Added render for xlabels
+
 ### 0.2.3
 
 - Updated to typst 0.11.0
