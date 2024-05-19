@@ -7,14 +7,14 @@ SOURCES=src/main.c $(wildcard src/*/*.c)
 INSTALLDIR=$(shell pwd)/install
 SRCDIR=$(shell pwd)/graphiz-src
 EPSRCDIR=$(shell pwd)/expat-src
-CFLAGS = -Oz --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1 -Wall -Wno-logical-op-parentheses
+CFLAGS = -O2 --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1 -Wall -Wno-logical-op-parentheses
 INCLUDE_FLAGS = -I"src" -I"$(INSTALLDIR)/include" -I"$(INSTALLDIR)/include/graphviz" -L"$(INSTALLDIR)/lib" -L"$(INSTALLDIR)/lib/graphviz" -lgvplugin_dot_layout -lgvplugin_neato_layout -lgvplugin_core -lgvc -lpathplan -lcgraph -lxdot -lcdt -lexpat -lm
 GRAPHVIZ_INFO_INCLUDE=-include "$(SRCDIR)/graphviz_version.h"
 INCLUDE_FLAGS += $(GRAPHVIZ_INFO_INCLUDE)
 
-all: build
+all: diagraph.wasm
 
-build: $(SOURCES) $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz src/protocol/protocol.c
+diagraph.wasm: $(SOURCES) $(INSTALLDIR)/lib/libexpat.a $(INSTALLDIR)/lib/graphviz src/protocol/protocol.c
 	$(CC) $(CFLAGS) $(SOURCES) -o diagraph.wasm $(INCLUDE_FLAGS)
 	wasi-stub --stub-function env:__syscall_unlinkat,env:__syscall_faccessat ./diagraph.wasm
 	mv ./"diagraph - stubbed.wasm" ./diagraph.wasm

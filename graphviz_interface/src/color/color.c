@@ -58,9 +58,16 @@ int hsv_to_rgb(float h, float s, float v) {
  * @return int the color in rgba format
  */
 int name_to_rgb(char *name) {
-	for (int i = 0; i < sizeof(colors) / sizeof(colors[0]); i++) {
-		if (strcmp(name, colors[i].name) == 0) {
+	size_t color_table_len = sizeof(colors) / sizeof(colors[0]);
+
+	for (int i = 0; i < color_table_len; i++) {
+		int result = strcmp(name, colors[i].name);
+		if (result == 0) {
 			return colors[i].rgb << 8 | 0xff;
+		} else if (result < 0) {
+            // colors are sorted in alphabetical order, so if we pass a color after the one we are looking
+            // for, we can break the loop
+            return DEFAULT_COLOR;
 		}
 	}
     return DEFAULT_COLOR;
