@@ -144,6 +144,44 @@ int process_xlabel_label(Agnode_t *n, LabelInfo *label_infos, bool is_xlabel_ove
     return 0;
 }
 
+int get_nodes_labels(graph_t *g, overriddenLabels labels, LabelsInfos nLabels, GVC_t *gvc) {
+    int label_index = 0;
+
+    // Get node labels.
+    for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
+        const char *name = agnameof(n);
+        bool is_manually_overridden = false;
+        bool is_xlabel_overridden = false;
+        for (int i = 0; i < labels.labels_len; i++) {
+            if (strcmp(labels.labels[i].label, name) == 0) {
+                is_manually_overridden = labels.labels[i].content;
+                is_xlabel_overridden = labels.labels[i].xlabel;
+                break;
+            }
+        }
+
+        const char *label = agget(n, "label");
+        if (aghtmlstr(label)) {
+            default_label_values(&nLabels.labels[label_index]);
+            nLabels.labels[label_index].html = true;
+        } else {
+            nLabels.labels[label_index].html = false;
+
+            if (process_node_label(n, &nLabels.labels[label_index], name, label, is_manually_overridden) ||
+                process_xlabel_label(n, &nLabels.labels[label_index], is_xlabel_overridden)) {
+                return 1;
+            }
+
+            process_font_name(n, &nLabels.labels[label_index]);
+            nLabels.labels[label_index].native = !is_manually_overridden;
+            nLabels.labels[label_index].color = color_to_int(agget(n, "fontcolor"));
+            nLabels.labels[label_index].font_size = atof(agget(n, "fontsize"));
+        }
+        label_index++;
+    }
+	return 0;
+}
+
 /**
  * @brief Return a list of all labels.
  */
@@ -192,60 +230,27 @@ EMSCRIPTEN_KEEPALIVE int get_labels(size_t buffer_len) {
         return 1;
     }
 
-    int label_index = 0;
-
-    // Get node labels.
-    for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-        const char *name = agnameof(n);
-        bool is_manually_overridden = false;
-        bool is_xlabel_overridden = false;
-        for (int i = 0; i < labels.labels_len; i++) {
-            if (strcmp(labels.labels[i].label, name) == 0) {
-                is_manually_overridden = labels.labels[i].content;
-                is_xlabel_overridden = labels.labels[i].xlabel;
-                break;
-            }
-        }
-
-        const char *label = agget(n, "label");
-        if (aghtmlstr(label)) {
-            default_label_values(&nLabels.labels[label_index]);
-            nLabels.labels[label_index].html = true;
-        } else {
-            nLabels.labels[label_index].html = false;
-
-            if (process_node_label(n, &nLabels.labels[label_index], name, label, is_manually_overridden) ||
-                process_xlabel_label(n, &nLabels.labels[label_index], is_xlabel_overridden)) {
-                free_overriddenLabels(&labels);
-                free_LabelsInfos(&nLabels);
-                gvFreeLayout(gvc, g);
-                agclose(g);
-                return 1;
-            }
-
-            process_font_name(n, &nLabels.labels[label_index]);
-            nLabels.labels[label_index].native = !is_manually_overridden;
-            nLabels.labels[label_index].color = color_to_int(agget(n, "fontcolor"));
-            nLabels.labels[label_index].font_size = atof(agget(n, "fontsize"));
-        }
-        label_index++;
-    }
-
+    int res = get_nodes_labels(g, labels, nLabels, gvc);
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFinalize(gvc);
-
-    if ((err = encode_LabelsInfos(&nLabels))) {
-        if (err == 1) {
-            ERROR("Failed to allocate memory for native labels");
-        } else if (err == 2) {
-            ERROR("Failed to encode native labels");
-        } else {
-            ERROR("Failled to encode native labels");
-        }
+	if (res) {
         free_overriddenLabels(&labels);
         free_LabelsInfos(&nLabels);
-        return 1;
+		return 1;
+	}
+
+	if ((err = encode_LabelsInfos(&nLabels))) {
+		if (err == 1) {
+			ERROR("Failed to allocate memory for native labels");
+		} else if (err == 2) {
+			ERROR("Failed to encode native labels");
+		} else {
+			ERROR("Failled to encode native labels");
+		}
+		free_overriddenLabels(&labels);
+		free_LabelsInfos(&nLabels);
+		return 1;
     }
 
     free_overriddenLabels(&labels);

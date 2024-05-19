@@ -225,6 +225,23 @@ Labels for nodes `big` and `sum` are overridden.
   ),
 )
 
+#render-example(```
+  graph {
+    simplexlabel[xlabel="simple"]
+    simplexlabel -- limitxlabel
+    simplexlabel -- longxlabel
+    longxlabel[xlabel="long xlabel --------------------------------------"]
+    "alpha xlabel"[xlabel="alpha"]
+    simplexlabel -- "alpha xlabel"
+    limitxlabel[xlabel="limit"]
+    formulaxlabel -- "alpha xlabel"
+  }
+  ```, 
+  xlabels: (
+    formulaxlabel: $ sum_(i=0)^n 1/i $
+  )
+)
+
 #pagebreak()
 
 = Automatic math labels
