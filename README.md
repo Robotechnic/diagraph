@@ -136,7 +136,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 0.2.4
 
-- Added render for xlabels
+- Added support for xlabels which are now rendered by Typst
 
 ### 0.2.3
 
