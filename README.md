@@ -52,6 +52,8 @@ For more information about the Graphviz Dot language, you can check the [officia
 
 - `xlabels` (`dict`) is a list of labels to use to override the defaults xlabels. This is discussed in depth in the next section. Defaults to `(:)`.
 
+- `clusters` (`dict`) is a list of clusters to use to override the defaults clusters labels. This is discussed in depth in the next section. Defaults to `(:)`.
+
 ### Labels
 
 By default, all node labels are rendered by Typst. If a node has no explicitly set label (using the `[label="..."]` syntax), its name is used as its label, and interpreted as math if possible. This means a node named `n_0` will render as 𝑛<sub>0</sub>.
@@ -104,6 +106,32 @@ Like labels, all xlabels are rendered by Typst. If you want a xlabel to contain 
 ````
 ![xlabels](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/xlabels1.png)
 
+### Clusters
+
+Clusters are a way to group nodes together in graphviz. Clusters labels are rendered by Typst. If you want a cluster label to contain a more complex mathematical equation, or more complex markup, you can use the `clusters` argument: pass a dictionary that maps cluster names to Typst `content`. Each cluster with a name within the dictionary will have its label overridden by the corresponding content.
+
+<!--EXAMPLE(clusters)-->
+````typ
+#raw-render(```
+  digraph {
+    subgraph cluster_0 {
+      a -> b -> c
+    }
+    subgraph cluster_1 {
+      label="Cluster 1\nNormal text"
+      d->b
+      b->f
+      d->f
+    }
+  }
+  ```, 
+  clusters: (
+    cluster_0: $ "Formula:"\ sum_(i=0)^n 1/i $
+  )
+)
+````
+![clusters](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/clusters1.png)
+
 <!--EXCLUDE-->
 ## Build
 
@@ -137,6 +165,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 0.2.4
 
 - Added support for xlabels which are now rendered by Typst
+- Added support for cluster labels which are now rendered by Typst
+- Fix a margin problem with the clusters
 
 ### 0.2.3
 

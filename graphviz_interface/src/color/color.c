@@ -134,6 +134,9 @@ int hsv_to_int(char *hsv) {
 }
 
 int color_to_int(char *color) {
+	if (color == NULL) {
+		return DEFAULT_COLOR;
+	}
 	if (color[0] == '#') {
 		if (strlen(color) == 7) {
 			return hex_to_rgb(color);

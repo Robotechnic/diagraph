@@ -138,7 +138,7 @@ See http://www.graphviz.org/content/cluster.
   ```
   digraph G {
 
-    subgraph cluster_0 {
+    cluster cluster_0 {
       style=filled;
       color=lightgrey;
       node [style=filled,color=white];
@@ -146,7 +146,7 @@ See http://www.graphviz.org/content/cluster.
       label = "process #1";
     }
 
-    subgraph cluster_1 {
+    cluster cluster_1 {
       node [style=filled];
       b0 -> b1 -> b2 -> b3;
       label = "process #2";
@@ -258,5 +258,5 @@ Labels for nodes `big` and `sum` are overridden.
 		a_8 -> omega
 		alpha_8 -> omega
 	}
-	```
+	```,
 )
