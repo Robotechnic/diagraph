@@ -44,8 +44,22 @@
 	zeros + n-str
 }
 
+/// Return a buffer in readable format.
+#let buffer_repr(buffer) = [
+	#repr(array(buffer).map(x => "0x" + int-to-string(x, 2, base: 16)).join(", "))
+]
+
+/// COnvert a string to math or text mode
+#let convert-label(label, math-mode) = {
+	if math-mode {
+		math.equation(eval(mode: "math", label))
+	} else {
+		parse-string(label)
+	}
+}
+
 /// Get an array of evaluated labels from a graph.
-#let get-labels(manual-label-names, manual-xlabel-names, dot) = {
+#let get-labels(manual-label-names, manual-xlabel-names, clusters-names, dot) = {
 	let labels = manual-label-names.map(label => {
 		(
 			label: label,
@@ -60,42 +74,53 @@
 			xlabel: true,
 		)
 	});
-	let encoded-labels = plugin.get_labels(encode-overriddenLabels((
+	let overridden-labels = (
 		"labels": labels,
+		"cluster_labels": clusters-names,
 		"dot": dot,
-	)))
+	);
+	let encoded-labels = plugin.get_labels(encode-overriddenLabels(overridden-labels))
 	let (labels, _) = decode-LabelsInfos(encoded-labels)
-  labels.at("labels").map(encoded-label => {
-		let label = if encoded-label.at("native") {
-			if encoded-label.at("math_mode") {
-				math.equation(eval(mode: "math", encoded-label.at("label")))
+  (
+		labels.at("labels").map(encoded-label => {
+			let label = if encoded-label.at("native") {
+				convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
 			} else {
-				parse-string(encoded-label.at("label"))
+				encoded-label.at("label")
 			}
-		} else {
-			encoded-label.at("label")
-		}
-		let xlabel = if encoded-label.at("xlabel") != "" {
-			if encoded-label.at("xlabel_math_mode") {
-				math.equation(eval(mode: "math", encoded-label.at("xlabel")))
+			let xlabel = if encoded-label.at("xlabel") != "" {
+				convert-label(encoded-label.at("xlabel"), encoded-label.at("xlabel_math_mode"))
 			} else {
-				parse-string(encoded-label.at("xlabel"))
+				""
 			}
-		} else {
-			""
-		}
-		let font_size = text.size
-		if encoded-label.at("font_size").pt() != 0 {
-			font_size = encoded-label.at("font_size")
-		}
-		(
-			..encoded-label,
-			label: label,
-			font_size: font_size,
-			xlabel: xlabel,
-		)
-  })
-	
+			let font_size = text.size
+			if encoded-label.at("font_size").pt() != 0 {
+				font_size = encoded-label.at("font_size")
+			}
+			(
+				..encoded-label,
+				label: label,
+				font_size: font_size,
+				xlabel: xlabel,
+			)
+		}),
+		labels.at("cluster_labels").map(encoded-label => {
+			let label = if encoded-label.at("native") {
+				convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
+			} else {
+				encoded-label.at("label")
+			}
+			let font_size = text.size
+			if encoded-label.at("font_size").pt() != 0 {
+				font_size = encoded-label.at("font_size")
+			}
+			(
+				..encoded-label,
+				label: label,
+				font_size: font_size,
+			)
+		})
+	)
 }
 
 /// Return a formatted label based on its color, font and content.
@@ -148,6 +173,20 @@
 	})
 }
 
+#let encode-cluster-label-dimensions(clusters-labels-infos, clusters) = {
+	clusters-labels-infos.map(label => {
+		let dimensions = if label.at("native") {
+			label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("label"))
+		} else {
+			measure(clusters.at(label.at("name")))
+		}
+		(
+			width: dimensions.width,
+			height: dimensions.height,
+		)
+	})
+}
+
 /// Converts any relative length to an absolute length.
 #let relative-to-absolute(value, container-dimension) = {
   if type(value) == relative {
@@ -185,6 +224,10 @@
 	/// overridden with the corresponding content. Defaults to an empty
 	/// dictionary.
 	xlabels: (:),
+	/// Cluster names whose name appear in this dictionary will have their
+	/// label overridden with the corresponding content. Defaults to an empty
+	/// dictionary.
+	clusters: (:),
   /// The name of the engine to generate the graph with. Defaults to `"dot"`.
 	engine: "dot",
   /// The width of the image to display. If set to `auto` (the default), will be
@@ -205,20 +248,23 @@
   set math.equation(numbering: none)
   let manual-label-names = labels.keys()
 	let manual-xlabel-names = xlabels.keys()
+	let clusters-names = clusters.keys()
 	
 	layout(((width: container-width, height: container-height)) => context {
-		let labels-infos = get-labels(manual-label-names, manual-xlabel-names, dot)
-  	let labels-info-count = labels-infos.len()
+		let (labels-infos, clusters-labels-infos) = get-labels(manual-label-names, manual-xlabel-names, clusters-names, dot)
 		// return [#repr(labels-infos)]
+		// return [#repr(clusters-labels-infos)]
+  	let labels-info-count = labels-infos.len()
 
 		let encoded-data = (
 			"font_size": text.size.to-absolute(),
 			"dot": dot,
 			"labels": encode-label-dimensions(labels-infos, labels, xlabels),
+			"cluster_labels": encode-cluster-label-dimensions(clusters-labels-infos, clusters),
 			"engine": engine,
 		)
 		// return [#repr(encoded-data)]
-		// return [#((array(encode-renderGraph(encoded-data)).map(x => "0x" + int-to-string(x, 2, base: 16))).join(", "))]
+		// return [#repr(encode-renderGraph(encoded-data))]
 
 		let output = plugin.render(encode-renderGraph(encoded-data))
 
@@ -283,22 +329,22 @@
 		)
 
     // Place labels.
-		for (label-infos, label-coordinates) in labels-infos.zip(output.at("labels")) {
-			if label-infos.at("html") {
+		for (label-info, label-coordinates) in labels-infos.zip(output.at("labels")) {
+			if label-info.at("html") {
 				continue
 			}
-			let label = if label-infos.at("native") {
-				label-infos.at("label")
+			let label-content = if label-info.at("native") {
+				label-info.at("label")
 			} else {
-				labels.at(label-infos.at("name"))
+				labels.at(label-info.at("name"))
 			}
-			let label = label-format(label-infos.at("color"), label-infos.at("font_name"), label-infos.at("font_size"), label)
-			let label-dimensions = measure(label)
+			let label-content = label-format(label-info.at("color"), label-info.at("font_name"), label-info.at("font_size"), label-content)
+			let label-dimensions = measure(label-content)
 			place(
 				top + left,
 				dx: label-coordinates.at("x") - label-dimensions.width / 2,
 				dy: final-height - label-coordinates.at("y") - label-dimensions.height / 2 - (final-height - svg-height),
-				label
+			  label-content
 			)
 
 			// debug-rectangle(
@@ -308,15 +354,15 @@
 			// 	label-dimensions.height
 			// )
 
-			let xlabel = if label-infos.at("override_xlabel") {
-				xlabels.at(label-infos.at("name"))
-			} else if label-infos.at("xlabel") != "" {
-				label-infos.at("xlabel")
+			let xlabel = if label-info.at("override_xlabel") {
+				xlabels.at(label-info.at("name"))
+			} else if label-info.at("xlabel") != "" {
+				label-info.at("xlabel")
 			} else {
 				continue
 			}
 
-			let xlabel = label-format(label-infos.at("color"), label-infos.at("font_name"), label-infos.at("font_size"), xlabel)
+			let xlabel = label-format(label-info.at("color"), label-info.at("font_name"), label-info.at("font_size"), xlabel)
 			let xlabel-dimensions = measure(xlabel)
 			place(
 				top + left,
@@ -329,6 +375,28 @@
 			// 	final-height - label-coordinates.at("xy") - xlabel-dimensions.height / 2 - (final-height - svg-height),
 			// 	xlabel-dimensions.width,
 			// 	xlabel-dimensions.height
+			// )
+		}
+		
+		for (clusters-infos, cluster-coordinates) in clusters-labels-infos.zip(output.at("cluster_labels")) {
+			let cluster = if clusters-infos.at("native") {
+				clusters-infos.at("label")
+			} else {
+				clusters.at(clusters-infos.at("name"))
+			}
+			let cluster = label-format(clusters-infos.at("color"), clusters-infos.at("font_name"), clusters-infos.at("font_size"), cluster)
+			let cluster-dimensions = measure(cluster)
+			place(
+				top + left,
+				dx: cluster-coordinates.at("x") - cluster-dimensions.width / 2,
+				dy: final-height - cluster-coordinates.at("y") - cluster-dimensions.height / 2 - (final-height - svg-height),
+				cluster
+			)
+			// debug-rectangle(
+			// 	cluster-coordinates.at("x") - cluster-dimensions.width / 2,
+			// 	final-height - cluster-coordinates.at("y") - cluster-dimensions.height / 2 - (final-height - svg-height),
+			// 	cluster-dimensions.width,
+			// 	cluster-dimensions.height
 			// )
 		}
 	})

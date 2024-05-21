@@ -107,14 +107,47 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
         __buffer_offset += __str_len + 1;                                                          \
     }
 typedef struct {
+    bool native;
+    bool html;
+    char* name;
+    char* label;
+    bool math_mode;
+    int color;
+    char* font_name;
+    float font_size;
+} ClusterLabelInfo;
+void free_ClusterLabelInfo(ClusterLabelInfo *s);
+
+typedef struct {
+    float width;
+    float height;
+} SizedClusterLabel;
+void free_SizedClusterLabel(SizedClusterLabel *s);
+
+typedef struct {
     bool override;
     bool xoverride;
     float width;
     float height;
     float xwidth;
     float xheight;
-} SizedLabel;
-void free_SizedLabel(SizedLabel *s);
+} SizedNodeLabel;
+void free_SizedNodeLabel(SizedNodeLabel *s);
+
+typedef struct {
+    bool native;
+    bool html;
+    char* name;
+    char* label;
+    bool math_mode;
+    bool override_xlabel;
+    char* xlabel;
+    bool xlabel_math_mode;
+    int color;
+    char* font_name;
+    float font_size;
+} NodeLabelInfo;
+void free_NodeLabelInfo(NodeLabelInfo *s);
 
 typedef struct {
     char* label;
@@ -128,56 +161,55 @@ typedef struct {
     float y;
     float xx;
     float xy;
-} Coordinates;
-void free_Coordinates(Coordinates *s);
+} NodeCoordinates;
+void free_NodeCoordinates(NodeCoordinates *s);
 
 typedef struct {
-    bool native;
-    bool html;
-    bool override_xlabel;
-    char* name;
-    char* label;
-    char* xlabel;
-    bool math_mode;
-    bool xlabel_math_mode;
-    int color;
-    char* font_name;
-    float font_size;
-} LabelInfo;
-void free_LabelInfo(LabelInfo *s);
+    float x;
+    float y;
+} ClusterCoordinates;
+void free_ClusterCoordinates(ClusterCoordinates *s);
 
 typedef struct {
-    float font_size;
-    char* dot;
-    SizedLabel * labels;
+    bool error;
+    NodeCoordinates * labels;
     size_t labels_len;
-    char* engine;
-} renderGraph;
-void free_renderGraph(renderGraph *s);
-int decode_renderGraph(size_t buffer_len, renderGraph *out);
+    ClusterCoordinates * cluster_labels;
+    size_t cluster_labels_len;
+    char* svg;
+} graphInfo;
+void free_graphInfo(graphInfo *s);
+int encode_graphInfo(const graphInfo *s);
 
 typedef struct {
     OverrideLabel * labels;
     size_t labels_len;
+    char* * cluster_labels;
+    size_t cluster_labels_len;
     char* dot;
 } overriddenLabels;
 void free_overriddenLabels(overriddenLabels *s);
 int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
-    LabelInfo * labels;
+    NodeLabelInfo * labels;
     size_t labels_len;
+    ClusterLabelInfo * cluster_labels;
+    size_t cluster_labels_len;
 } LabelsInfos;
 void free_LabelsInfos(LabelsInfos *s);
 int encode_LabelsInfos(const LabelsInfos *s);
 
 typedef struct {
-    bool error;
-    Coordinates * labels;
+    float font_size;
+    char* dot;
+    SizedNodeLabel * labels;
     size_t labels_len;
-    char* svg;
-} graphInfo;
-void free_graphInfo(graphInfo *s);
-int encode_graphInfo(const graphInfo *s);
+    SizedClusterLabel * cluster_labels;
+    size_t cluster_labels_len;
+    char* engine;
+} renderGraph;
+void free_renderGraph(renderGraph *s);
+int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 #endif
