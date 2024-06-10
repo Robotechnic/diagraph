@@ -69,7 +69,10 @@ void default_node_label_values(NodeLabelInfo *label) {
  */
 int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name, const char *label,
                        bool is_manually_overridden) {
-    if (!is_manually_overridden) {
+    if (strncmp(ND_shape(n)->name, "point", 5) == 0) {
+        label_infos->label = NULL;
+        label_infos->math_mode = false;
+    } else if (!is_manually_overridden) {
         // If there is no explicitly set label for a node, so Graphviz intuitively sets its
         // "label" attribute to "\\N".
         bool has_label = strcmp(label, "\\N") != 0;
