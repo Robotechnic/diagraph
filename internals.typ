@@ -106,6 +106,7 @@
 				label: label,
 				font_size: font_size,
 				xlabel: xlabel,
+				font_name: encoded-label.at("font_name").split(",")
 			)
 		}),
 		labels.at("cluster_labels").map(encoded-label => {
@@ -126,6 +127,7 @@
 				..encoded-label,
 				label: label,
 				font_size: font_size,
+				font_name: encoded-label.at("font_name").split(",")
 			)
 		})
 	)
