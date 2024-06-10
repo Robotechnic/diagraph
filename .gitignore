@@ -73,3 +73,5 @@ graphviz_interface/src/test.c
 graphviz_interface/CMakeLists.txt
 
 images/*.typ
+
+tests

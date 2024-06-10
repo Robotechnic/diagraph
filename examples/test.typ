@@ -1,4 +1,4 @@
-#import "@preview/diagraph:0.2.4": *
+#import "@preview/diagraph:0.2.5": *
 
 #let labels = (
 	"a" :$1$,

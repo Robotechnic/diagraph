@@ -10,7 +10,7 @@ A simple Graphviz binding for Typst using the WebAssembly plugin system.
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/diagraph:0.2.4": *
+#import "@preview/diagraph:0.2.5": *
 ```
 <!--END-->
 
