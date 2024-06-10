@@ -84,7 +84,11 @@
   (
 		labels.at("labels").map(encoded-label => {
 			let label = if encoded-label.at("native") {
-				convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
+				if encoded-label.at("label") == "" {
+					""
+				} else {
+					convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
+				}
 			} else {
 				encoded-label.at("label")
 			}
@@ -106,7 +110,11 @@
 		}),
 		labels.at("cluster_labels").map(encoded-label => {
 			let label = if encoded-label.at("native") {
-				convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
+				if encoded-label.at("label") == "" {
+					""
+				} else {
+					convert-label(encoded-label.at("label"), 	encoded-label.at("math_mode"))
+				}
 			} else {
 				encoded-label.at("label")
 			}
@@ -132,8 +140,15 @@
 ]
 
 #let label-dimensions(color, font, fontsize, label) = {
-	let label = label-format(color, font, fontsize, label)
-	measure(label)
+	if label == "" {
+		(
+			width: 0pt,
+			height: 0pt
+		)
+	} else {
+		let label = label-format(color, font, fontsize, label)
+		measure(label)
+	}
 }
 
 /// Encodes the dimensions of labels into bytes.
@@ -338,6 +353,9 @@
 			} else {
 				labels.at(label-info.at("name"))
 			}
+			if label-content == "" {
+				continue;
+			}
 			let label-content = label-format(label-info.at("color"), label-info.at("font_name"), label-info.at("font_size"), label-content)
 			let label-dimensions = measure(label-content)
 			place(
@@ -362,6 +380,10 @@
 				continue
 			}
 
+			if xlabel == "" {
+				continue;
+			}
+
 			let xlabel = label-format(label-info.at("color"), label-info.at("font_name"), label-info.at("font_size"), xlabel)
 			let xlabel-dimensions = measure(xlabel)
 			place(
@@ -383,6 +405,9 @@
 				clusters-infos.at("label")
 			} else {
 				clusters.at(clusters-infos.at("name"))
+			}
+			if cluster == "" {
+				continue;
 			}
 			let cluster = label-format(clusters-infos.at("color"), clusters-infos.at("font_name"), clusters-infos.at("font_size"), cluster)
 			let cluster-dimensions = measure(cluster)

@@ -408,6 +408,9 @@ int get_labels(size_t buffer_len) {
  * Creates and returns a Graphviz label that has the specified dimensions.
  */
 char *create_label_for_dimension(graph_t *g, double width, double height) {
+	if (width < 1e-5 && height < 1e-5) {
+		return agstrdup(g, "");
+	}
     char label[2048];
     snprintf(label, sizeof(label),
              "<TABLE "
