@@ -367,6 +367,8 @@ int get_labels(size_t buffer_len) {
         return 1;
     }
 
+	agattr(g, AGNODE, "xlabel", "");
+
     LabelsInfos nLabels = {0};
     nLabels.labels_len = get_total_node_label_count(g);
     nLabels.labels = malloc(nLabels.labels_len * sizeof(NodeLabelInfo));
@@ -600,7 +602,6 @@ int render(size_t buffer_len) {
     }
     graph_t *g = agmemread(renderInfo.dot);
 
-    agattr(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
 
     if (!g) {
         free_renderGraph(&renderInfo);
@@ -609,6 +610,9 @@ int render(size_t buffer_len) {
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
     }
+    
+	agattr(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
+    agattr(g, AGNODE, "xlabel", "");
 
     // Passing a graph sets the value for the graph.
     agattr(g, AGRAPH, "bgcolor", "transparent");
