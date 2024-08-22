@@ -55,6 +55,9 @@ bool is_math(const char *name) {
     bool was_identifier_character = false;
 	size_t identifier_length = 0;
 	size_t len = strlen(name);
+	if (len == 0) {
+		return false;
+	}
     for (int i = 0; i < len; i++) {
         if (name[i] < 0) {
             // Non-ASCII characters are too complicated to handle properly.

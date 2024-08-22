@@ -11,20 +11,42 @@ protocol C overriddenLabels {
 	string dot;
 }
 
-struct NodeLabelInfo {
-	bool native;
-	bool html;
-	string name;
+struct EdgeLabelInfo {
 	string label;
 	bool math_mode;
 
-	bool override_xlabel;
 	string xlabel;
 	bool xlabel_math_mode;
+	
+	string headlabel;
+	bool headlabel_math_mode;
+	
+	string taillabel;
+	bool taillabel_math_mode;
 
 	int color;
 	string font_name;
 	point font_size;
+}
+
+struct NodeLabelInfo {
+	string name;
+	
+	bool native;
+	bool html;
+	string label;
+	bool math_mode;
+ 
+	bool override_xlabel;
+	string xlabel;
+	bool xlabel_math_mode;
+	bool xlabel_html;
+
+	int color;
+	string font_name;
+	point font_size;
+
+	EdgeLabelInfo edges_infos[];
 }
 
 struct ClusterLabelInfo {
@@ -45,6 +67,24 @@ protocol Typst LabelsInfos {
 }
 
 // Those two protocols allow to ask the engine to render a graph and get the svg back
+struct SizedEdgeLabel {
+	bool override;
+	point width;
+	point height;
+
+	bool xoverride;
+	point xwidth;
+	point xheight;
+
+	bool headoverride;
+	point headwidth;
+	point headheight;
+
+	bool tailoverride;
+	point tailwidth;
+	point tailheight;
+}
+
 struct SizedNodeLabel {
 	bool override;
 	bool xoverride;
@@ -52,6 +92,7 @@ struct SizedNodeLabel {
 	point height;
 	point xwidth;
 	point xheight;
+	SizedEdgeLabel edges_size[];
 }
 
 struct SizedClusterLabel {
@@ -67,11 +108,23 @@ protocol C renderGraph {
 	string engine;
 }
 
+struct EdgeCoordinates {
+	point x;
+	point y;
+	point xx;
+	point xy;
+	point headx;
+	point heady;
+	point tailx;
+	point taily;
+}
+
 struct NodeCoordinates {
 	point x;
 	point y;
 	point xx;
 	point xy;
+	EdgeCoordinates edges[];
 }
 
 struct ClusterCoordinates {
