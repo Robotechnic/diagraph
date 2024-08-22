@@ -107,6 +107,46 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
         __buffer_offset += __str_len + 1;                                                          \
     }
 typedef struct {
+    char* label;
+    bool content;
+    bool xlabel;
+} OverrideLabel;
+void free_OverrideLabel(OverrideLabel *s);
+
+typedef struct {
+    char* label;
+    bool math_mode;
+    char* xlabel;
+    bool xlabel_math_mode;
+    char* headlabel;
+    bool headlabel_math_mode;
+    char* taillabel;
+    bool taillabel_math_mode;
+    int color;
+    char* font_name;
+    float font_size;
+} EdgeLabelInfo;
+void free_EdgeLabelInfo(EdgeLabelInfo *s);
+
+typedef struct {
+    char* name;
+    bool native;
+    bool html;
+    char* label;
+    bool math_mode;
+    bool override_xlabel;
+    char* xlabel;
+    bool xlabel_math_mode;
+    bool xlabel_html;
+    int color;
+    char* font_name;
+    float font_size;
+    EdgeLabelInfo * edges_infos;
+    size_t edges_infos_len;
+} NodeLabelInfo;
+void free_NodeLabelInfo(NodeLabelInfo *s);
+
+typedef struct {
     bool native;
     bool html;
     char* name;
@@ -119,10 +159,20 @@ typedef struct {
 void free_ClusterLabelInfo(ClusterLabelInfo *s);
 
 typedef struct {
+    bool override;
     float width;
     float height;
-} SizedClusterLabel;
-void free_SizedClusterLabel(SizedClusterLabel *s);
+    bool xoverride;
+    float xwidth;
+    float xheight;
+    bool headoverride;
+    float headwidth;
+    float headheight;
+    bool tailoverride;
+    float tailwidth;
+    float tailheight;
+} SizedEdgeLabel;
+void free_SizedEdgeLabel(SizedEdgeLabel *s);
 
 typedef struct {
     bool override;
@@ -131,36 +181,36 @@ typedef struct {
     float height;
     float xwidth;
     float xheight;
+    SizedEdgeLabel * edges_size;
+    size_t edges_size_len;
 } SizedNodeLabel;
 void free_SizedNodeLabel(SizedNodeLabel *s);
 
 typedef struct {
-    bool native;
-    bool html;
-    char* name;
-    char* label;
-    bool math_mode;
-    bool override_xlabel;
-    char* xlabel;
-    bool xlabel_math_mode;
-    int color;
-    char* font_name;
-    float font_size;
-} NodeLabelInfo;
-void free_NodeLabelInfo(NodeLabelInfo *s);
-
-typedef struct {
-    char* label;
-    bool content;
-    bool xlabel;
-} OverrideLabel;
-void free_OverrideLabel(OverrideLabel *s);
+    float width;
+    float height;
+} SizedClusterLabel;
+void free_SizedClusterLabel(SizedClusterLabel *s);
 
 typedef struct {
     float x;
     float y;
     float xx;
     float xy;
+    float headx;
+    float heady;
+    float tailx;
+    float taily;
+} EdgeCoordinates;
+void free_EdgeCoordinates(EdgeCoordinates *s);
+
+typedef struct {
+    float x;
+    float y;
+    float xx;
+    float xy;
+    EdgeCoordinates * edges;
+    size_t edges_len;
 } NodeCoordinates;
 void free_NodeCoordinates(NodeCoordinates *s);
 
@@ -169,6 +219,16 @@ typedef struct {
     float y;
 } ClusterCoordinates;
 void free_ClusterCoordinates(ClusterCoordinates *s);
+
+typedef struct {
+    OverrideLabel * labels;
+    size_t labels_len;
+    char* * cluster_labels;
+    size_t cluster_labels_len;
+    char* dot;
+} overriddenLabels;
+void free_overriddenLabels(overriddenLabels *s);
+int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
     bool error;
@@ -180,16 +240,6 @@ typedef struct {
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
-
-typedef struct {
-    OverrideLabel * labels;
-    size_t labels_len;
-    char* * cluster_labels;
-    size_t cluster_labels_len;
-    char* dot;
-} overriddenLabels;
-void free_overriddenLabels(overriddenLabels *s);
-int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
     NodeLabelInfo * labels;
