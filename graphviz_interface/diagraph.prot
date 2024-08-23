@@ -33,14 +33,12 @@ struct NodeLabelInfo {
 	string name;
 	
 	bool native;
-	bool html;
 	string label;
 	bool math_mode;
  
 	bool override_xlabel;
 	string xlabel;
 	bool xlabel_math_mode;
-	bool xlabel_html;
 
 	int color;
 	string font_name;
@@ -51,7 +49,6 @@ struct NodeLabelInfo {
 
 struct ClusterLabelInfo {
 	bool native;
-	bool html;
 	string name;
 	string label;
 	bool math_mode;

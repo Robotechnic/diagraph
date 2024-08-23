@@ -180,7 +180,10 @@ int process_xlabel_label(Agnode_t *n, NodeLabelInfo *label_infos, bool is_xlabel
 
 int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
     const char *l = agget(e, name);
-    if (l) {
+	if (!l || aghtmlstr(l)) {
+		*label = NULL;
+		*math_mode = false;
+	} else  {
         *label = malloc(strlen(l) + 1);
         if (!*label) {
             ERROR("Failed to allocate memory for label");
@@ -189,9 +192,6 @@ int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
         strcpy(*label, l);
         (*label)[strlen(l)] = '\0';
         *math_mode = is_math(l);
-    } else {
-        *label = NULL;
-        *math_mode = false;
     }
     return 0;
 }
@@ -256,9 +256,7 @@ int get_nodes_labels(graph_t *g, const overriddenLabels *labels, LabelsInfos *nL
         const char *label = agget(n, "label");
         if (aghtmlstr(label)) {
             default_node_label_values(&nLabels->labels[label_index]);
-            nLabels->labels[label_index].html = true;
         } else {
-            nLabels->labels[label_index].html = false;
 
             if (process_node_label(n, &nLabels->labels[label_index], name, label, is_manually_overridden) ||
                 process_xlabel_label(n, &nLabels->labels[label_index], is_xlabel_overridden)) {
@@ -386,9 +384,7 @@ int get_cluster_labels(graph_t *g, const overriddenLabels *labels, LabelsInfos *
         }
         if (aghtmlstr(label)) {
             default_cluster_label_values(&sgLabels->cluster_labels[*label_index]);
-            sgLabels->cluster_labels[*label_index].html = true;
         } else {
-            sgLabels->cluster_labels[*label_index].html = false;
             if (process_cluster_label(sg, name, label, &sgLabels->cluster_labels[*label_index],
                                       is_manually_overridden)) {
                 return 1;
