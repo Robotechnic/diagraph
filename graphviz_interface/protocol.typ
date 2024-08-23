@@ -225,8 +225,6 @@
   offset += size
   let (f_native, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
-  let (f_html, size) = decode-bool(bytes.slice(offset, bytes.len()))
-  offset += size
   let (f_label, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
@@ -236,8 +234,6 @@
   let (f_xlabel, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_xlabel_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
-  offset += size
-  let (f_xlabel_html, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_color, size) = decode-int(bytes.slice(offset, bytes.len()))
   offset += size
@@ -250,13 +246,11 @@
   ((
     name: f_name,
     native: f_native,
-    html: f_html,
     label: f_label,
     math_mode: f_math_mode,
     override_xlabel: f_override_xlabel,
     xlabel: f_xlabel,
     xlabel_math_mode: f_xlabel_math_mode,
-    xlabel_html: f_xlabel_html,
     color: f_color,
     font_name: f_font_name,
     font_size: f_font_size,
@@ -266,8 +260,6 @@
 #let decode-ClusterLabelInfo(bytes) = {
   let offset = 0
   let (f_native, size) = decode-bool(bytes.slice(offset, bytes.len()))
-  offset += size
-  let (f_html, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_name, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
@@ -283,7 +275,6 @@
   offset += size
   ((
     native: f_native,
-    html: f_html,
     name: f_name,
     label: f_label,
     math_mode: f_math_mode,
@@ -361,9 +352,6 @@
     y: f_y,
   ), offset)
 }
-#let encode-overriddenLabels(value) = {
-  encode-list(value.at("labels"), encode-OverrideLabel) + encode-list(value.at("cluster_labels"), encode-string) + encode-string(value.at("dot"))
-}
 #let decode-graphInfo(bytes) = {
   let offset = 0
   let (f_error, size) = decode-bool(bytes.slice(offset, bytes.len()))
@@ -380,6 +368,9 @@
     cluster_labels: f_cluster_labels,
     svg: f_svg,
   ), offset)
+}
+#let encode-overriddenLabels(value) = {
+  encode-list(value.at("labels"), encode-OverrideLabel) + encode-list(value.at("cluster_labels"), encode-string) + encode-string(value.at("dot"))
 }
 #let decode-LabelsInfos(bytes) = {
   let offset = 0

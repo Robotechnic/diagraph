@@ -131,13 +131,11 @@ void free_EdgeLabelInfo(EdgeLabelInfo *s);
 typedef struct {
     char* name;
     bool native;
-    bool html;
     char* label;
     bool math_mode;
     bool override_xlabel;
     char* xlabel;
     bool xlabel_math_mode;
-    bool xlabel_html;
     int color;
     char* font_name;
     float font_size;
@@ -148,7 +146,6 @@ void free_NodeLabelInfo(NodeLabelInfo *s);
 
 typedef struct {
     bool native;
-    bool html;
     char* name;
     char* label;
     bool math_mode;
@@ -221,16 +218,6 @@ typedef struct {
 void free_ClusterCoordinates(ClusterCoordinates *s);
 
 typedef struct {
-    OverrideLabel * labels;
-    size_t labels_len;
-    char* * cluster_labels;
-    size_t cluster_labels_len;
-    char* dot;
-} overriddenLabels;
-void free_overriddenLabels(overriddenLabels *s);
-int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
-
-typedef struct {
     bool error;
     NodeCoordinates * labels;
     size_t labels_len;
@@ -240,6 +227,16 @@ typedef struct {
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
+
+typedef struct {
+    OverrideLabel * labels;
+    size_t labels_len;
+    char* * cluster_labels;
+    size_t cluster_labels_len;
+    char* dot;
+} overriddenLabels;
+void free_overriddenLabels(overriddenLabels *s);
+int decode_overriddenLabels(size_t buffer_len, overriddenLabels *out);
 
 typedef struct {
     NodeLabelInfo * labels;

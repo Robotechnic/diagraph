@@ -189,15 +189,15 @@
   } else {
     measure(edge.at(name))
   }
-	(
-		width: dim.width + margin,
-		height: dim.height + margin,
-	)
+  (
+    width: dim.width + margin,
+    height: dim.height + margin,
+  )
 }
 
 /// Encodes the dimensions of labels into bytes.
 #let encode-label-dimensions(labels, overridden-labels, overridden-xlabels) = {
-	let edges-margin = 5pt
+  let edges-margin = 5pt
   labels.map(label => {
     let edges-size = label.at("edges_infos").map(edge => {
       let label = measure-label(edge, "label", edge.at("native"), margin: edges-margin)
@@ -205,54 +205,43 @@
       let taillabel = measure-label(edge, "taillabel", edge.at("tailnative"), margin: edges-margin)
       let headlabel = measure-label(edge, "headlabel", edge.at("headnative"), margin: edges-margin)
       (
-				override: edge.at("label") != "",
+        override: edge.at("label") != "",
         width: label.width,
         height: label.height,
-				xoverride: edge.at("xlabel") != "",
+        xoverride: edge.at("xlabel") != "",
         xwidth: xlabel.width,
         xheight: xlabel.height,
-				tailoverride: edge.at("taillabel") != "",
+        tailoverride: edge.at("taillabel") != "",
         tailwidth: taillabel.width,
         tailheight: taillabel.height,
-				headoverride: edge.at("headlabel") != "",
+        headoverride: edge.at("headlabel") != "",
         headwidth: headlabel.width,
         headheight: headlabel.height,
       )
     })
 
-    if label.at("html") {
-      (
-        override: false,
-        xoverride: false,
-        width: 0pt,
-        height: 0pt,
-        xwidth: 0pt,
-        xheight: 0pt,
-        edges_size: edges-size,
-      )
+    let dimensions = if label.at("native") {
+      label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("label"))
     } else {
-      let dimensions = if label.at("native") {
-        label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("label"))
-      } else {
-        measure(overridden-labels.at(label.at("name")))
-      }
-      let xdimensions = if label.at("override_xlabel") {
-        measure(overridden-xlabels.at(label.at("name")))
-      } else if label.at("xlabel") != "" {
-        label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("xlabel"))
-      } else {
-        (width: 0pt, height: 0pt)
-      }
-      (
-        override: true,
-        xoverride: label.at("xlabel") != "" or label.at("override_xlabel"),
-        width: dimensions.width,
-        height: dimensions.height,
-        xwidth: xdimensions.width,
-        xheight: xdimensions.height,
-        edges_size: edges-size,
-      )
+      measure(overridden-labels.at(label.at("name")))
     }
+    let xdimensions = if label.at("override_xlabel") {
+      measure(overridden-xlabels.at(label.at("name")))
+    } else if label.at("xlabel") != "" {
+      label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("xlabel"))
+    } else {
+      (width: 0pt, height: 0pt)
+    }
+    (
+      override: true,
+      xoverride: label.at("xlabel") != "" or label.at("override_xlabel"),
+      width: dimensions.width,
+      height: dimensions.height,
+      xwidth: xdimensions.width,
+      xheight: xdimensions.height,
+      edges_size: edges-size,
+    )
+
   })
 }
 
@@ -364,7 +353,7 @@
         "cluster_labels": encode-cluster-label-dimensions(clusters-labels-infos, clusters),
         "engine": engine,
       )
-			
+
       // return [#repr(encoded-data)]
       // return [#buffer-repr(encode-renderGraph(encoded-data))]
 
@@ -430,91 +419,90 @@
         height: svg-height,
       )
 
-			let place-label(dx, dy, label) = {
-				let dimensions = measure(label)
-				place(
-					top + left,
-					dx: dx - dimensions.width / 2,
-					dy: final-height - dy - dimensions.height / 2 - (final-height - svg-height),
-					label,
-				)
-				if debug {
-					debug-rectangle(
-						dx - dimensions.width / 2,
-						final-height - dy - dimensions.height / 2 - (final-height - svg-height),
-						dimensions.width,
-						dimensions.height
-					)
-				}
-			}
+      let place-label(dx, dy, label) = {
+        let dimensions = measure(label)
+        place(
+          top + left,
+          dx: dx - dimensions.width / 2,
+          dy: final-height - dy - dimensions.height / 2 - (final-height - svg-height),
+          label,
+        )
+        if debug {
+          debug-rectangle(
+            dx - dimensions.width / 2,
+            final-height - dy - dimensions.height / 2 - (final-height - svg-height),
+            dimensions.width,
+            dimensions.height,
+          )
+        }
+      }
 
-			let place-edge-label(dx, dy, name, edge-info) = {
-				if edge-info.at(name) == "" {
-					return
-				}
-				let label = label-format(
-					edge-info.at("font_color"),
-					edge-info.at("font_name"),
-					edge-info.at("font_size"),
-					edge-info.at(name),
-				)
-				place-label(
-					dx,
-					dy,
-					label,
-				)
-			}
+      let place-edge-label(dx, dy, name, edge-info) = {
+        if edge-info.at(name) == "" {
+          return
+        }
+        let label = label-format(
+          edge-info.at("font_color"),
+          edge-info.at("font_name"),
+          edge-info.at("font_size"),
+          edge-info.at(name),
+        )
+        place-label(
+          dx,
+          dy,
+          label,
+        )
+      }
 
       // Place labels.
       for (label-info, label-coordinates) in labels-infos.zip(output.at("labels")) {
-				for (edge-info, edge-coordinates) in label-info.at("edges_infos").zip(label-coordinates.at("edges")) {
-					place-edge-label(
-						edge-coordinates.at("x"),
-						edge-coordinates.at("y"),
-						"label",
-						edge-info,
-					)
-					place-edge-label(
-						edge-coordinates.at("xx"),
-						edge-coordinates.at("xy"),
-						"xlabel",
-						edge-info,
-					)
-					place-edge-label(
-						edge-coordinates.at("headx"),
-						edge-coordinates.at("heady"),
-						"headlabel",
-						edge-info,
-					)
-					place-edge-label(
-						edge-coordinates.at("tailx"),
-						edge-coordinates.at("taily"),
-						"taillabel",
-						edge-info,
-					)
-				}
-
-        if not label-info.at("html") {
-          let label-content = if label-info.at("native") {
-            label-info.at("label")
-          } else {
-            labels.at(label-info.at("name"))
-          }
-          if label-content == "" {
-            continue
-          }
-          let label-content = label-format(
-            label-info.at("color"),
-            label-info.at("font_name"),
-            label-info.at("font_size"),
-            label-content,
+        for (edge-info, edge-coordinates) in label-info.at("edges_infos").zip(label-coordinates.at("edges")) {
+          place-edge-label(
+            edge-coordinates.at("x"),
+            edge-coordinates.at("y"),
+            "label",
+            edge-info,
           )
-          place-label(
-						label-coordinates.at("x"),
-						label-coordinates.at("y"),
-						label-content,
-					)
+          place-edge-label(
+            edge-coordinates.at("xx"),
+            edge-coordinates.at("xy"),
+            "xlabel",
+            edge-info,
+          )
+          place-edge-label(
+            edge-coordinates.at("headx"),
+            edge-coordinates.at("heady"),
+            "headlabel",
+            edge-info,
+          )
+          place-edge-label(
+            edge-coordinates.at("tailx"),
+            edge-coordinates.at("taily"),
+            "taillabel",
+            edge-info,
+          )
         }
+
+        let label-content = if label-info.at("native") {
+          label-info.at("label")
+        } else {
+          labels.at(label-info.at("name"))
+        }
+        if label-content == "" {
+          continue
+        }
+        let label-content = label-format(
+          label-info.at("color"),
+          label-info.at("font_name"),
+          label-info.at("font_size"),
+          label-content,
+        )
+        place-label(
+          label-coordinates.at("x"),
+          label-coordinates.at("y"),
+          label-content,
+        )
+
 
         let xlabel = if label-info.at("override_xlabel") {
           xlabels.at(label-info.at("name"))
@@ -534,12 +522,13 @@
           label-info.at("font_size"),
           xlabel,
         )
-				place-label(
-					label-coordinates.at("x"),
-					label-coordinates.at("y"),
-					xlabel,
-				)
+        place-label(
+          label-coordinates.at("x"),
+          label-coordinates.at("y"),
+          xlabel,
+        )
       }
+
 
       for (clusters-infos, cluster-coordinates) in clusters-labels-infos.zip(output.at("cluster_labels")) {
         let cluster = if clusters-infos.at("native") {
@@ -556,11 +545,11 @@
           clusters-infos.at("font_size"),
           cluster,
         )
-				place-label(
-					cluster-coordinates.at("x"),
-					cluster-coordinates.at("y"),
-					cluster,
-				)
+        place-label(
+          cluster-coordinates.at("x"),
+          cluster-coordinates.at("y"),
+          cluster,
+        )
       }
     }
   ))
