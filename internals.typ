@@ -61,115 +61,136 @@
   }
 }
 
+/// Return a formatted label based on its color, font and content.
+#let label-format(color, font, fontsize, label) = {
+  if label == "" {
+		return ""
+	}
+	set text(fill: rgb(int-to-string(color, 8, base: 16)), bottom-edge: "bounds")
+  set text(size: fontsize) if fontsize.pt() != 0
+  set text(font: font) if font != ""
+  text(label)
+}
+
+#let edge-label-format(edge-overwrite, edge-label, color, font, fontsize, name) = {
+  if name in edge-overwrite {
+    edge-overwrite.at(name)
+  } else {
+		let label-content = edge-label.at(name)
+		if label-content == "" {
+			return ""
+		} else {
+  		label-format(color, font, fontsize, 
+    	convert-label(label-content, edge-label.at(name + "_math_mode")))
+		}
+  }
+}
+
 /// Get an array of evaluated labels from a graph.
-#let get-labels(manual-label-names, manual-xlabel-names, clusters-names, edges, dot) = {
-  let labels = manual-label-names.map(label => {
-    (
-      label: label,
-      content: true,
-      xlabel: manual-xlabel-names.contains(label),
-    )
-  })
-  let labels = labels + manual-xlabel-names.filter(label => not manual-label-names.contains(label)).map(label => {
-    (
-      label: label,
-      content: false,
-      xlabel: true,
-    )
-  })
+#let get-labels(labels, xlabels, clusters, edges, dot) = {
   let overridden-labels = (
-    "labels": labels,
-    "cluster_labels": clusters-names,
     "dot": dot,
   )
-  let encoded-labels = plugin.get_labels(encode-overriddenLabels(overridden-labels))
-  let (labels, _) = decode-LabelsInfos(encoded-labels)
+	// panic(buffer-repr(encode-GetGraphInfo(overridden-labels)))
+  let encoded-labels = plugin.get_labels(encode-GetGraphInfo(overridden-labels))
+  let (graph-labels, _) = decode-GraphInfo(encoded-labels)
+	// panic(labels)
   (
-    labels.at("labels").map(encoded-label => {
-      let label = if encoded-label.at("native") {
-        convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
-      } else {
-        encoded-label.at("label")
-      }
-      let xlabel = convert-label(encoded-label.at("xlabel"), encoded-label.at("xlabel_math_mode"))
-
-      let font_size = text.size
+    graph-labels.at("labels").map(encoded-label => {
+      let font-size = text.size
       if encoded-label.at("font_size").pt() != 0 {
-        font_size = encoded-label.at("font_size")
+        font-size = encoded-label.at("font_size")
       }
+      let font-name = encoded-label.at("font_name").split(",")
+
+      let label = encoded-label.at("label")
+      let overwrite = false
+      if encoded-label.at("name") in labels {
+        overwrite = true
+        label = labels.at(encoded-label.at("name"))
+      } else if label != "" {
+				overwrite = true
+        label = convert-label(label, encoded-label.at("math_mode"))
+      	label = label-format(encoded-label.at("color"), font-name, font-size, label)
+      }
+
+      let xlabel = encoded-label.at("xlabel")
+      let xoverwrite = false
+      if encoded-label.at("name") in xlabels {
+        xoverwrite = true
+        xlabel = xlabels.at(encoded-label.at("name"))
+      } else if xlabel != "" {
+				xoverwrite = true
+        xlabel = convert-label(xlabel, encoded-label.at("xlabel_math_mode"))
+      	xlabel = label-format(encoded-label.at("color"), font-name, font-size, xlabel)
+      }
+
       let edge-overwrite = edges.at(encoded-label.at("name"), default: (:))
       let encoded-edge-labels = encoded-label.at("edges_infos").map(edge-label => {
+        let font-size = text.size
+        if edge-label.at("font_size").pt() != 0 {
+          font-size = edge-label.at("font_size")
+        }
+        let font-name = edge-label.at("font_name").split(",")
+        let font-color = edge-label.at("color")
         (
           native: "label" in edge-overwrite,
-          label: if "label" in edge-overwrite {
-            edge-overwrite.at("label")
-          } else {
-            convert-label(edge-label.at("label"), edge-label.at("math_mode"))
-          },
+          label: edge-label-format(edge-overwrite, edge-label, edge-label.at("color"), font-name, font-size, "label"),
           xnative: "xlabel" in edge-overwrite,
-          xlabel: if "xlabel" in edge-overwrite {
-            edge-overwrite.at("xlabel")
-          } else {
-            convert-label(edge-label.at("xlabel"), edge-label.at("xlabel_math_mode"))
-          },
+          xlabel: edge-label-format(edge-overwrite, edge-label, edge-label.at("color"), font-name, font-size, "xlabel"),
           tailnative: "taillabel" in edge-overwrite,
-          taillabel: if "taillabel" in edge-overwrite {
-            edge-overwrite.at("taillabel")
-          } else {
-            convert-label(edge-label.at("taillabel"), edge-label.at("taillabel_math_mode"))
-          },
+          taillabel: edge-label-format(
+            edge-overwrite,
+            edge-label,
+            edge-label.at("color"),
+            font-name,
+            font-size,
+            "taillabel",
+          ),
           headnative: "headlabel" in edge-overwrite,
-          headlabel: if "headlabel" in edge-overwrite {
-            edge-overwrite.at("headlabel")
-          } else {
-            convert-label(edge-label.at("headlabel"), edge-label.at("headlabel_math_mode"))
-          },
-          font_size: edge-label.at("font_size"),
-          font_name: edge-label.at("font_name").split(","),
-          font_color: edge-label.at("color"),
+          headlabel: edge-label-format(
+            edge-overwrite,
+            edge-label,
+            edge-label.at("color"),
+            font-name,
+            font-size,
+            "headlabel",
+          ),
         )
       })
 
       (
-        ..encoded-label,
+        overwrite: overwrite,
         label: label,
-        font_size: font_size,
+        xoverwrite: xoverwrite,
         xlabel: xlabel,
         edges_infos: encoded-edge-labels,
-        font_name: encoded-label.at("font_name").split(","),
       )
     }),
-    labels.at("cluster_labels").map(encoded-label => {
-      let label = if encoded-label.at("native") {
-        if encoded-label.at("label") == "" {
-          ""
-        } else {
-          convert-label(encoded-label.at("label"), encoded-label.at("math_mode"))
-        }
-      } else {
-        encoded-label.at("label")
-      }
-      let font_size = text.size
-      if encoded-label.at("font_size").pt() != 0 {
-        font_size = encoded-label.at("font_size")
+    graph-labels.at("cluster_labels").map(encoded-label => {
+      let overwrite = false
+      let label = encoded-label.at("label")
+      if encoded-label.at("name") in clusters {
+        label = clusters.at(encoded-label.at("name"))
+        overwrite = true
+      } else if label != "" {
+      	let font_name = encoded-label.at("font_name").split(",")
+				let font_size = text.size
+				if encoded-label.at("font_size").pt() != 0 {
+					font_size = encoded-label.at("font_size")
+				}
+        label = convert-label(label, encoded-label.at("math_mode"))
+				label = label-format(encoded-label.at("color"), font_name, font_size, label)
+        overwrite = true
       }
       (
-        ..encoded-label,
+        overwrite: overwrite,
         label: label,
-        font_size: font_size,
-        font_name: encoded-label.at("font_name").split(","),
       )
     }),
   )
 }
 
-/// Return a formatted label based on its color, font and content.
-#let label-format(color, font, fontsize, label) = [
-  #set text(fill: rgb(int-to-string(color, 8, base: 16)), bottom-edge: "bounds")
-  #set text(size: fontsize) if fontsize.pt() != 0
-  #set text(font: font) if font != ""
-  #text(label)
-]
 
 #let label-dimensions(color, font, fontsize, label) = {
   if label == "" {
@@ -183,12 +204,8 @@
   }
 }
 
-#let measure-label(edge, name, native, margin: 0pt) = {
-  let dim = if native {
-    label-dimensions(edge.at("font_color"), edge.at("font_name"), edge.at("font_size"), edge.at(name))
-  } else {
-    measure(edge.at(name))
-  }
+#let measure-label(edge, name, margin: 0pt) = {
+  let dim = measure(edge.at(name))
   (
     width: dim.width + margin,
     height: dim.height + margin,
@@ -200,41 +217,39 @@
   let edges-margin = 5pt
   labels.map(label => {
     let edges-size = label.at("edges_infos").map(edge => {
-      let label = measure-label(edge, "label", edge.at("native"), margin: edges-margin)
-      let xlabel = measure-label(edge, "xlabel", edge.at("xnative"), margin: edges-margin)
-      let taillabel = measure-label(edge, "taillabel", edge.at("tailnative"), margin: edges-margin)
-      let headlabel = measure-label(edge, "headlabel", edge.at("headnative"), margin: edges-margin)
+      let label = measure-label(edge, "label", margin: edges-margin)
+      let xlabel = measure-label(edge, "xlabel", margin: edges-margin)
+      let taillabel = measure-label(edge, "taillabel", margin: edges-margin)
+      let headlabel = measure-label(edge, "headlabel", margin: edges-margin)
       (
-        override: edge.at("label") != "",
+        overwrite: edge.at("label") != "",
         width: label.width,
         height: label.height,
-        xoverride: edge.at("xlabel") != "",
+        xoverwrite: edge.at("xlabel") != "",
         xwidth: xlabel.width,
         xheight: xlabel.height,
-        tailoverride: edge.at("taillabel") != "",
+        tailoverwrite: edge.at("taillabel") != "",
         tailwidth: taillabel.width,
         tailheight: taillabel.height,
-        headoverride: edge.at("headlabel") != "",
+        headoverwrite: edge.at("headlabel") != "",
         headwidth: headlabel.width,
         headheight: headlabel.height,
       )
     })
 
-    let dimensions = if label.at("native") {
-      label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("label"))
+    let dimensions = if label.at("overwrite") {
+      measure(label.at("label"))
     } else {
-      measure(overridden-labels.at(label.at("name")))
+      (width: 0pt, height: 0pt)
     }
-    let xdimensions = if label.at("override_xlabel") {
-      measure(overridden-xlabels.at(label.at("name")))
-    } else if label.at("xlabel") != "" {
-      label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("xlabel"))
+    let xdimensions = if label.at("xoverwrite") {
+      measure(label.at("xlabel"))
     } else {
       (width: 0pt, height: 0pt)
     }
     (
-      override: true,
-      xoverride: label.at("xlabel") != "" or label.at("override_xlabel"),
+      overwrite: label.at("label") != "" or label.at("overwrite"),
+      xoverwrite: label.at("xlabel") != "" or label.at("xoverwrite"),
       width: dimensions.width,
       height: dimensions.height,
       xwidth: xdimensions.width,
@@ -247,14 +262,10 @@
 
 #let encode-cluster-label-dimensions(clusters-labels-infos, clusters) = {
   clusters-labels-infos.map(label => {
-    let dimensions = if label.at("native") {
-      label-dimensions(label.at("color"), label.at("font_name"), label.at("font_size"), label.at("label"))
-    } else {
-      measure(clusters.at(label.at("name")))
-    }
+    let dim = measure(label.at("label"))
     (
-      width: dimensions.width,
-      height: dimensions.height,
+      width: dim.width,
+      height: dim.height,
     )
   })
 }
@@ -329,16 +340,13 @@
   background: none,
 ) = {
   set math.equation(numbering: none)
-  let manual-label-names = labels.keys()
-  let manual-xlabel-names = xlabels.keys()
-  let clusters-names = clusters.keys()
 
   layout(((width: container-width, height: container-height)) => (
     context {
       let (labels-infos, clusters-labels-infos) = get-labels(
-        manual-label-names,
-        manual-xlabel-names,
-        clusters-names,
+        labels,
+        xlabels,
+        clusters,
         edges,
         dot,
       )
@@ -441,16 +449,10 @@
         if edge-info.at(name) == "" {
           return
         }
-        let label = label-format(
-          edge-info.at("font_color"),
-          edge-info.at("font_name"),
-          edge-info.at("font_size"),
-          edge-info.at(name),
-        )
         place-label(
           dx,
           dy,
-          label,
+          edge-info.at(name),
         )
       }
 
@@ -483,73 +485,31 @@
           )
         }
 
-        let label-content = if label-info.at("native") {
-          label-info.at("label")
-        } else {
-          labels.at(label-info.at("name"))
+        if label-info.at("overwrite") {
+          place-label(
+            label-coordinates.at("x"),
+            label-coordinates.at("y"),
+            label-info.at("label"),
+          )
         }
-        if label-content == "" {
-          continue
+        if label-info.at("xoverwrite") {
+          place-label(
+            label-coordinates.at("xx"),
+            label-coordinates.at("xy"),
+            label-info.at("xlabel"),
+          )
         }
-        let label-content = label-format(
-          label-info.at("color"),
-          label-info.at("font_name"),
-          label-info.at("font_size"),
-          label-content,
-        )
-        place-label(
-          label-coordinates.at("x"),
-          label-coordinates.at("y"),
-          label-content,
-        )
-
-
-        let xlabel = if label-info.at("override_xlabel") {
-          xlabels.at(label-info.at("name"))
-        } else if label-info.at("xlabel") != "" {
-          label-info.at("xlabel")
-        } else {
-          continue
-        }
-
-        if xlabel == "" {
-          continue
-        }
-
-        let xlabel = label-format(
-          label-info.at("color"),
-          label-info.at("font_name"),
-          label-info.at("font_size"),
-          xlabel,
-        )
-        place-label(
-          label-coordinates.at("x"),
-          label-coordinates.at("y"),
-          xlabel,
-        )
       }
 
 
       for (clusters-infos, cluster-coordinates) in clusters-labels-infos.zip(output.at("cluster_labels")) {
-        let cluster = if clusters-infos.at("native") {
-          clusters-infos.at("label")
-        } else {
-          clusters.at(clusters-infos.at("name"))
+        if clusters-infos.at("overwrite") {
+          place-label(
+            cluster-coordinates.at("x"),
+            cluster-coordinates.at("y"),
+            clusters-infos.at("label"),
+          )
         }
-        if cluster == "" {
-          continue
-        }
-        let cluster = label-format(
-          clusters-infos.at("color"),
-          clusters-infos.at("font_name"),
-          clusters-infos.at("font_size"),
-          cluster,
-        )
-        place-label(
-          cluster-coordinates.at("x"),
-          cluster-coordinates.at("y"),
-          cluster,
-        )
       }
     }
   ))
