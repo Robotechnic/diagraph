@@ -48,11 +48,11 @@ For more information about the Graphviz Dot language, you can check the [officia
 
 - `background` (`none` or `color` or `gradient`) describes how to fill the background. If set to `none` (the default), the background will be transparent.
 
-- `labels` (`dict`) is a list of labels to use to override the defaults labels. This is discussed in depth in the next section. Defaults to `(:)`.
+- `labels` (`dict`) is a list of labels to use to overwrite the defaults labels. This is discussed in depth in the next section. Defaults to `(:)`.
 
-- `xlabels` (`dict`) is a list of labels to use to override the defaults xlabels. This is discussed in depth in the next section. Defaults to `(:)`.
+- `xlabels` (`dict`) is a list of labels to use to overwrite the defaults xlabels. This is discussed in depth in the next section. Defaults to `(:)`.
 
-- `clusters` (`dict`) is a list of clusters to use to override the defaults clusters labels. This is discussed in depth in the next section. Defaults to `(:)`.
+- `clusters` (`dict`) is a list of clusters to use to overwrite the defaults clusters labels. This is discussed in depth in the next section. Defaults to `(:)`.
 
 ### Labels
 

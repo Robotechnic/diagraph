@@ -58,38 +58,34 @@ void default_node_label_values(NodeLabelInfo *label) {
 }
 
 /**
- * @brief Check if the the node label is overridden and if not if the label is a math expression.
+ * @brief Extract labels, font names, color and font sizes from a node.
  *
  * @param n the node
  * @param label_infos the label infos
  * @param name the name of the node
  * @param label the label of the node
- * @param is_manually_overridden whether the label is manually overridden
  * @return int 0 on success, 1 on failure
  */
-int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name, const char *label,
-                       bool is_manually_overridden) {
+int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name, const char *label) {
     if (strncmp(ND_shape(n)->name, "point", 5) == 0) {
         label_infos->label = NULL;
         label_infos->math_mode = false;
-    } else if (!is_manually_overridden) {
+    } else {
         // If there is no explicitly set label for a node, so Graphviz intuitively sets its
         // "label" attribute to "\\N".
         bool has_label = strcmp(label, "\\N") != 0;
         if (!has_label) {
-            label = agnameof(n);
+            label = name;
         }
-        label_infos->label = malloc(strlen(label) + 1);
+		size_t len = strlen(label);
+        label_infos->label = malloc(len + 1);
         if (!label_infos->label) {
             ERROR("Failed to allocate memory for native labels");
             return 1;
         }
         strcpy(label_infos->label, label);
-        label_infos->label[strlen(label)] = '\0';
+        label_infos->label[len] = '\0';
         label_infos->math_mode = !has_label && is_math(label);
-    } else {
-        label_infos->label = NULL;
-        label_infos->math_mode = false;
     }
     label_infos->name = malloc(strlen(name) + 1);
     if (!label_infos->name) {
@@ -112,6 +108,7 @@ void process_font_name(Agnode_t *n, NodeLabelInfo *label_infos) {
     if (fn) {
         label_infos->font_name = malloc(strlen(fn) + 1);
         strcpy(label_infos->font_name, fn);
+		label_infos->font_name[strlen(fn)] = '\0';
     } else {
         label_infos->font_name = NULL;
     }
@@ -152,17 +149,15 @@ void process_edge_fontsize(Agedge_t *e, EdgeLabelInfo *label_infos) {
 }
 
 /**
- * @brief Check if the the xlabel label is overridden and if not if the label is a math expression.
+ * @brief Process the xlabel label for a node
  *
  * @param n the node
  * @param label_infos the label infos
- * @param is_xlabel_overridden whether the xlabel label is manually overridden
  * @return int 0 on success, 1 on failure
  */
-int process_xlabel_label(Agnode_t *n, NodeLabelInfo *label_infos, bool is_xlabel_overridden) {
+int process_xlabel_label(Agnode_t *n, NodeLabelInfo *label_infos) {
     const char *xlabel = agget(n, "xlabel");
-    label_infos->override_xlabel = is_xlabel_overridden;
-    if (!is_xlabel_overridden && xlabel) {
+    if (xlabel) {
         label_infos->xlabel = malloc(strlen(xlabel) + 1);
         if (!label_infos->xlabel) {
             ERROR("Failed to allocate memory for xlabel");
@@ -180,10 +175,10 @@ int process_xlabel_label(Agnode_t *n, NodeLabelInfo *label_infos, bool is_xlabel
 
 int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
     const char *l = agget(e, name);
-	if (!l || aghtmlstr(l)) {
-		*label = NULL;
-		*math_mode = false;
-	} else  {
+    if (!l || aghtmlstr(l)) {
+        *label = NULL;
+        *math_mode = false;
+    } else {
         *label = malloc(strlen(l) + 1);
         if (!*label) {
             ERROR("Failed to allocate memory for label");
@@ -201,20 +196,20 @@ int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
  *
  * @param g the graph we are working on
  * @param n the node we are working on
- * @param[out] labels the description of which labels are overriden
+ * @param[out] labels the description of which labels are overwriten
  * @param[out] len the number of edges
  * @return int 1 on error, 0 otherwise
  */
 int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_t *len) {
     *len = agdegree(g, n, false, true);
-    *labels = malloc(*len * sizeof(NodeLabelInfo));
+    *labels = malloc(*len * sizeof(EdgeLabelInfo));
     if (!*labels) {
         ERROR("Failed to allocate memory for edge labels");
         return 1;
     }
     int i = 0;
     for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
-        if (copy_label(e, "label", &(*labels)[i].label, &(*labels)[i].math_mode) ||
+        if (copy_label(e, "label", &(*labels)[i].label, &(*labels)[i].label_math_mode) ||
             copy_label(e, "xlabel", &(*labels)[i].xlabel, &(*labels)[i].xlabel_math_mode) ||
             copy_label(e, "headlabel", &(*labels)[i].headlabel, &(*labels)[i].headlabel_math_mode) ||
             copy_label(e, "taillabel", &(*labels)[i].taillabel, &(*labels)[i].taillabel_math_mode)) {
@@ -233,44 +228,36 @@ int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_
  * @brief fill the label infos with nodes labels and xlabels data
  *
  * @param g the graph we are working on
- * @param labels the description of which labels are overriden
+ * @param labels the description of which labels are overwriten
  * @param nLabels the labels and xlabel infos
  * @return int 1 on error, 0 otherwise
  */
-int get_nodes_labels(graph_t *g, const overriddenLabels *labels, LabelsInfos *nLabels) {
+int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels) {
     int label_index = 0;
 
     // Get node labels.
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
         const char *name = agnameof(n);
-        bool is_manually_overridden = false;
-        bool is_xlabel_overridden = false;
-        for (int i = 0; i < labels->labels_len; i++) {
-            if (strcmp(labels->labels[i].label, name) == 0) {
-                is_manually_overridden = labels->labels[i].content;
-                is_xlabel_overridden = labels->labels[i].xlabel;
-                break;
-            }
-        }
-
         const char *label = agget(n, "label");
         if (aghtmlstr(label)) {
             default_node_label_values(&nLabels->labels[label_index]);
+			nLabels->labels[label_index].name = malloc(sizeof(name) + 1);
+			strcpy(nLabels->labels[label_index].name, name);
+			nLabels->labels[label_index].name[strlen(name)] = '\0';
         } else {
 
-            if (process_node_label(n, &nLabels->labels[label_index], name, label, is_manually_overridden) ||
-                process_xlabel_label(n, &nLabels->labels[label_index], is_xlabel_overridden)) {
+            if (process_node_label(n, &nLabels->labels[label_index], name, label) ||
+                process_xlabel_label(n, &nLabels->labels[label_index])) {
                 return 1;
             }
 
             process_font_name(n, &nLabels->labels[label_index]);
             process_fontsize(n, &nLabels->labels[label_index]);
-            nLabels->labels[label_index].native = !is_manually_overridden;
             nLabels->labels[label_index].color = color_to_int(agget(n, "fontcolor"));
         }
 
         get_node_edges_labels(g, n, &nLabels->labels[label_index].edges_infos,
-                       &nLabels->labels[label_index].edges_infos_len);
+                              &nLabels->labels[label_index].edges_infos_len);
 
         label_index++;
     }
@@ -302,9 +289,7 @@ void process_cluster_font_name(Agraph_t *g, ClusterLabelInfo *label_infos) {
     }
 }
 
-int process_cluster_label(Agraph_t *sg, const char *name, const char *label, ClusterLabelInfo *label_infos,
-                          bool is_manually_overridden) {
-    label_infos->native = !is_manually_overridden;
+int process_cluster_label(Agraph_t *sg, const char *name, const char *label, ClusterLabelInfo *label_infos) {
     label_infos->name = malloc(strlen(name) + 1);
     if (!label_infos->name) {
         ERROR("Failed to allocate memory for cluster name");
@@ -312,19 +297,14 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
     }
     strcpy(label_infos->name, name);
     label_infos->name[strlen(name)] = '\0';
-    if (is_manually_overridden) {
-        label_infos->label = NULL;
-        label_infos->math_mode = false;
-    } else {
-        label_infos->label = malloc(strlen(label) + 1);
-        if (!label_infos->label) {
-            ERROR("Failed to allocate memory for cluster label");
-            return 1;
-        }
-        strcpy(label_infos->label, label);
-        label_infos->label[strlen(label)] = '\0';
-        label_infos->math_mode = is_math(label);
+    label_infos->label = malloc(strlen(label) + 1);
+    if (!label_infos->label) {
+        ERROR("Failed to allocate memory for cluster label");
+        return 1;
     }
+    strcpy(label_infos->label, label);
+    label_infos->label[strlen(label)] = '\0';
+    label_infos->math_mode = is_math(label);
     label_infos->color = color_to_int(agget(sg, "fontcolor"));
     const char *fontsize = agget(sg, "fontsize");
     if (fontsize) {
@@ -340,11 +320,11 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
  * @brief fill the label infos with cluster labels
  *
  * @param g the graph we are working on
- * @param labels the description of which labels are overriden
+ * @param labels the description of which labels are overwriten
  * @param sgLabels the clusters labels infos
  * @return int 1 on error, 0 otherwise
  */
-int get_cluster_labels(graph_t *g, const overriddenLabels *labels, LabelsInfos *sgLabels, int *label_index) {
+int get_cluster_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *sgLabels, int *label_index) {
     int cluster_count = agnsubg(g);
     if (cluster_count == 0) {
         return 0;
@@ -370,23 +350,15 @@ int get_cluster_labels(graph_t *g, const overriddenLabels *labels, LabelsInfos *
             get_cluster_labels(sg, labels, sgLabels, label_index);
             continue;
         }
-        bool is_manually_overridden = false;
-        for (int i = 0; i < labels->cluster_labels_len; i++) {
-            if (strcmp(labels->cluster_labels[i], name) == 0) {
-                is_manually_overridden = true;
-                break;
-            }
-        }
 
         const char *label = agget(sg, "label");
-        if (!label && !is_manually_overridden) {
+        if (!label) {
             continue;
         }
         if (aghtmlstr(label)) {
             default_cluster_label_values(&sgLabels->cluster_labels[*label_index]);
         } else {
-            if (process_cluster_label(sg, name, label, &sgLabels->cluster_labels[*label_index],
-                                      is_manually_overridden)) {
+            if (process_cluster_label(sg, name, label, &sgLabels->cluster_labels[*label_index])) {
                 return 1;
             }
         }
@@ -414,9 +386,9 @@ int get_labels(size_t buffer_len) {
     agseterr(AGERR);
     agseterrf(vizErrorf);
 
-    overriddenLabels labels = {0};
+    GetGraphInfo labels = {0};
     int err;
-    if ((err = decode_overriddenLabels(buffer_len, &labels))) {
+    if ((err = decode_GetGraphInfo(buffer_len, &labels))) {
         if (err == 1) {
             ERROR("Failled to allocate memory for overridden labels");
         } else if (err == 2) {
@@ -439,7 +411,7 @@ int get_labels(size_t buffer_len) {
     graph_t *g = agmemread(labels.dot);
 
     if (!g) {
-        free_overriddenLabels(&labels);
+        free_GetGraphInfo(&labels);
         gvFinalize(gvc);
         gvFreeContext(gvc);
 
@@ -449,12 +421,12 @@ int get_labels(size_t buffer_len) {
 
     agattr(g, AGNODE, "xlabel", "");
 
-    LabelsInfos nLabels = {0};
+    GraphInfo nLabels = {0};
     nLabels.labels_len = get_total_node_label_count(g);
     nLabels.labels = malloc(nLabels.labels_len * sizeof(NodeLabelInfo));
     if (!nLabels.labels) {
         ERROR("Failed to allocate memory for native labels");
-        free_overriddenLabels(&labels);
+        free_GetGraphInfo(&labels);
         gvFinalize(gvc);
         gvFreeContext(gvc);
         return 1;
@@ -466,12 +438,12 @@ int get_labels(size_t buffer_len) {
     agclose(g);
     gvFinalize(gvc);
     if (err) {
-        free_overriddenLabels(&labels);
-        free_LabelsInfos(&nLabels);
+        free_GetGraphInfo(&labels);
+        free_GraphInfo(&nLabels);
         return 1;
     }
 
-    if ((err = encode_LabelsInfos(&nLabels))) {
+    if ((err = encode_GraphInfo(&nLabels))) {
         if (err == 1) {
             ERROR("Failed to allocate memory for native labels");
         } else if (err == 2) {
@@ -479,13 +451,13 @@ int get_labels(size_t buffer_len) {
         } else {
             ERROR("Failled to encode native labels");
         }
-        free_overriddenLabels(&labels);
-        free_LabelsInfos(&nLabels);
+        free_GetGraphInfo(&labels);
+        free_GraphInfo(&nLabels);
         return 1;
     }
 
-    free_overriddenLabels(&labels);
-    free_LabelsInfos(&nLabels);
+    free_GetGraphInfo(&labels);
+    free_GraphInfo(&nLabels);
     return 0;
 }
 
@@ -511,16 +483,16 @@ char *create_label_for_dimension(graph_t *g, double width, double height) {
 /**
  * Replaces labels for each nodes with invisible labels that have specific dimensions.
  */
-void override_labels(graph_t *g, const renderGraph *renderInfo) {
+void overwrite_labels(graph_t *g, const renderGraph *renderInfo) {
     int label_index = 0;
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
-        if (renderInfo->labels[label_index].override) {
+        if (renderInfo->labels[label_index].overwrite) {
             agset(n, "label",
                   create_label_for_dimension(g, renderInfo->labels[label_index].width,
                                              renderInfo->labels[label_index].height));
         }
-        if (renderInfo->labels[label_index].xoverride) {
+        if (renderInfo->labels[label_index].xoverwrite) {
             agset(n, "xlabel",
                   create_label_for_dimension(g, renderInfo->labels[label_index].xwidth,
                                              renderInfo->labels[label_index].xheight));
@@ -528,17 +500,17 @@ void override_labels(graph_t *g, const renderGraph *renderInfo) {
         int edge_label_index = 0;
         for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
             SizedEdgeLabel *edges_infos = &renderInfo->labels[label_index].edges_size[edge_label_index];
-            if (edges_infos->override) {
+            if (edges_infos->overwrite) {
                 agset(e, "label", create_label_for_dimension(g, edges_infos->width, edges_infos->height));
             }
-            if (edges_infos->xoverride) {
+            if (edges_infos->xoverwrite) {
                 agset(e, "xlabel", create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight));
             }
-            if (edges_infos->headoverride) {
+            if (edges_infos->headoverwrite) {
                 agset(e, "headlabel",
                       create_label_for_dimension(g, edges_infos->headwidth, edges_infos->headheight));
             }
-            if (edges_infos->tailoverride) {
+            if (edges_infos->tailoverwrite) {
                 agset(e, "taillabel",
                       create_label_for_dimension(g, edges_infos->tailwidth, edges_infos->tailheight));
             }
@@ -556,7 +528,7 @@ void override_labels(graph_t *g, const renderGraph *renderInfo) {
  * @param renderInfo structure containing the cluster labels sizes
  * @param label_index the current index of the cluster label
  */
-void override_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *label_index) {
+void overwrite_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *label_index) {
     for (Agraph_t *sg = agfstsubg(g); sg; sg = agnxtsubg(sg)) {
         if (agget(sg, "margin") == NULL) {
             agset(sg, "margin", "8");
@@ -565,7 +537,7 @@ void override_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *lab
         const char *name = agnameof(sg);
         // the name must be "cluster_([0-9]+)"
         if (strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
-            override_cluster_labels(sg, renderInfo, label_index);
+            overwrite_cluster_labels(sg, renderInfo, label_index);
             continue;
         }
         agset(sg, "label",
@@ -573,7 +545,7 @@ void override_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *lab
                                          renderInfo->cluster_labels[*label_index].height));
 
         (*label_index)++;
-        override_cluster_labels(sg, renderInfo, label_index);
+        overwrite_cluster_labels(sg, renderInfo, label_index);
     }
 }
 
@@ -593,7 +565,7 @@ void get_edges_labels_coordinates(graph_t *g, Agnode_t *n, NodeCoordinates *outp
     for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
         EdgeCoordinates *edge_coords = &output[label_index].edges[edge_label_index];
         SizedEdgeLabel *edges_infos = &labels[label_index].edges_size[edge_label_index];
-        if (edges_infos->override) {
+        if (edges_infos->overwrite) {
             pointf pos = ED_label(e)->pos;
             edge_coords->x = (float)pos.x + pad;
             edge_coords->y = (float)pos.y + pad;
@@ -601,7 +573,7 @@ void get_edges_labels_coordinates(graph_t *g, Agnode_t *n, NodeCoordinates *outp
             edge_coords->x = 0;
             edge_coords->y = 0;
         }
-        if (edges_infos->xoverride) {
+        if (edges_infos->xoverwrite) {
             pointf pos = ED_xlabel(e)->pos;
             edge_coords->xx = (float)pos.x + pad;
             edge_coords->xy = (float)pos.y + pad;
@@ -609,7 +581,7 @@ void get_edges_labels_coordinates(graph_t *g, Agnode_t *n, NodeCoordinates *outp
             edge_coords->xx = 0;
             edge_coords->xy = 0;
         }
-        if (edges_infos->headoverride) {
+        if (edges_infos->headoverwrite) {
             pointf pos = ED_head_label(e)->pos;
             edge_coords->headx = (float)pos.x + pad;
             edge_coords->heady = (float)pos.y + pad;
@@ -617,7 +589,7 @@ void get_edges_labels_coordinates(graph_t *g, Agnode_t *n, NodeCoordinates *outp
             edge_coords->headx = 0;
             edge_coords->heady = 0;
         }
-        if (edges_infos->tailoverride) {
+        if (edges_infos->tailoverwrite) {
             pointf pos = ED_tail_label(e)->pos;
             edge_coords->tailx = (float)pos.x + pad;
             edge_coords->taily = (float)pos.y + pad;
@@ -625,7 +597,7 @@ void get_edges_labels_coordinates(graph_t *g, Agnode_t *n, NodeCoordinates *outp
             edge_coords->tailx = 0;
             edge_coords->taily = 0;
         }
-		edge_label_index++;
+        edge_label_index++;
     }
 }
 
@@ -643,7 +615,7 @@ void get_label_coordinates(graph_t *g, float pad, const SizedNodeLabel *labels, 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
         output[label_index].x = (float)ND_coord(n).x + pad;
         output[label_index].y = (float)ND_coord(n).y + pad;
-        if (labels[label_index].xoverride) {
+        if (labels[label_index].xoverwrite) {
             pointf pos = ND_xlabel(n)->pos;
             output[label_index].xx = (float)pos.x + pad;
             output[label_index].xy = (float)pos.y + pad;
@@ -651,22 +623,22 @@ void get_label_coordinates(graph_t *g, float pad, const SizedNodeLabel *labels, 
             output[label_index].xx = 0;
             output[label_index].xy = 0;
         }
-		output[label_index].edges_len = labels[label_index].edges_size_len;
-		output[label_index].edges = malloc(output[label_index].edges_len * sizeof(EdgeCoordinates));
+        output[label_index].edges_len = labels[label_index].edges_size_len;
+        output[label_index].edges = malloc(output[label_index].edges_len * sizeof(EdgeCoordinates));
         get_edges_labels_coordinates(g, n, output, label_index, labels, pad);
         label_index++;
     }
 }
 
 /**
-   * @brief Encodes the position of considered cluster labels in the output buffer.
-   *
-   * @param g the current graph we are working on
-   * @param pad the padding to apply to the labels
-   * @param labels the labels to encode
-   * @param output the output coordinates
-   * @param index the current index of the cluster label
-   */
+ * @brief Encodes the position of considered cluster labels in the output buffer.
+ *
+ * @param g the current graph we are working on
+ * @param pad the padding to apply to the labels
+ * @param labels the labels to encode
+ * @param output the output coordinates
+ * @param index the current index of the cluster label
+ */
 void get_cluster_label_coordinates(Agraph_t *g, float pad, const SizedClusterLabel *labels,
                                    ClusterCoordinates *output, int *index) {
     for (Agraph_t *sg = agfstsubg(g); sg; sg = agnxtsubg(sg)) {
@@ -770,6 +742,7 @@ int render(size_t buffer_len) {
     // Passing a graph sets the value for the graph.
     agattr(g, AGRAPH, "bgcolor", "transparent");
     agset(g, "margin", "0");
+	agset(g, "size", NULL);
 
     {
         char font_size_string[128];
@@ -781,10 +754,10 @@ int render(size_t buffer_len) {
 
     DEBUG("Total label count: %d\n", get_total_node_label_count(g));
 
-    // Override labels with invisible labels that have specific dimensions.
-    override_labels(g, &renderInfo);
+    // overwrite labels with invisible labels that have specific dimensions.
+    overwrite_labels(g, &renderInfo);
     int index = 0;
-    override_cluster_labels(g, &renderInfo, &index);
+    overwrite_cluster_labels(g, &renderInfo, &index);
 
     // Layout graph.
     // FIXME: The call to `gvLayout` causes to reach an `unreachable` instruction if a (user-made)

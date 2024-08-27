@@ -8,7 +8,11 @@
   let code = raw(dot.text, lang: "dot")
   let graph = render(dot.text, ..args)
   let side-by-side = measure(code, styles).width + measure(graph, styles).width < 20cm
-  let columns = if side-by-side { (auto, auto) } else { (auto,) }
+  let columns = if side-by-side {
+    (auto, auto)
+  } else {
+    (auto,)
+  }
   grid(
     columns: columns,
     gutter: 1cm,
@@ -17,73 +21,6 @@
   )
 })
 
-= Test
-
-
-#render-example(
-  ```
-  digraph {
-    rankdir=LR;
-    f -> B
-    B -> f
-    C -> D
-    D -> B
-    E -> F
-    f -> E
-    B -> F
-  }
-  ```
-)
-
-
-= Eating
-
-#render-example(
-  ```
-  digraph {
-    orange -> fruit
-    apple -> fruit
-    fruit -> food
-    carrot -> vegetable
-    vegetable -> food
-    food -> eat
-    eat -> survive
-  }
-  ```
-)
-
-
-= FFT
-
-Labels are overridden manually.
-
-#render-example(
-  ```
-  digraph {
-    node [shape=none]
-    1
-    2
-    3
-    r1
-    r2
-    r3
-    1->2
-    1->3
-    2->r1 [color=red]
-    3->r2 [color=red]
-    r1->r3 [color=red]
-    r2->r3 [color=red]
-  }
-  ```,
-  labels: (
-    "1": $(1,0,0,0), i$,
-    "2": $(1,0), -1$,
-    "3": $(0,0), -1$,
-    r1: $(1,1)$,
-    r2: $(0,0)$,
-    r3: $(1,1,1,1)$,
-  )
-)
 
 = State Machine
 
@@ -115,27 +52,27 @@ Labels are overridden manually.
     LR_8 -> LR_6 [label="S(b)"]
     LR_8 -> LR_5 [label="S(a)"]
   }
-  ```, labels: (
-		"LR_0": $"LR"_0$,
-		"LR_1": $"LR"_1$,
-		"LR_2": $"LR"_2$,
-		"LR_3": $"LR"_3$,
-		"LR_4": $"LR"_4$,
-		"LR_5": $"LR"_5$,
-		"LR_6": $"LR"_6$,
-		"LR_7": $"LR"_7$,
-		"LR_8": $"LR"_8$
-	),
+  ```,
+  labels: (
+    "LR_0": $"LR"_0$,
+    "LR_1": $"LR"_1$,
+    "LR_2": $"LR"_2$,
+    "LR_3": $"LR"_3$,
+    "LR_4": $"LR"_4$,
+    "LR_5": $"LR"_5$,
+    "LR_6": $"LR"_6$,
+    "LR_7": $"LR"_7$,
+    "LR_8": $"LR"_8$,
+  ),
 )
 
 #pagebreak()
 
 = Clustering
 
-See http://www.graphviz.org/content/cluster.
+See http: www.graphviz.org/content/cluster.
 
-#render-example(
-  ```
+#render-example(```
   digraph G {
 	fontname="Helvetica,Arial,sans-serif"
 	node [fontname="Helvetica,Arial,sans-serif"]
@@ -167,43 +104,40 @@ See http://www.graphviz.org/content/cluster.
 	end [shape=Msquare];
 }
   }
-  ```
-)
+```)
 
 
 = HTML
-#render-example(
-  ```
-  digraph structs {
-      node [shape=plaintext]
-      struct1 [label=<
-  <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD>left</TD><TD PORT="f1">mid dle</TD><TD PORT="f2">right</TD></TR>
-  </TABLE>>];
-      struct2 [label=<
-  <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD PORT="f0">one</TD><TD>two</TD></TR>
-  </TABLE>>];
-      struct3 [label=<
-  <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-    <TR>
-      <TD ROWSPAN="3">hello<BR/>world</TD>
-      <TD COLSPAN="3">b</TD>
-      <TD ROWSPAN="3">g</TD>
-      <TD ROWSPAN="3">h</TD>
-    </TR>
-    <TR>
-      <TD>c</TD><TD PORT="here">d</TD><TD>e</TD>
-    </TR>
-    <TR>
-      <TD COLSPAN="3">f</TD>
-    </TR>
-  </TABLE>>];
-      struct1:f1 -> struct2:f0;
-      struct1:f2 -> struct3:here;
-  }
-  ```
-)
+#render-example(```
+digraph structs {
+    node [shape=plaintext]
+    struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD>left</TD><TD PORT="f1">mid dle</TD><TD PORT="f2">right</TD></TR>
+</TABLE>>];
+    struct2 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD PORT="f0">one</TD><TD>two</TD></TR>
+</TABLE>>];
+    struct3 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR>
+    <TD ROWSPAN="3">hello<BR/>world</TD>
+    <TD COLSPAN="3">b</TD>
+    <TD ROWSPAN="3">g</TD>
+    <TD ROWSPAN="3">h</TD>
+  </TR>
+  <TR>
+    <TD>c</TD><TD PORT="here">d</TD><TD>e</TD>
+  </TR>
+  <TR>
+    <TD COLSPAN="3">f</TD>
+  </TR>
+</TABLE>>];
+    struct1:f1 -> struct2:f0;
+    struct1:f2 -> struct3:here;
+}
+```)
 
 
 = Overridden labels
@@ -222,13 +156,14 @@ Labels for nodes `big` and `sum` are overridden.
     big -> sum
   }
   ```,
-  labels: (:
+  labels: (
     big: [_some_#text(2em)[ big ]*text*],
-    sum: $ sum_(i=0)^n 1/i $,
+    sum: $ sum_(i=0)^n 1 / i $,
   ),
 )
 
-#render-example(```
+#render-example(
+  ```
   graph {
     simplexlabel[xlabel="simple"]
     simplexlabel -- limitxlabel
@@ -239,27 +174,26 @@ Labels for nodes `big` and `sum` are overridden.
     limitxlabel[xlabel="limit"]
     formulaxlabel -- "alpha xlabel"
   }
-  ```, 
+  ```,
   xlabels: (
-    formulaxlabel: $ sum_(i=0)^n 1/i $
-  )
+    formulaxlabel: $ sum_(i=0)^n 1 / i $,
+  ),
 )
+
 
 #pagebreak()
 
 = Automatic math labels
 
-#render-example(
-	```
-	digraph {
-		a -> alpha
-		phi -> rho
-		rho -> a
-		tau -> omega
-		phi -> a_8
-		a_8 -> alpha
-		a_8 -> omega
-		alpha_8 -> omega
-	}
-	```,
-)
+#render-example(```
+digraph {
+	a -> alpha
+	phi -> rho
+	rho -> a
+	tau -> omega
+	phi -> a_8
+	a_8 -> alpha
+	a_8 -> omega
+	alpha_8 -> omega
+}
+```)

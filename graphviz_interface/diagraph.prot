@@ -1,19 +1,10 @@
-// Those two protocols allow to get the labels that are not overridden by the user
-struct OverrideLabel {
-	string label;
-	bool content;
-	bool xlabel;
-}
-
-protocol C overriddenLabels {
-	OverrideLabel labels[];
-	string cluster_labels[];
+protocol C GetGraphInfo {
 	string dot;
 }
 
 struct EdgeLabelInfo {
 	string label;
-	bool math_mode;
+	bool label_math_mode;
 
 	string xlabel;
 	bool xlabel_math_mode;
@@ -32,12 +23,10 @@ struct EdgeLabelInfo {
 struct NodeLabelInfo {
 	string name;
 	
-	bool native;
 	string label;
 	bool math_mode;
  
-	bool override_xlabel;
-	string xlabel;
+ 	string xlabel;
 	bool xlabel_math_mode;
 
 	int color;
@@ -48,7 +37,6 @@ struct NodeLabelInfo {
 }
 
 struct ClusterLabelInfo {
-	bool native;
 	string name;
 	string label;
 	bool math_mode;
@@ -58,33 +46,33 @@ struct ClusterLabelInfo {
 	point font_size;
 }
 
-protocol Typst LabelsInfos {
+protocol Typst GraphInfo {
 	NodeLabelInfo labels[];
 	ClusterLabelInfo cluster_labels[];
 }
 
 // Those two protocols allow to ask the engine to render a graph and get the svg back
 struct SizedEdgeLabel {
-	bool override;
+	bool overwrite;
 	point width;
 	point height;
 
-	bool xoverride;
+	bool xoverwrite;
 	point xwidth;
 	point xheight;
 
-	bool headoverride;
+	bool headoverwrite;
 	point headwidth;
 	point headheight;
 
-	bool tailoverride;
+	bool tailoverwrite;
 	point tailwidth;
 	point tailheight;
 }
 
 struct SizedNodeLabel {
-	bool override;
-	bool xoverride;
+	bool overwrite;
+	bool xoverwrite;
 	point width;
 	point height;
 	point xwidth;
