@@ -3,6 +3,7 @@ protocol C GetGraphInfo {
 }
 
 struct EdgeLabelInfo {
+	string to;
 	string label;
 	bool label_math_mode;
 

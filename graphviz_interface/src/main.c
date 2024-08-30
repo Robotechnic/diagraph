@@ -218,6 +218,10 @@ int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_
         process_edge_font_name(e, &(*labels)[i]);
         process_edge_fontsize(e, &(*labels)[i]);
         (*labels)[i].color = color_to_int(agget(e, "fontcolor"));
+		const char* to = agnameof(aghead(e));
+		(*labels)[i].to = malloc(strlen(to) + 1);
+		strcpy((*labels)[i].to, to);
+		(*labels)[i].to[strlen(to)] = '\0';
         i++;
     }
 
