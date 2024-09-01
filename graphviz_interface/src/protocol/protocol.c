@@ -87,7 +87,7 @@ void free_EdgeLabelInfo(EdgeLabelInfo *s) {
     }
 }
 size_t EdgeLabelInfo_size(const void *s){
-	return string_size(((EdgeLabelInfo*)s)->to) + string_size(((EdgeLabelInfo*)s)->label) + 1 + string_size(((EdgeLabelInfo*)s)->xlabel) + 1 + string_size(((EdgeLabelInfo*)s)->headlabel) + 1 + string_size(((EdgeLabelInfo*)s)->taillabel) + 1 + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->font_name) + TYPST_INT_SIZE;
+	return string_size(((EdgeLabelInfo*)s)->to) + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->label) + 1 + string_size(((EdgeLabelInfo*)s)->xlabel) + 1 + string_size(((EdgeLabelInfo*)s)->headlabel) + 1 + string_size(((EdgeLabelInfo*)s)->taillabel) + 1 + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->font_name) + TYPST_INT_SIZE;
 }
 int encode_EdgeLabelInfo(const EdgeLabelInfo *s, uint8_t *__input_buffer, size_t *buffer_len, size_t *buffer_offset) {
     size_t __buffer_offset = 0;    size_t s_size = EdgeLabelInfo_size(s);
@@ -97,6 +97,7 @@ int encode_EdgeLabelInfo(const EdgeLabelInfo *s, uint8_t *__input_buffer, size_t
     int err;
 	(void)err;
     STR_PACK(s->to)
+    INT_PACK(s->index)
     STR_PACK(s->label)
     CHAR_PACK(s->label_math_mode)
     STR_PACK(s->xlabel)
@@ -324,17 +325,43 @@ int encode_ClusterCoordinates(const ClusterCoordinates *s, uint8_t *__input_buff
     *buffer_offset += __buffer_offset;
     return 0;
 }
-void free_GetGraphInfo(GetGraphInfo *s) {
-    if (s->dot) {
-        free(s->dot);
+void free_graphInfo(graphInfo *s) {
+    for (size_t i = 0; i < s->labels_len; i++) {
+    free_NodeCoordinates(&s->labels[i]);
+    }
+    free(s->labels);
+    for (size_t i = 0; i < s->cluster_labels_len; i++) {
+    free_ClusterCoordinates(&s->cluster_labels[i]);
+    }
+    free(s->cluster_labels);
+    if (s->svg) {
+        free(s->svg);
     }
 }
-int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out) {
-    INIT_BUFFER_UNPACK(buffer_len)
+size_t graphInfo_size(const void *s){
+	return 1 + TYPST_INT_SIZE + list_size(((graphInfo*)s)->labels, ((graphInfo*)s)->labels_len, NodeCoordinates_size, sizeof(*((graphInfo*)s)->labels)) + TYPST_INT_SIZE + list_size(((graphInfo*)s)->cluster_labels, ((graphInfo*)s)->cluster_labels_len, ClusterCoordinates_size, sizeof(*((graphInfo*)s)->cluster_labels)) + string_size(((graphInfo*)s)->svg);
+}
+int encode_graphInfo(const graphInfo *s) {
+    size_t buffer_len = graphInfo_size(s);
+    INIT_BUFFER_PACK(buffer_len)
     int err;
-    (void)err;
-    NEXT_STR(out->dot)
-    FREE_BUFFER()
+	(void)err;
+    CHAR_PACK(s->error)
+    INT_PACK(s->labels_len)
+    for (size_t i = 0; i < s->labels_len; i++) {
+        if ((err = encode_NodeCoordinates(&s->labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
+    }
+    INT_PACK(s->cluster_labels_len)
+    for (size_t i = 0; i < s->cluster_labels_len; i++) {
+        if ((err = encode_ClusterCoordinates(&s->cluster_labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
+    }
+    STR_PACK(s->svg)
+
+    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
     return 0;
 }
 void free_GraphInfo(GraphInfo *s) {
@@ -421,42 +448,16 @@ int decode_renderGraph(size_t buffer_len, renderGraph *out) {
     FREE_BUFFER()
     return 0;
 }
-void free_graphInfo(graphInfo *s) {
-    for (size_t i = 0; i < s->labels_len; i++) {
-    free_NodeCoordinates(&s->labels[i]);
-    }
-    free(s->labels);
-    for (size_t i = 0; i < s->cluster_labels_len; i++) {
-    free_ClusterCoordinates(&s->cluster_labels[i]);
-    }
-    free(s->cluster_labels);
-    if (s->svg) {
-        free(s->svg);
+void free_GetGraphInfo(GetGraphInfo *s) {
+    if (s->dot) {
+        free(s->dot);
     }
 }
-size_t graphInfo_size(const void *s){
-	return 1 + TYPST_INT_SIZE + list_size(((graphInfo*)s)->labels, ((graphInfo*)s)->labels_len, NodeCoordinates_size, sizeof(*((graphInfo*)s)->labels)) + TYPST_INT_SIZE + list_size(((graphInfo*)s)->cluster_labels, ((graphInfo*)s)->cluster_labels_len, ClusterCoordinates_size, sizeof(*((graphInfo*)s)->cluster_labels)) + string_size(((graphInfo*)s)->svg);
-}
-int encode_graphInfo(const graphInfo *s) {
-    size_t buffer_len = graphInfo_size(s);
-    INIT_BUFFER_PACK(buffer_len)
+int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out) {
+    INIT_BUFFER_UNPACK(buffer_len)
     int err;
-	(void)err;
-    CHAR_PACK(s->error)
-    INT_PACK(s->labels_len)
-    for (size_t i = 0; i < s->labels_len; i++) {
-        if ((err = encode_NodeCoordinates(&s->labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-    INT_PACK(s->cluster_labels_len)
-    for (size_t i = 0; i < s->cluster_labels_len; i++) {
-        if ((err = encode_ClusterCoordinates(&s->cluster_labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-    STR_PACK(s->svg)
-
-    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
+    (void)err;
+    NEXT_STR(out->dot)
+    FREE_BUFFER()
     return 0;
 }

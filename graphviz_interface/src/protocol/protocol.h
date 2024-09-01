@@ -108,6 +108,7 @@ PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
     }
 typedef struct {
     char* to;
+    int index;
     char* label;
     bool label_math_mode;
     char* xlabel;
@@ -209,10 +210,15 @@ typedef struct {
 void free_ClusterCoordinates(ClusterCoordinates *s);
 
 typedef struct {
-    char* dot;
-} GetGraphInfo;
-void free_GetGraphInfo(GetGraphInfo *s);
-int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
+    bool error;
+    NodeCoordinates * labels;
+    size_t labels_len;
+    ClusterCoordinates * cluster_labels;
+    size_t cluster_labels_len;
+    char* svg;
+} graphInfo;
+void free_graphInfo(graphInfo *s);
+int encode_graphInfo(const graphInfo *s);
 
 typedef struct {
     NodeLabelInfo * labels;
@@ -236,14 +242,9 @@ void free_renderGraph(renderGraph *s);
 int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 typedef struct {
-    bool error;
-    NodeCoordinates * labels;
-    size_t labels_len;
-    ClusterCoordinates * cluster_labels;
-    size_t cluster_labels_len;
-    char* svg;
-} graphInfo;
-void free_graphInfo(graphInfo *s);
-int encode_graphInfo(const graphInfo *s);
+    char* dot;
+} GetGraphInfo;
+void free_GetGraphInfo(GetGraphInfo *s);
+int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
 
 #endif

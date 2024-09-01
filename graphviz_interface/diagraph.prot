@@ -4,6 +4,7 @@ protocol C GetGraphInfo {
 
 struct EdgeLabelInfo {
 	string to;
+	int index;
 	string label;
 	bool label_math_mode;
 
