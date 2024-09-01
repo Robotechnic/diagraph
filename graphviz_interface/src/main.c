@@ -222,6 +222,11 @@ int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_
 		(*labels)[i].to = malloc(strlen(to) + 1);
 		strcpy((*labels)[i].to, to);
 		(*labels)[i].to[strlen(to)] = '\0';
+		if (i > 0 && strcmp((*labels)[i].to, (*labels)[i - 1].to) == 0) {
+			(*labels)[i].index = (*labels)[i - 1].index + 1;
+		} else {
+			(*labels)[i].index = 0;
+		}
         i++;
     }
 

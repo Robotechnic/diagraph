@@ -182,6 +182,8 @@
   let offset = 0
   let (f_to, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_index, size) = decode-int(bytes.slice(offset, bytes.len()))
+  offset += size
   let (f_label, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_label_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
@@ -206,6 +208,7 @@
   offset += size
   ((
     to: f_to,
+    index: f_index,
     label: f_label,
     label_math_mode: f_label_math_mode,
     xlabel: f_xlabel,
@@ -343,23 +346,6 @@
     y: f_y,
   ), offset)
 }
-#let encode-GetGraphInfo(value) = {
-  encode-string(value.at("dot"))
-}
-#let decode-GraphInfo(bytes) = {
-  let offset = 0
-  let (f_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NodeLabelInfo)
-  offset += size
-  let (f_cluster_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-ClusterLabelInfo)
-  offset += size
-  ((
-    labels: f_labels,
-    cluster_labels: f_cluster_labels,
-  ), offset)
-}
-#let encode-renderGraph(value) = {
-  encode-point(value.at("font_size")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedNodeLabel) + encode-list(value.at("cluster_labels"), encode-SizedClusterLabel) + encode-string(value.at("engine"))
-}
 #let decode-graphInfo(bytes) = {
   let offset = 0
   let (f_error, size) = decode-bool(bytes.slice(offset, bytes.len()))
@@ -376,4 +362,21 @@
     cluster_labels: f_cluster_labels,
     svg: f_svg,
   ), offset)
+}
+#let decode-GraphInfo(bytes) = {
+  let offset = 0
+  let (f_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NodeLabelInfo)
+  offset += size
+  let (f_cluster_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-ClusterLabelInfo)
+  offset += size
+  ((
+    labels: f_labels,
+    cluster_labels: f_cluster_labels,
+  ), offset)
+}
+#let encode-renderGraph(value) = {
+  encode-point(value.at("font_size")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedNodeLabel) + encode-list(value.at("cluster_labels"), encode-SizedClusterLabel) + encode-string(value.at("engine"))
+}
+#let encode-GetGraphInfo(value) = {
+  encode-string(value.at("dot"))
 }
