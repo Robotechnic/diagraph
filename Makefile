@@ -11,7 +11,7 @@ format:
 
 link :
 	mkdir -p ~/.cache/typst/packages/preview/diagraph
-	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.2.5
+	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.3.0
 
 module :
 	mkdir -p ./diagraph
@@ -39,3 +39,6 @@ wasi-stub:
 	cd wasm-minimal-protocol/wasi-stub; \
 	cargo install --path . 
 	rm -rf wasm-minimal-protocol
+
+manual: wasm
+	typst compile --root . ./doc/manual.typ
