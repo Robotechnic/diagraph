@@ -36,7 +36,6 @@ Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
 
 For more information about the Graphviz Dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 
-
 ### Advanced usage
 
 Check the [manual](https://raw.githubusercontent.com/Robotechnic/diagraph/main/doc/manual.pdf) for more information about the plugin.
@@ -72,7 +71,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### 
+### 0.3.0
+
+- Added support for edge labels
+- Added a manual generated with Typst
+- Updated graphviz version
+- Fix an error in math mode detection
 
 ### 0.2.5
 
