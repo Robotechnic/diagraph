@@ -86,11 +86,19 @@
     let index = edge-label.at("index")
     if type(overwrite-list) == array and index < overwrite-list.len() {
 			let overwrite = overwrite-list.at(index)
-			if name in overwrite {
+			if type(overwrite) != dictionary {
+				if name == "label" {
+					return overwrite
+				}
+			} else if name in overwrite {
       	return overwrite.at(name)
 			}
     } else if index == 0 {
-			if name in overwrite-list {
+			if type(overwrite-list) != dictionary {
+				if name == "label" {
+					return overwrite-list
+				}
+			} else if name in overwrite-list {
 				return overwrite-list.at(name)
 			}
     }
