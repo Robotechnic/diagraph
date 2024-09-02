@@ -1,4 +1,4 @@
-#import "internals.typ": render
+#import "internals.typ": render, engine-list
 
 /// Renders a graph with Graphviz.
 ///

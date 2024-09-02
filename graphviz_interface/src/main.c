@@ -77,7 +77,7 @@ int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name
         if (!has_label) {
             label = name;
         }
-		size_t len = strlen(label);
+        size_t len = strlen(label);
         label_infos->label = malloc(len + 1);
         if (!label_infos->label) {
             ERROR("Failed to allocate memory for native labels");
@@ -108,7 +108,7 @@ void process_font_name(Agnode_t *n, NodeLabelInfo *label_infos) {
     if (fn) {
         label_infos->font_name = malloc(strlen(fn) + 1);
         strcpy(label_infos->font_name, fn);
-		label_infos->font_name[strlen(fn)] = '\0';
+        label_infos->font_name[strlen(fn)] = '\0';
     } else {
         label_infos->font_name = NULL;
     }
@@ -218,15 +218,15 @@ int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_
         process_edge_font_name(e, &(*labels)[i]);
         process_edge_fontsize(e, &(*labels)[i]);
         (*labels)[i].color = color_to_int(agget(e, "fontcolor"));
-		const char* to = agnameof(aghead(e));
-		(*labels)[i].to = malloc(strlen(to) + 1);
-		strcpy((*labels)[i].to, to);
-		(*labels)[i].to[strlen(to)] = '\0';
-		if (i > 0 && strcmp((*labels)[i].to, (*labels)[i - 1].to) == 0) {
-			(*labels)[i].index = (*labels)[i - 1].index + 1;
-		} else {
-			(*labels)[i].index = 0;
-		}
+        const char *to = agnameof(aghead(e));
+        (*labels)[i].to = malloc(strlen(to) + 1);
+        strcpy((*labels)[i].to, to);
+        (*labels)[i].to[strlen(to)] = '\0';
+        if (i > 0 && strcmp((*labels)[i].to, (*labels)[i - 1].to) == 0) {
+            (*labels)[i].index = (*labels)[i - 1].index + 1;
+        } else {
+            (*labels)[i].index = 0;
+        }
         i++;
     }
 
@@ -250,9 +250,9 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
         const char *label = agget(n, "label");
         if (aghtmlstr(label)) {
             default_node_label_values(&nLabels->labels[label_index]);
-			nLabels->labels[label_index].name = malloc(sizeof(name) + 1);
-			strcpy(nLabels->labels[label_index].name, name);
-			nLabels->labels[label_index].name[strlen(name)] = '\0';
+            nLabels->labels[label_index].name = malloc(sizeof(name) + 1);
+            strcpy(nLabels->labels[label_index].name, name);
+            nLabels->labels[label_index].name[strlen(name)] = '\0';
         } else {
 
             if (process_node_label(n, &nLabels->labels[label_index], name, label) ||
@@ -306,14 +306,19 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
     }
     strcpy(label_infos->name, name);
     label_infos->name[strlen(name)] = '\0';
-    label_infos->label = malloc(strlen(label) + 1);
-    if (!label_infos->label) {
-        ERROR("Failed to allocate memory for cluster label");
-        return 1;
-    }
-    strcpy(label_infos->label, label);
-    label_infos->label[strlen(label)] = '\0';
-    label_infos->math_mode = is_math(label);
+	if (label == NULL) {
+		label_infos->label = NULL;
+		label_infos->math_mode = false;
+	} else {
+		label_infos->label = malloc(strlen(label) + 1);
+		if (!label_infos->label) {
+			ERROR("Failed to allocate memory for cluster label");
+			return 1;
+		}
+		strcpy(label_infos->label, label);
+		label_infos->label[strlen(label)] = '\0';
+		label_infos->math_mode = is_math(label);
+	}
     label_infos->color = color_to_int(agget(sg, "fontcolor"));
     const char *fontsize = agget(sg, "fontsize");
     if (fontsize) {
@@ -361,15 +366,10 @@ int get_cluster_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *sgLabe
         }
 
         const char *label = agget(sg, "label");
-        if (!label) {
-            continue;
-        }
         if (aghtmlstr(label)) {
             default_cluster_label_values(&sgLabels->cluster_labels[*label_index]);
-        } else {
-            if (process_cluster_label(sg, name, label, &sgLabels->cluster_labels[*label_index])) {
-                return 1;
-            }
+        } else if (process_cluster_label(sg, name, label, &sgLabels->cluster_labels[*label_index])) {
+            return 1;
         }
         (*label_index)++;
         get_cluster_labels(sg, labels, sgLabels, label_index);
@@ -745,13 +745,18 @@ int render(size_t buffer_len) {
         return 0;
     }
 
+    agattr(g, AGRAPH, "label", "");
     agattr(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
     agattr(g, AGNODE, "xlabel", "");
+    agattr(g, AGEDGE, "label", "");
+    agattr(g, AGEDGE, "xlabel", "");
+    agattr(g, AGEDGE, "taillabel", "");
+    agattr(g, AGEDGE, "headlabel", "");
 
     // Passing a graph sets the value for the graph.
     agattr(g, AGRAPH, "bgcolor", "transparent");
     agset(g, "margin", "0");
-	agset(g, "size", NULL);
+    agset(g, "size", NULL);
 
     {
         char font_size_string[128];
@@ -834,4 +839,38 @@ EMSCRIPTEN_KEEPALIVE
 int get_version() {
     wasm_minimal_protocol_send_result_to_host((uint8_t *)PACKAGE_VERSION, strlen(PACKAGE_VERSION));
     return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int engine_list() {
+#ifdef TEST
+    GVC_t *gvc = gvContext();
+#else
+    GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
+#endif
+    if (!gvc) {
+		ERROR("Failed to create Graphviz context");
+		return 1;
+	}
+	char *kind = "layout";
+	int size = 0;
+	char **engines_list = gvPluginList(gvc, kind, &size);
+	if (!engines_list) {
+		ERROR("Failed to get engines list");
+		return 1;
+	}
+#ifdef TEST
+	for (int i = 0; i < size; i++) {
+		DEBUG("Engine: %s\n", *(engines_list + i));
+	}
+#endif
+	Engines engines;
+	engines.engines_len = size;
+	engines.engines = engines_list;
+	if (encode_Engines(&engines)) {
+		ERROR("Failed to encode engines list");
+		return 1;
+	}
+	free_Engines(&engines);
+	return 0;
 }
