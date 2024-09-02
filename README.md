@@ -36,101 +36,10 @@ Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
 
 For more information about the Graphviz Dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 
-### Arguments
 
-`render` and `raw-render` accept multiple arguments that help you customize your graphs.
+### Advanced usage
 
-- `engine` (`str`) is the name of the engine to generate the graph with. Available engines are circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, and twopi. Defaults to `"dot"`.
-
-- `width` and `height` (`length` or `auto`) are the dimensions of the image to display. If set to `auto` (the default), will be the dimensions of the generated SVG. If a `length`, cannot be expressed in `em`.
-
-- `clip` (`bool`) determines whether to hide parts of the graph that extend beyond its frame. Defaults to `true`.
-
-- `background` (`none` or `color` or `gradient`) describes how to fill the background. If set to `none` (the default), the background will be transparent.
-
-- `labels` (`dict`) is a list of labels to use to overwrite the defaults labels. This is discussed in depth in the next section. Defaults to `(:)`.
-
-- `xlabels` (`dict`) is a list of labels to use to overwrite the defaults xlabels. This is discussed in depth in the next section. Defaults to `(:)`.
-
-- `clusters` (`dict`) is a list of clusters to use to overwrite the defaults clusters labels. This is discussed in depth in the next section. Defaults to `(:)`.
-
-### Labels
-
-By default, all node labels are rendered by Typst. If a node has no explicitly set label (using the `[label="..."]` syntax), its name is used as its label, and interpreted as math if possible. This means a node named `n_0` will render as 𝑛<sub>0</sub>.
-
-If you want a node label to contain a more complex mathematical equation, or more complex markup, you can use the `labels` argument: pass a dictionary that maps node names to Typst `content`. Each node with a name within the dictionary will have its label overridden by the corresponding content.
-
-<!--EXAMPLE(labels)-->
-````typ
-#raw-render(
-  ```
-  digraph {
-    rankdir=LR
-    node[shape=circle]
-    Hmm -> a_0
-    Hmm -> big
-    a_0 -> "a'" -> big [style="dashed"]
-    big -> sum
-  }
-  ```,
-  labels: (:
-    big: [_some_#text(2em)[ big ]*text*],
-    sum: $ sum_(i=0)^n 1/i $,
-  ),
-)
-````
-![labels](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/labels1.png)
-
-### Xlabels
-
-Like labels, all xlabels are rendered by Typst. If you want a xlabel to contain a more complex mathematical equation, or more complex markup, you can use the `xlabels` argument: pass a dictionary that maps edge names to Typst `content`. Each node with a name within the dictionary will have its xlabel overridden by the corresponding content.
-
-<!--EXAMPLE(xlabels)-->
-````typ
-#raw-render(```
-  graph {
-    simplexlabel[xlabel="simple"]
-    simplexlabel -- limitxlabel
-    simplexlabel -- longxlabel
-    longxlabel[xlabel="long xlabel --------------------------------------"]
-    "alpha xlabel"[xlabel="alpha"]
-    simplexlabel -- "alpha xlabel"
-    limitxlabel[xlabel="limit"]
-    formulaxlabel -- "alpha xlabel"
-  }
-  ```, 
-  xlabels: (
-    formulaxlabel: $ sum_(i=0)^n 1/i $
-  )
-)
-````
-![xlabels](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/xlabels1.png)
-
-### Clusters
-
-Clusters are a way to group nodes together in graphviz. Clusters labels are rendered by Typst. If you want a cluster label to contain a more complex mathematical equation, or more complex markup, you can use the `clusters` argument: pass a dictionary that maps cluster names to Typst `content`. Each cluster with a name within the dictionary will have its label overridden by the corresponding content.
-
-<!--EXAMPLE(clusters)-->
-````typ
-#raw-render(```
-  digraph {
-    subgraph cluster_0 {
-      a -> b -> c
-    }
-    subgraph cluster_1 {
-      label="Cluster 1\nNormal text"
-      d->b
-      b->f
-      d->f
-    }
-  }
-  ```, 
-  clusters: (
-    cluster_0: $ "Formula:"\ sum_(i=0)^n 1/i $
-  )
-)
-````
-![clusters](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/clusters1.png)
+Check the [manual](https://raw.githubusercontent.com/Robotechnic/diagraph/main/doc/manual.pdf) for more information about the plugin.
 
 <!--EXCLUDE-->
 ## Build
@@ -144,6 +53,7 @@ There are also some other make commands:
 - `make clean-link`: Only clean the link
 - `make compile_database`: Generate the compile_commands.json file
 - `make module`: It copy the files needed to run the plugin in a folder called `graphviz` in the current directory
+- `make manual`: Generate the manual pdf
 - `make wasi-stub`: Build the wasi stub executable, it require a rust toolchain properly configured
 
 ### Wasi stub
@@ -161,6 +71,8 @@ This package also uses a protocol generator to generate the wasm interface. You 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Changelog
+
+### 
 
 ### 0.2.5
 
