@@ -90,7 +90,9 @@
       	return overwrite.at(name)
 			}
     } else if index == 0 {
-      return overwrite-list
+			if name in overwrite-list {
+				return overwrite-list.at(name)
+			}
     }
   }
   let label-content = edge-label.at(name)
@@ -536,4 +538,10 @@
       }
     }
   ))
+}
+
+#let engine-list() = {
+	let list = plugin.engine_list()
+  let (engines, _) = decode-Engines(plugin.engine_list())
+	engines
 }

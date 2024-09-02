@@ -125,3 +125,8 @@ protocol Typst graphInfo {
 	ClusterCoordinates cluster_labels[];
 	string svg;
 }
+
+// Protocol to get the list of available engines
+protocol Typst Engines {
+	string engines[];
+}
