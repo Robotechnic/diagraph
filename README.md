@@ -71,6 +71,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.1
+
+- Updated graphviz version to 12.2.0
+- Fixed a bug with the font being incorrectly set
+
 ### 0.3.0
 
 - Added support for edge labels

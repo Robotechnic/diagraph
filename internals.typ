@@ -68,8 +68,8 @@
   }
   set text(fill: rgb(int-to-string(color, 8, base: 16)), bottom-edge: "bounds")
   set text(size: fontsize) if fontsize.pt() != 0
-  set text(font: font) if font != ""
-  text(label)
+	set text(font: font) if font != ("",)
+	text(label)
 }
 /// Check that all edges in the overwrite dictionary are present in the encoded label edges.
 #let check-overwrite(encoded-label, edge-overwrite) = {
