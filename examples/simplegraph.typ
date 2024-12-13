@@ -1,4 +1,4 @@
-#import "@preview/diagraph:0.4.0": *
+#import "@preview/diagraph:0.3.1": *
 
 
 #set heading(numbering: (..nums) => [Graph #numbering("1", ..nums):])

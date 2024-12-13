@@ -1,5 +1,5 @@
 #import "@preview/mantys:0.1.4": *
-#import "@preview/diagraph:0.4.0"
+#import "@preview/diagraph:0.3.1"
 
 #show: mantys.with(
   ..toml("../typst.toml"),
