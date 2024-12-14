@@ -121,6 +121,8 @@
   let vertex-labels = graph-params.remove("vertex-labels", default: ())
   let directed = graph-params.remove("directed", default: true)
   let clusters = graph-params.remove("clusters", default: ())
+	let debug = graph-params.remove("debug", default: false)
+	let clip = graph-params.remove("clip", default: true)
 
   render(
     if directed {
@@ -131,6 +133,8 @@
       0,
       adjacency.len(),
     ) + ";" + create-clusters(clusters) + create-attributes(vertex-labels) + build-edges(adjacency, directed) + "}",
+		debug: debug,
+		clip: clip,
     labels: name => {
       let id = int(name)
       if id < vertex-labels.len() {

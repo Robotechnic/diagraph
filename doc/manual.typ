@@ -21,7 +21,7 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   arg("width", auto),
   arg("height", auto),
   arg("clip", true),
-  arg("debug", true),
+  arg("debug", false),
   arg("background", none),
 )[
   #argument("dot", types: ("string"))[
@@ -136,6 +136,105 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   #argument("background", types: (none, "color"))[
     The background color of the rendered image. `none` means transparent.
   ]
+]
+
+= Adjacency list
+If you don't want to write the graph in dot format, you can use the adjacency list format. This format allow you to pass a matrix of edges values that represent the graph. 
+
+#command("adjacency",
+	arg("matrix"),
+	arg("directed", true),
+	arg("vertex-labels", ()),
+	arg("clusters", ()),
+	arg("debug", false),
+	arg("clip", true),
+	sarg("dot arguments")
+)[
+	#argument("matrix", types: (array))[
+		The matrix of edges. The matrix must be a list of lists. Each list represents a row of the matrix. The values of the matrix are the labels of the edges. If the value is none, there is no edge between the nodes.
+
+		#example(````
+			#adjacency(
+				(
+					(none, "B", "C"),
+					("D", none, "F"),
+					("G", "H", none),
+				),
+				rankdir: "LR"
+			)
+		````)
+	]
+	#argument("directed", types: (true))[
+		Whether the graph is directed or not.
+		#example(````
+			#adjacency(
+				(
+					(none, "A"),
+					("B", none),
+				),
+				rankdir: "LR",
+				directed: false
+			)
+		````)
+	]
+	#argument("vertex-labels", types: ((:),))[
+		List of labels. If the value is a content, the content is used as the label of the vertex. If the value is a dictionary then the keys are the nodes attributes.
+		
+		#example(````
+			#adjacency(
+				(
+					(none, "B", "C"),
+					("D", none, "F"),
+					("G", "H", none),
+				),
+				rankdir: "LR",
+				vertex-labels: (
+					"Node A", "Node B", 
+					(label: "Node C", color: red, shape: "doublecircle"),
+				)
+			)
+		````)
+	]
+	#argument("clusters", types: (list(),))[
+		List of clusters. If the value is a list, it is used as the list of nodes in the cluster. If the value is a dictionary, the mandatory key is `nodes` which is the list of nodes in the cluster. The other keys are the cluster attributes.
+	]
+	#argument("debug", types: (true))[
+		Show debug boxes around the labels.
+	]
+	#argument("clip", types: (true))[
+		Whether to hide part of the graphs that goes outside the bounding box given by graphviz.
+	]
+	#argument("dot arguments")[
+		Graph arguments. There are two types of values:
+		- A key -- dot value pair: The key is the attribute name and the value is the attribute value.
+		
+		For example, `rankdir: "LR"` will be converted to `rankdir=LR` in dot.
+		
+		- A key -- dictionary pair: The key is the element name and the value is a dictionary of attributes. The attributes must be all key -- dot value pairs.
+
+		For example, `node: (shape: "circle")` will be converted to `node[shape=circle]` in dot. 
+	]
+
+	#example(````
+	#adjacency(
+		vertex-labels: ($alpha$, $beta$, $gamma$),
+		(
+			([1], move(dx: 25pt, dy: -5pt)[lala], none),
+			($4x$, none, none),
+			(none, 1, 13 / 4),
+		),
+		layout: "neato",
+		rankdir: "LR",
+		edge: (
+			arrowsize: 0.7,
+		),
+		node: (
+			shape: "circle",
+			width: 0.3,
+			fixedsize: true,
+		),
+	)
+	````)
 ]
 
 = Fonts, colors and sizes
