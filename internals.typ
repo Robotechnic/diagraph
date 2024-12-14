@@ -150,6 +150,32 @@
   formatted-edge-labels
 }
 
+/// Return 
+/// - the label content depending on the overwrite method.
+/// - a boolean indicating if the label was overwritten.
+#let label-overwrite(label-type, label, overwrite-method, font-name, font-size) = {
+	let name = label.at("name")
+	if type(overwrite-method) == dictionary and name in overwrite-method {
+		return (overwrite-method.at(name), true)
+	} 
+	
+	if type(overwrite-method) == function {
+		let overwrite = overwrite-method(name)
+		if overwrite != none {
+			return (overwrite, true)
+		}
+	}
+
+	let label-content = label.at(label-type)
+	if label-content != "" {
+		label-content = convert-label(label-content, label.at("math_mode"))
+		label-content = label-format(label.at("color"), font-name, font-size, label-content)
+		return (label-content, true)
+	}
+	
+	return ("", false)
+}
+
 /// Get an array of evaluated labels from a graph.
 #let get-labels(labels, xlabels, clusters, edges, dot) = {
   let overridden-labels = (
@@ -167,29 +193,15 @@
       }
       let font-name = encoded-label.at("font_name").split(",")
 
-      let label = encoded-label.at("label")
-      let overwrite = false
-      if encoded-label.at("name") in labels {
-        overwrite = true
-        label = labels.at(encoded-label.at("name"))
-      } else if label != "" {
-        overwrite = true
-        label = convert-label(label, encoded-label.at("math_mode"))
-        label = label-format(encoded-label.at("color"), font-name, font-size, label)
-      }
+			let (label, overwrite) = label-overwrite("label", encoded-label, labels, font-name, font-size)
 
-      let xlabel = encoded-label.at("xlabel")
-      let xoverwrite = false
-      if encoded-label.at("name") in xlabels {
-        xoverwrite = true
-        xlabel = xlabels.at(encoded-label.at("name"))
-      } else if xlabel != "" {
-        xoverwrite = true
-        xlabel = convert-label(xlabel, encoded-label.at("xlabel_math_mode"))
-        xlabel = label-format(encoded-label.at("color"), font-name, font-size, xlabel)
-      }
+			let (xlabel, xoverwrite) = label-overwrite("xlabel", encoded-label, xlabels, font-name, font-size)
 
-      let edges-overwrite = edges.at(encoded-label.at("name"), default: (:))
+			let edges-overwrite = if type(edges) == function {
+				edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
+			} else {
+				edges.at(encoded-label.at("name"), default: (:))
+			}
       check-overwrite(encoded-label, edges-overwrite)
       let edge-labels = format-edge-labels(encoded-label, edges-overwrite)
       (
@@ -201,25 +213,16 @@
       )
     }),
     graph-labels.at("cluster_labels").map(encoded-label => {
-      let overwrite = false
-      let label = encoded-label.at("label")
-      if encoded-label.at("name") in clusters {
-        label = clusters.at(encoded-label.at("name"))
-        overwrite = true
-      } else if label != "" {
-        let font_name = encoded-label.at("font_name").split(",")
-        let font_size = text.size
-        if encoded-label.at("font_size").pt() != 0 {
-          font_size = encoded-label.at("font_size")
-        }
-        label = convert-label(label, encoded-label.at("math_mode"))
-        label = label-format(encoded-label.at("color"), font_name, font_size, label)
-        overwrite = true
-      }
-      (
-        overwrite: overwrite,
-        label: label,
-      )
+			let font-name = encoded-label.at("font_name").split(",")
+			let font-size = text.size
+			if encoded-label.at("font_size").pt() != 0 {
+				font-size = encoded-label.at("font_size")
+			}
+			let (label, overwrite) = label-overwrite("label", encoded-label, clusters, font-name, font-size)
+			(
+				overwrite: overwrite,
+				label: label,
+			)
     }),
   )
 }
