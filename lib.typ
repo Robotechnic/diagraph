@@ -1,4 +1,5 @@
 #import "internals.typ": render, engine-list
+#import "adjacency.typ": adjacency
 
 /// Renders a graph with Graphviz.
 ///

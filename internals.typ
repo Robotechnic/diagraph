@@ -376,6 +376,9 @@
   background: none,
 ) = {
   set math.equation(numbering: none)
+	if type(dot) != str {
+		panic("The dot code must be a string")
+	}
 
   layout(((width: container-width, height: container-height)) => (
     context {

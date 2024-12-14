@@ -75,3 +75,4 @@ graphviz_interface/CMakeLists.txt
 images/*.typ
 
 tests
+adjacency.pdf
