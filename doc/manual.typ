@@ -27,8 +27,11 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   #argument("dot", types: ("string"))[
     The dot code to render.
   ]
-  #argument("labels", types: ((:)))[
-    Nodes labels to overwrite. The dictionary is indexed by the node name.
+  #argument("labels", types: ((:), () => {}))[
+    Nodes labels to overwrite.
+		
+		If the provided argument is a dictionary, the keys are the node names and the values are the labels. If the provided argument is a function, the function is called with the node name as argument and must return the label. A none value means that the label is not overwritten.
+		
     #example(````
     	#raw-render(```
     		digraph G {
@@ -46,8 +49,10 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   \
   \
   \
-  #argument("xlabels", types: ((:)))[
-    Nodes labels to overwrite. The dictionary is indexed by the node name.
+  #argument("xlabels", types: ((:), () => {}))[
+    Nodes xlabels to overwrite.
+
+		If the provided argument is a dictionary, the keys are the node names and the values are the xlabels. If the provided argument is a function, the function is called with the node name as argument and must return the xlabel. A none value means that the xlabel is not overwritten.
     #example(````
     	#raw-render(```
     		digraph G {
@@ -60,10 +65,17 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
     	)
     ````)
   ]
-  #argument("edges", types: ((:)))[
-    Edges labels to overwrite. The dictionary keys are source nodes. The values are dictionaries indexed by the target node. Each edge is one dictionary or multiple ones designating multiple edges.
+  #argument("edges", types: ((:), () => {}))[
+    Edges labels to overwrite. 
+		
+		If the parameter is a dictionary, the dictionary keys are source nodes. The values are dictionaries indexed by the target node. Each edge is one dictionary of valid keys or a list designating multiple edges between the same nodes.
 
-    Valid keys are:
+		If the parameter is a function, the function is called with two parameters:
+		- The source node
+		- A list of the nodes with an edge from the source node to them
+		It must return a dictionary with the target nodes as keys and a dictionary or list of dictionary as values.
+
+    Valid keys for the edges dictionary are:
     - `label`: The label of the edge.
     - `xlabel`: The xlabel of the edge.
     - `taillabel`: The taillabel of the edge.
@@ -88,7 +100,9 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
     ````)
   ]
   #argument("clusters", types: ((:)))[
-    Clusters labels to overwrite. The dictionary is indexed by the cluster name.
+    Clusters labels to overwrite. 
+
+		If the provided argument is a dictionary, the keys are the cluster names and the values are the labels. If the provided argument is a function, the function is called with the cluster name as argument and must return the label. A none value means that the label is not overwritten.
     #example(````
     	#raw-render(```
     		digraph G {
@@ -102,6 +116,7 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
     	)
     ````)
   ]
+	\
   #argument("engine", types: ("string"))[
     The engine to use to render the graph. The currently supported engines are:
     #list(..diagraph.engine-list().engines)
@@ -112,7 +127,6 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   #argument("height", types: (1em, 1%))[
     The height of the rendered image.
   ]
-  \
   #argument("clip", types: (true))[
     Whether to hide part of the graphs that goes outside the bounding box given by graphviz.
   ]
@@ -210,32 +224,32 @@ Those examples are here to demonstrate the capabilities of diagraph. For more in
 
 #example(````
  #raw-render(```
-digraph finite_state_machine {
-   rankdir=LR
-   size="8,5"
+	digraph finite_state_machine {
+		rankdir=LR
+		size="8,5"
 
-   node [shape=doublecircle]
-   LR_0
-   LR_3
-   LR_4
-   LR_8
+		node [shape=doublecircle]
+		LR_0
+		LR_3
+		LR_4
+		LR_8
 
-   node [shape=circle]
-   LR_0 -> LR_2 [label="SS(B)"]
-   LR_0 -> LR_1 [label="SS(S)"]
-   LR_1 -> LR_3 [label="S($end)"]
-   LR_2 -> LR_6 [label="SS(b)"]
-   LR_2 -> LR_5 [label="SS(a)"]
-   LR_2 -> LR_4 [label="S(A)"]
-   LR_5 -> LR_7 [label="S(b)"]
-   LR_5 -> LR_5 [label="S(a)"]
-   LR_6 -> LR_6 [label="S(b)"]
-   LR_6 -> LR_5 [label="S(a)"]
-   LR_7 -> LR_8 [label="S(b)"]
-   LR_7 -> LR_5 [label="S(a)"]
-   LR_8 -> LR_6 [label="S(b)"]
-   LR_8 -> LR_5 [label="S(a)"]
- }
+		node [shape=circle]
+		LR_0 -> LR_2 [label="SS(B)"]
+		LR_0 -> LR_1 [label="SS(S)"]
+		LR_1 -> LR_3 [label="S($end)"]
+		LR_2 -> LR_6 [label="SS(b)"]
+		LR_2 -> LR_5 [label="SS(a)"]
+		LR_2 -> LR_4 [label="S(A)"]
+		LR_5 -> LR_7 [label="S(b)"]
+		LR_5 -> LR_5 [label="S(a)"]
+		LR_6 -> LR_6 [label="S(b)"]
+		LR_6 -> LR_5 [label="S(a)"]
+		LR_7 -> LR_8 [label="S(b)"]
+		LR_7 -> LR_5 [label="S(a)"]
+		LR_8 -> LR_6 [label="S(b)"]
+		LR_8 -> LR_5 [label="S(a)"]
+	}
  ```,
  labels: (
    "LR_0": $"LR"_0$,
@@ -254,5 +268,49 @@ digraph finite_state_machine {
 	"LR_2": ("LR_6": $S S(b)$, "LR_5": $S S(a)$),
  ),
  width: 100%,
+)
+````)
+
+#example(````
+#import "@preview/diagraph:0.3.1": *
+
+#raw-render(```
+	graph {
+		abc -- def
+		def -- ghi
+		jkl -- mno
+		abc -- jkl
+		subgraph cluster_0 {
+			ghi
+			def -- pqr
+		}
+		abc -- vwx
+		abc -- stu
+		subgraph cluster_1 {
+			vwx -- yz
+		}
+	}
+```, 
+height: 20em,
+labels: (name) => {
+	text(fill: red, name.rev())
+},
+xlabels: (name) => {
+	text(fill: blue, size: 2em, font: "FreeMono", name)
+},
+clusters: (name) => {
+		text(fill: orange, size: 3em, name.at(-1))
+},
+edges: (name, edges) => {
+	let labels = (:)
+	for edge in edges {
+		labels.insert(edge, (
+			label: text(fill: green, [#name -- #edge]),
+			headlabel: name.at(0),
+			taillabel: edge.at(0)
+		))
+	}
+	labels
+}
 )
 ````)
