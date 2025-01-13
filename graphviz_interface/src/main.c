@@ -446,6 +446,8 @@ int get_labels(size_t buffer_len) {
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFinalize(gvc);
+	gvFreeContext(gvc);
+
     if (err) {
         free_GetGraphInfo(&labels);
         free_GraphInfo(&nLabels);
@@ -665,17 +667,6 @@ void get_cluster_label_coordinates(Agraph_t *g, float pad, const SizedClusterLab
     }
 }
 
-#define FREE_EVERYTHING()                                                                                    \
-    {                                                                                                        \
-        free_renderGraph(&renderInfo);                                                                       \
-        free_graphInfo(&g_render);                                                                           \
-        if (g) {                                                                                             \
-            gvFreeLayout(gvc, g);                                                                            \
-            agclose(g);                                                                                      \
-        }                                                                                                    \
-        gvFinalize(gvc);                                                                                     \
-    }
-
 /**
  * @brief Render a graphviz graph to svg from a dot string.
  *
@@ -733,14 +724,16 @@ int render(size_t buffer_len) {
 #endif
     if (!gvc) {
         ERROR("Failed to create Graphviz context");
+        free_renderGraph(&renderInfo);
         return 1;
     }
-    graph_t *g = agmemread(renderInfo.dot);
 
+    graph_t *g = agmemread(renderInfo.dot);
     if (!g) {
         free_renderGraph(&renderInfo);
         free_graphInfo(&g_render);
         gvFinalize(gvc);
+		gvFreeContext(gvc);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
     }
@@ -780,6 +773,8 @@ int render(size_t buffer_len) {
         free_renderGraph(&renderInfo);
         free_graphInfo(&g_render);
         gvFinalize(gvc);
+		gvFreeContext(gvc);
+		free(g);
 
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
@@ -791,7 +786,9 @@ int render(size_t buffer_len) {
     if (err == -1) {
         free_renderGraph(&renderInfo);
         free_graphInfo(&g_render);
+		agclose(g);
         gvFinalize(gvc);
+		gvFreeContext(gvc);
         ERROR("\0Diagraph error: failed to render graph to svg\0");
         return 1;
     }
@@ -811,8 +808,10 @@ int render(size_t buffer_len) {
     index = 0;
     get_cluster_label_coordinates(g, (float)pad, renderInfo.cluster_labels, g_render.cluster_labels, &index);
 
+	gvFreeLayout(gvc, g);
     agclose(g);
     gvFinalize(gvc);
+	gvFreeContext(gvc);
     free_renderGraph(&renderInfo);
 
     // Generate output.
