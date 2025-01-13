@@ -20,6 +20,7 @@ module :
 	cp ./graphviz_interface/protocol.typ ./diagraph/graphviz_interface/protocol.typ
 	cp ./internals.typ ./diagraph/internals.typ
 	cp ./lib.typ ./diagraph/lib.typ
+	cp ./adjacency.typ ./diagraph/adjacency.typ
 	cp ./README.md ./diagraph/README.md
 	cp ./typst.toml ./diagraph/typst.toml
 	cp ./LICENSE ./diagraph/LICENSE
