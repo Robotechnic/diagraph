@@ -73,7 +73,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 0.3.1
 
-- Updated graphviz version to 12.2.0
+- Updated graphviz version to 12.2.1
 - Fixed a bug with the font being incorrectly set
 - Added adjacency lists to the graph rendering possibilities
 
