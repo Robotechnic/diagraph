@@ -210,11 +210,10 @@ typedef struct {
 void free_ClusterCoordinates(ClusterCoordinates *s);
 
 typedef struct {
-    char* * engines;
-    size_t engines_len;
-} Engines;
-void free_Engines(Engines *s);
-int encode_Engines(const Engines *s);
+    char* dot;
+} GetGraphInfo;
+void free_GetGraphInfo(GetGraphInfo *s);
+int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
 
 typedef struct {
     float font_size;
@@ -229,6 +228,13 @@ void free_renderGraph(renderGraph *s);
 int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
 typedef struct {
+    char* * engines;
+    size_t engines_len;
+} Engines;
+void free_Engines(Engines *s);
+int encode_Engines(const Engines *s);
+
+typedef struct {
     bool error;
     NodeCoordinates * labels;
     size_t labels_len;
@@ -238,12 +244,6 @@ typedef struct {
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
-
-typedef struct {
-    char* dot;
-} GetGraphInfo;
-void free_GetGraphInfo(GetGraphInfo *s);
-int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
 
 typedef struct {
     NodeLabelInfo * labels;
