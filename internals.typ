@@ -374,6 +374,7 @@
   /// A color or gradient to fill the background with. If set to `none` (the
   /// default), the background will be transparent.
   background: none,
+  stretch: true,
 ) = {
   set math.equation(numbering: none)
 	if type(dot) != str {
@@ -424,24 +425,42 @@
 				image(bytes(output.at("svg")), format: "svg")
 			})
 
-      let final-width = if width == auto {
-        svg-width
-      } else {
-        relative-to-absolute(width, container-width)
-      }
-      let final-height = if height == auto {
-        svg-height
-      } else {
-        relative-to-absolute(height, container-height)
-      }
+      let final-width = width
+			let final-height = height
 
-      if width == auto and height != auto {
-        let ratio = final-height / svg-height
-        final-width = svg-width * ratio
-      } else if width != auto and height == auto {
-        let ratio = final-width / svg-width
-        final-height = svg-height * ratio
-      }
+
+      // fill the container like css background contain
+      if not stretch and width != auto and height != auto {
+				let ratio = svg-width / svg-height
+				let container-ratio = width / height
+
+				if ratio > container-ratio {
+					final-width = width
+					final-height = width / ratio
+				} else {
+					final-height = height
+					final-width = height * ratio
+				}
+      } else { // stretch
+				let final-width = if width == auto {
+					svg-width
+				} else {
+					relative-to-absolute(width, container-width)
+				}
+				let final-height = if height == auto {
+					svg-height
+				} else {
+					relative-to-absolute(height, container-height)
+				}
+
+				if width == auto and height != auto {
+					let ratio = final-height / svg-height
+					final-width = svg-width * ratio
+				} else if width != auto and height == auto {
+					let ratio = final-width / svg-width
+					final-height = svg-height * ratio
+				}
+			}
       // Rescale the final image to the desired size.
       show: block.with(
         width: final-width,
