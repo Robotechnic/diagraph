@@ -419,7 +419,7 @@
       // return [#repr(output)]
 
       // Get SVG dimensions.
-      let (width: svg-width, height: svg-height) = measure(image.decode(output.at("svg"), format: "svg"))
+      let (width: svg-width, height: svg-height) = measure(image(bytes(output.at("svg")), format: "svg"))
 
       let final-width = if width == auto {
         svg-width
@@ -459,8 +459,8 @@
       show: block.with(width: svg-width, height: svg-height, fill: background)
 
       // Display SVG.
-      image.decode(
-        output.at("svg"),
+      image(
+        bytes(output.at("svg")),
         format: "svg",
         width: svg-width,
         height: svg-height,
