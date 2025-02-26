@@ -1,13 +1,13 @@
-#import "@preview/diagraph:0.3.1": *
+#import "@preview/diagraph:0.3.2": *
 
 
 #set heading(numbering: (..nums) => [Graph #numbering("1", ..nums):])
 
 
-#let render-example(dot, ..args) = style(styles => {
+#let render-example(dot, ..args) = context {
   let code = raw(dot.text, lang: "dot")
   let graph = render(dot.text, ..args)
-  let side-by-side = measure(code, styles).width + measure(graph, styles).width < 20cm
+  let side-by-side = measure(code).width + measure(graph).width < 20cm
   let columns = if side-by-side {
     (auto, auto)
   } else {
@@ -19,7 +19,7 @@
     raw(dot.text, lang: "dot"),
     graph,
   )
-})
+}
 
 
 = State Machine

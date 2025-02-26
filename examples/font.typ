@@ -1,4 +1,4 @@
-#import "@preview/diagraph:0.3.1" : *
+#import "@preview/diagraph:0.3.2" : *
 
 
 #raw-render(```

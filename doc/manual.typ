@@ -1,7 +1,7 @@
-#import "@preview/mantys:0.1.4": *
-#import "@preview/diagraph:0.3.1"
+#import "@preview/mantys:1.0.1": *
+#import "@preview/diagraph:0.3.2"
 
-#show: mantys.with(
+#show: mantys(
   ..toml("../typst.toml"),
   examples-scope: dictionary(diagraph),
 )
@@ -371,7 +371,7 @@ Those examples are here to demonstrate the capabilities of diagraph. For more in
 ````)
 
 #example(````
-#import "@preview/diagraph:0.3.1": *
+#import "@preview/diagraph:0.3.2": *
 
 #raw-render(```
 	graph {
