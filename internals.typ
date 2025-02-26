@@ -68,8 +68,8 @@
   }
   set text(fill: rgb(int-to-string(color, 8, base: 16)), bottom-edge: "bounds")
   set text(size: fontsize) if fontsize.pt() != 0
-	set text(font: font) if font != ("",)
-	text(label)
+  set text(font: font) if font != ("",)
+  text(label)
 }
 /// Check that all edges in the overwrite dictionary are present in the encoded label edges.
 #let check-overwrite(encoded-label, edge-overwrite) = {
@@ -85,22 +85,22 @@
   if overwrite-list != none {
     let index = edge-label.at("index")
     if type(overwrite-list) == array and index < overwrite-list.len() {
-			let overwrite = overwrite-list.at(index)
-			if type(overwrite) != dictionary {
-				if name == "label" {
-					return overwrite
-				}
-			} else if name in overwrite {
-      	return overwrite.at(name)
-			}
+      let overwrite = overwrite-list.at(index)
+      if type(overwrite) != dictionary {
+        if name == "label" {
+          return overwrite
+        }
+      } else if name in overwrite {
+        return overwrite.at(name)
+      }
     } else if index == 0 {
-			if type(overwrite-list) != dictionary {
-				if name == "label" {
-					return overwrite-list
-				}
-			} else if name in overwrite-list {
-				return overwrite-list.at(name)
-			}
+      if type(overwrite-list) != dictionary {
+        if name == "label" {
+          return overwrite-list
+        }
+      } else if name in overwrite-list {
+        return overwrite-list.at(name)
+      }
     }
   }
   let label-content = edge-label.at(name)
@@ -150,30 +150,30 @@
   formatted-edge-labels
 }
 
-/// Return 
+/// Return
 /// - the label content depending on the overwrite method.
 /// - a boolean indicating if the label was overwritten.
 #let label-overwrite(label-type, label, overwrite-method, font-name, font-size) = {
-	let name = label.at("name")
-	if type(overwrite-method) == dictionary and name in overwrite-method {
-		return (overwrite-method.at(name), true)
-	} 
-	
-	if type(overwrite-method) == function {
-		let overwrite = overwrite-method(name)
-		if overwrite != none {
-			return (overwrite, true)
-		}
-	}
+  let name = label.at("name")
+  if type(overwrite-method) == dictionary and name in overwrite-method {
+    return (overwrite-method.at(name), true)
+  }
 
-	let label-content = label.at(label-type)
-	if label-content != "" {
-		label-content = convert-label(label-content, label.at("math_mode"))
-		label-content = label-format(label.at("color"), font-name, font-size, label-content)
-		return (label-content, true)
-	}
-	
-	return ("", false)
+  if type(overwrite-method) == function {
+    let overwrite = overwrite-method(name)
+    if overwrite != none {
+      return (overwrite, true)
+    }
+  }
+
+  let label-content = label.at(label-type)
+  if label-content != "" {
+    label-content = convert-label(label-content, label.at("math_mode"))
+    label-content = label-format(label.at("color"), font-name, font-size, label-content)
+    return (label-content, true)
+  }
+
+  return ("", false)
 }
 
 /// Get an array of evaluated labels from a graph.
@@ -186,44 +186,48 @@
   let (graph-labels, _) = decode-GraphInfo(encoded-labels)
   // panic(graph-labels)
   (
-    graph-labels.at("labels").map(encoded-label => {
-      let font-size = text.size
-      if encoded-label.at("font_size").pt() != 0 {
-        font-size = encoded-label.at("font_size")
-      }
-      let font-name = encoded-label.at("font_name").split(",")
+    graph-labels
+      .at("labels")
+      .map(encoded-label => {
+        let font-size = text.size
+        if encoded-label.at("font_size").pt() != 0 {
+          font-size = encoded-label.at("font_size")
+        }
+        let font-name = encoded-label.at("font_name").split(",")
 
-			let (label, overwrite) = label-overwrite("label", encoded-label, labels, font-name, font-size)
+        let (label, overwrite) = label-overwrite("label", encoded-label, labels, font-name, font-size)
 
-			let (xlabel, xoverwrite) = label-overwrite("xlabel", encoded-label, xlabels, font-name, font-size)
+        let (xlabel, xoverwrite) = label-overwrite("xlabel", encoded-label, xlabels, font-name, font-size)
 
-			let edges-overwrite = if type(edges) == function {
-				edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
-			} else {
-				edges.at(encoded-label.at("name"), default: (:))
-			}
-      check-overwrite(encoded-label, edges-overwrite)
-      let edge-labels = format-edge-labels(encoded-label, edges-overwrite)
-      (
-        overwrite: overwrite,
-        label: label,
-        xoverwrite: xoverwrite,
-        xlabel: xlabel,
-        edges_infos: edge-labels,
-      )
-    }),
-    graph-labels.at("cluster_labels").map(encoded-label => {
-			let font-name = encoded-label.at("font_name").split(",")
-			let font-size = text.size
-			if encoded-label.at("font_size").pt() != 0 {
-				font-size = encoded-label.at("font_size")
-			}
-			let (label, overwrite) = label-overwrite("label", encoded-label, clusters, font-name, font-size)
-			(
-				overwrite: overwrite,
-				label: label,
-			)
-    }),
+        let edges-overwrite = if type(edges) == function {
+          edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
+        } else {
+          edges.at(encoded-label.at("name"), default: (:))
+        }
+        check-overwrite(encoded-label, edges-overwrite)
+        let edge-labels = format-edge-labels(encoded-label, edges-overwrite)
+        (
+          overwrite: overwrite,
+          label: label,
+          xoverwrite: xoverwrite,
+          xlabel: xlabel,
+          edges_infos: edge-labels,
+        )
+      }),
+    graph-labels
+      .at("cluster_labels")
+      .map(encoded-label => {
+        let font-name = encoded-label.at("font_name").split(",")
+        let font-size = text.size
+        if encoded-label.at("font_size").pt() != 0 {
+          font-size = encoded-label.at("font_size")
+        }
+        let (label, overwrite) = label-overwrite("label", encoded-label, clusters, font-name, font-size)
+        (
+          overwrite: overwrite,
+          label: label,
+        )
+      }),
   )
 }
 
@@ -252,26 +256,28 @@
 #let encode-label-dimensions(labels, overridden-labels, overridden-xlabels) = {
   let edges-margin = 5pt
   labels.map(label => {
-    let edges-size = label.at("edges_infos").map(edge => {
-      let label = measure-label(edge, "label", margin: edges-margin)
-      let xlabel = measure-label(edge, "xlabel", margin: edges-margin)
-      let taillabel = measure-label(edge, "taillabel", margin: edges-margin)
-      let headlabel = measure-label(edge, "headlabel", margin: edges-margin)
-      (
-        overwrite: edge.at("label") != "",
-        width: label.width,
-        height: label.height,
-        xoverwrite: edge.at("xlabel") != "",
-        xwidth: xlabel.width,
-        xheight: xlabel.height,
-        tailoverwrite: edge.at("taillabel") != "",
-        tailwidth: taillabel.width,
-        tailheight: taillabel.height,
-        headoverwrite: edge.at("headlabel") != "",
-        headwidth: headlabel.width,
-        headheight: headlabel.height,
-      )
-    })
+    let edges-size = label
+      .at("edges_infos")
+      .map(edge => {
+        let label = measure-label(edge, "label", margin: edges-margin)
+        let xlabel = measure-label(edge, "xlabel", margin: edges-margin)
+        let taillabel = measure-label(edge, "taillabel", margin: edges-margin)
+        let headlabel = measure-label(edge, "headlabel", margin: edges-margin)
+        (
+          overwrite: edge.at("label") != "",
+          width: label.width,
+          height: label.height,
+          xoverwrite: edge.at("xlabel") != "",
+          xwidth: xlabel.width,
+          xheight: xlabel.height,
+          tailoverwrite: edge.at("taillabel") != "",
+          tailwidth: taillabel.width,
+          tailheight: taillabel.height,
+          headoverwrite: edge.at("headlabel") != "",
+          headwidth: headlabel.width,
+          headheight: headlabel.height,
+        )
+      })
 
     let dimensions = if label.at("overwrite") {
       measure(label.at("label"))
@@ -292,7 +298,6 @@
       xheight: xdimensions.height,
       edges_size: edges-size,
     )
-
   })
 }
 
@@ -331,55 +336,40 @@
   )
 }
 
-/// Renders a graph with Graphviz.
+///
+///
+/// - dot (str): A string containing Dot code.
+/// - labels (dict): Nodes whose name appear in this dictionary will have their label overridden with the corresponding content. Defaults to an empty dictionary.
+/// - xlabels (dict): Nodes whose name appear in this dictionary will have their xlabel overridden with the corresponding content. Defaults to an empty dictionary.
+/// - edges (dict): Nodes whose name appear in this dictionary will have their edge label overridden with the corresponding content. Each vale mut be a list of dictionaries, one for each edge. Each dictionary can have the following keys:
+/// 	- `label`: the content of the label - `xlabel`: the content of the xlabel
+/// 	- `taillabel`: the content of the taillabel - `headlabel`: the content of the headlabel
+/// 	- clusters (dict): Cluster names whose name appear in this dictionary will have their label overridden with the corresponding content. Defaults to an empty dictionary.
+/// - engine (str): The name of the engine to generate the graph with. Defaults to `"dot"`.
+/// - width (str): The width of the image to display. If set to `auto` (the default), will be the width of the generated SVG or, if the height is set to a value, it will be scaled to keep the aspect ratio.
+/// - height (str): The height of the image to display. If set to `auto` (the default), will be the height of the generated SVG or if the width is set to a value, it will be scaled to keep the aspect ratio.
+/// - clip (bool): Whether to hide parts of the graph that extend beyond its frame. Defaults to `true`.
+/// - debug (bool): Display a red rectangle around each label to help with debugging.
+/// - background (str): A color or gradient to fill the background with. If set to `none` (the default), the background will be transparent.
+/// -> content: The rendered graph.
 #let render(
-  /// A string containing Dot code.
-	dot,
-  /// Nodes whose name appear in this dictionary will have their label
-  /// overridden with the corresponding content. Defaults to an empty
-  /// dictionary.
+  dot,
   labels: (:),
-	/// Nodes whose name appear in this dictionary will have their xlabel
-	/// overridden with the corresponding content. Defaults to an empty
-	/// dictionary.
-	xlabels: (:),
-	/// Nodes whose name appear in this dictionary will have their
-	/// edge label overridden with the corresponding content.
-	/// Each vale mut be a list of dictionaries, one for each edge.
-	/// Each dictionary can have the following keys:
-	/// - `label`: the content of the label
-	/// - `xlabel`: the content of the xlabel
-	/// - `taillabel`: the content of the taillabel
-	/// - `headlabel`: the content of the headlabel
-	edges: (:),
-	/// Cluster names whose name appear in this dictionary will have their
-	/// label overridden with the corresponding content. Defaults to an empty
-	/// dictionary.
-	clusters: (:),
-  /// The name of the engine to generate the graph with. Defaults to `"dot"`.
-	engine: "dot",
-  /// The width of the image to display. If set to `auto` (the default), will be
-  /// the width of the generated SVG or, if the height is set to a value, it
-  /// will be scaled to keep the aspect ratio.
-	width: auto,
-  /// The height of the image to display. If set to `auto` (the default), will
-  /// be the height of the generated SVG or if the width is set to a value, it
-  /// will be scaled to keep the aspect ratio.
-	height: auto,
-  /// Whether to hide parts of the graph that extend beyond its frame. Defaults
-  /// to `true`.
+  xlabels: (:),
+  edges: (:),
+  clusters: (:),
+  engine: "dot",
+  width: auto,
+  height: auto,
   clip: true,
-	/// Display a red rectangle around each label to help with debugging.
-	debug: false,
-  /// A color or gradient to fill the background with. If set to `none` (the
-  /// default), the background will be transparent.
+  debug: false,
   background: none,
   stretch: true,
 ) = {
   set math.equation(numbering: none)
-	if type(dot) != str {
-		panic("The dot code must be a string")
-	}
+  if type(dot) != str {
+    panic("The dot code must be a string")
+  }
 
   layout(((width: container-width, height: container-height)) => (
     context {
@@ -421,46 +411,47 @@
 
       // Get SVG dimensions.
       let (width: svg-width, height: svg-height) = measure({
-				set image(width: auto, height: auto)
-				image(bytes(output.at("svg")), format: "svg")
-			})
+        set image(width: auto, height: auto)
+        image(bytes(output.at("svg")), format: "svg")
+      })
 
       let final-width = width
-			let final-height = height
+      let final-height = height
 
 
       // fill the container like css background contain
       if not stretch and width != auto and height != auto {
-				let ratio = svg-width / svg-height
-				let container-ratio = width / height
+        let ratio = svg-width / svg-height
+        let container-ratio = width / height
 
-				if ratio > container-ratio {
-					final-width = width
-					final-height = width / ratio
-				} else {
-					final-height = height
-					final-width = height * ratio
-				}
-      } else { // stretch
-				let final-width = if width == auto {
-					svg-width
-				} else {
-					relative-to-absolute(width, container-width)
-				}
-				let final-height = if height == auto {
-					svg-height
-				} else {
-					relative-to-absolute(height, container-height)
-				}
+        if ratio > container-ratio {
+          final-width = width
+          final-height = width / ratio
+        } else {
+          final-height = height
+          final-width = height * ratio
+        }
+      } else {
+        // stretch
+        let final-width = if width == auto {
+          svg-width
+        } else {
+          relative-to-absolute(width, container-width)
+        }
+        let final-height = if height == auto {
+          svg-height
+        } else {
+          relative-to-absolute(height, container-height)
+        }
 
-				if width == auto and height != auto {
-					let ratio = final-height / svg-height
-					final-width = svg-width * ratio
-				} else if width != auto and height == auto {
-					let ratio = final-width / svg-width
-					final-height = svg-height * ratio
-				}
-			}
+        if width == auto and height != auto {
+          let ratio = final-height / svg-height
+          final-width = svg-width * ratio
+        } else if width != auto and height == auto {
+          let ratio = final-width / svg-width
+          final-height = svg-height * ratio
+        }
+      }
       // Rescale the final image to the desired size.
       show: block.with(
         width: final-width,
@@ -577,7 +568,7 @@
 }
 
 #let engine-list() = {
-	let list = plugin.engine_list()
+  let list = plugin.engine_list()
   let (engines, _) = decode-Engines(plugin.engine_list())
-	engines
+  engines
 }

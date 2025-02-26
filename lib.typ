@@ -7,9 +7,9 @@
 /// arguments and their descriptions.
 #let raw-render(
   /// A `raw` element containing Dot code.
-	raw,
-	..args,
+  raw,
+  ..args,
 ) = {
-	assert(raw.has("text"), message: "`raw-render` expects a `raw` element")
-	return render(raw.text, ..args)
+  assert(raw.has("text"), message: "`raw-render` expects a `raw` element")
+  return render(raw.text, ..args)
 }
