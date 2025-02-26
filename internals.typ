@@ -419,7 +419,10 @@
       // return [#repr(output)]
 
       // Get SVG dimensions.
-      let (width: svg-width, height: svg-height) = measure(image(bytes(output.at("svg")), format: "svg"))
+      let (width: svg-width, height: svg-height) = measure({
+				set image(width: auto, height: auto)
+				image(bytes(output.at("svg")), format: "svg")
+			})
 
       let final-width = if width == auto {
         svg-width
