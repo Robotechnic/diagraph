@@ -1,35 +1,12 @@
 #include "math/math.h"
 
-const char* greek_alphabet[] = {
-	"alpha",
-	"beta",
-	"gamma",
-	"delta",
-	"epsilon",
-	"zeta",
-	"eta",
-	"theta",
-	"iota",
-	"kappa",
-	"lambda",
-	"mu",
-	"nu",
-	"xi",
-	"omicron",
-	"pi",
-	"rho",
-	"sigma",
-	"tau",
-	"upsilon",
-	"phi",
-	"chi",
-	"psi",
-	"omega"
-};
+const char *greek_alphabet[] = {"alpha", "beta",  "gamma",  "delta",   "epsilon", "zeta", "eta",     "theta",
+                                "iota",  "kappa", "lambda", "mu",      "nu",      "xi",   "omicron", "pi",
+                                "rho",   "sigma", "tau",    "upsilon", "phi",     "chi",  "psi",     "omega"};
 
 /**
  * @brief Check if a string is a greek letter with no case sensitivity
- * 
+ *
  * @param str the string to check
  * @param len the length of the string
  * @return true if the string is a greek letter

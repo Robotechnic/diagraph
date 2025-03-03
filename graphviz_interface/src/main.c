@@ -306,19 +306,19 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
     }
     strcpy(label_infos->name, name);
     label_infos->name[strlen(name)] = '\0';
-	if (label == NULL) {
-		label_infos->label = NULL;
-		label_infos->math_mode = false;
-	} else {
-		label_infos->label = malloc(strlen(label) + 1);
-		if (!label_infos->label) {
-			ERROR("Failed to allocate memory for cluster label");
-			return 1;
-		}
-		strcpy(label_infos->label, label);
-		label_infos->label[strlen(label)] = '\0';
-		label_infos->math_mode = is_math(label);
-	}
+    if (label == NULL) {
+        label_infos->label = NULL;
+        label_infos->math_mode = false;
+    } else {
+        label_infos->label = malloc(strlen(label) + 1);
+        if (!label_infos->label) {
+            ERROR("Failed to allocate memory for cluster label");
+            return 1;
+        }
+        strcpy(label_infos->label, label);
+        label_infos->label[strlen(label)] = '\0';
+        label_infos->math_mode = is_math(label);
+    }
     label_infos->color = color_to_int(agget(sg, "fontcolor"));
     const char *fontsize = agget(sg, "fontsize");
     if (fontsize) {
@@ -446,7 +446,7 @@ int get_labels(size_t buffer_len) {
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFinalize(gvc);
-	gvFreeContext(gvc);
+    gvFreeContext(gvc);
 
     if (err) {
         free_GetGraphInfo(&labels);
@@ -733,7 +733,7 @@ int render(size_t buffer_len) {
         free_renderGraph(&renderInfo);
         free_graphInfo(&g_render);
         gvFinalize(gvc);
-		gvFreeContext(gvc);
+        gvFreeContext(gvc);
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
     }
@@ -773,8 +773,8 @@ int render(size_t buffer_len) {
         free_renderGraph(&renderInfo);
         free_graphInfo(&g_render);
         gvFinalize(gvc);
-		gvFreeContext(gvc);
-		free(g);
+        gvFreeContext(gvc);
+        free(g);
 
         wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
         return 0;
@@ -786,9 +786,9 @@ int render(size_t buffer_len) {
     if (err == -1) {
         free_renderGraph(&renderInfo);
         free_graphInfo(&g_render);
-		agclose(g);
+        agclose(g);
         gvFinalize(gvc);
-		gvFreeContext(gvc);
+        gvFreeContext(gvc);
         ERROR("\0Diagraph error: failed to render graph to svg\0");
         return 1;
     }
@@ -808,10 +808,10 @@ int render(size_t buffer_len) {
     index = 0;
     get_cluster_label_coordinates(g, (float)pad, renderInfo.cluster_labels, g_render.cluster_labels, &index);
 
-	gvFreeLayout(gvc, g);
+    gvFreeLayout(gvc, g);
     agclose(g);
     gvFinalize(gvc);
-	gvFreeContext(gvc);
+    gvFreeContext(gvc);
     free_renderGraph(&renderInfo);
 
     // Generate output.
@@ -848,28 +848,28 @@ int engine_list() {
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
 #endif
     if (!gvc) {
-		ERROR("Failed to create Graphviz context");
-		return 1;
-	}
-	char *kind = "layout";
-	int size = 0;
-	char **engines_list = gvPluginList(gvc, kind, &size);
-	if (!engines_list) {
-		ERROR("Failed to get engines list");
-		return 1;
-	}
+        ERROR("Failed to create Graphviz context");
+        return 1;
+    }
+    char *kind = "layout";
+    int size = 0;
+    char **engines_list = gvPluginList(gvc, kind, &size);
+    if (!engines_list) {
+        ERROR("Failed to get engines list");
+        return 1;
+    }
 #ifdef TEST
-	for (int i = 0; i < size; i++) {
-		DEBUG("Engine: %s\n", *(engines_list + i));
-	}
+    for (int i = 0; i < size; i++) {
+        DEBUG("Engine: %s\n", *(engines_list + i));
+    }
 #endif
-	Engines engines;
-	engines.engines_len = size;
-	engines.engines = engines_list;
-	if (encode_Engines(&engines)) {
-		ERROR("Failed to encode engines list");
-		return 1;
-	}
-	free_Engines(&engines);
-	return 0;
+    Engines engines;
+    engines.engines_len = size;
+    engines.engines = engines_list;
+    if (encode_Engines(&engines)) {
+        ERROR("Failed to encode engines list");
+        return 1;
+    }
+    free_Engines(&engines);
+    return 0;
 }
