@@ -76,3 +76,5 @@ images/*.typ
 
 tests
 adjacency.pdf
+graphviz_interface/test1.c
+graphviz_interface/test1
