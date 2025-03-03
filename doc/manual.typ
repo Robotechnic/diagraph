@@ -3,8 +3,17 @@
 
 #show: mantys(
   ..toml("../typst.toml"),
-  examples-scope: dictionary(diagraph),
+  examples-scope: (
+		scope: (
+			diagraph: diagraph,
+		),
+		imports: (
+			diagraph: "*",
+		)
+	)
 )
+
+#set page(margin: (bottom: auto))
 
 = Drawing graphs
 
@@ -366,7 +375,7 @@ Those examples are here to demonstrate the capabilities of diagraph. For more in
 	"LR_1": ("LR_3": $S(dollar"end")$),
 	"LR_2": ("LR_6": $S S(b)$, "LR_5": $S S(a)$),
  ),
- width: 100%,
+ height: 10em
 )
 ````)
 
@@ -390,7 +399,7 @@ Those examples are here to demonstrate the capabilities of diagraph. For more in
 		}
 	}
 ```, 
-height: 20em,
+height: 15em,
 labels: (name) => {
 	text(fill: red, name.rev())
 },
@@ -410,6 +419,6 @@ edges: (name, edges) => {
 		))
 	}
 	labels
-}
+},
 )
 ````)

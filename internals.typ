@@ -433,12 +433,12 @@
         }
       } else {
         // stretch
-        let final-width = if width == auto {
+        final-width = if width == auto {
           svg-width
         } else {
           relative-to-absolute(width, container-width)
         }
-        let final-height = if height == auto {
+        final-height = if height == auto {
           svg-height
         } else {
           relative-to-absolute(height, container-height)
