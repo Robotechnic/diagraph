@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MATH_MODE(obj, label, math_attribute) \
+	(is_math(label) || strcmp(agget(obj, math_attribute), "true") == 0) && strcmp(agget(obj, math_attribute), "false") != 0
+
 char errBuff[1024];
 int vizErrorf(char *str) {
     const char *intro = "\1Diagraph error: ";
@@ -85,7 +88,7 @@ int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name
         }
         strcpy(label_infos->label, label);
         label_infos->label[len] = '\0';
-        label_infos->math_mode = !has_label && is_math(label);
+        label_infos->math_mode = MATH_MODE(n, label, "math");
     }
     label_infos->name = malloc(strlen(name) + 1);
     if (!label_infos->name) {
@@ -165,7 +168,7 @@ int process_xlabel_label(Agnode_t *n, NodeLabelInfo *label_infos) {
         }
         strcpy(label_infos->xlabel, xlabel);
         label_infos->xlabel[strlen(xlabel)] = '\0';
-        label_infos->xlabel_math_mode = is_math(xlabel);
+        label_infos->xlabel_math_mode = MATH_MODE(n, xlabel, "xmath");
     } else {
         label_infos->xlabel = NULL;
         label_infos->xlabel_math_mode = false;
@@ -186,7 +189,8 @@ int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
         }
         strcpy(*label, l);
         (*label)[strlen(l)] = '\0';
-        *math_mode = is_math(l);
+		char label[] = {name[0], 'm', 'a', 't', 'h', '\0'};
+        *math_mode = MATH_MODE(e, l, label);
     }
     return 0;
 }
@@ -317,7 +321,7 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
         }
         strcpy(label_infos->label, label);
         label_infos->label[strlen(label)] = '\0';
-        label_infos->math_mode = is_math(label);
+        label_infos->math_mode = MATH_MODE(sg, label, "math");
     }
     label_infos->color = color_to_int(agget(sg, "fontcolor"));
     const char *fontsize = agget(sg, "fontsize");
