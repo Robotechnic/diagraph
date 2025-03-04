@@ -32,6 +32,7 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   arg("clip", true),
   arg("debug", false),
   arg("background", none),
+	arg("stretch", true)
 )[
   #argument("dot", types: ("string"))[
     The dot code to render.
@@ -145,6 +146,9 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   #argument("background", types: (none, "color"))[
     The background color of the rendered image. `none` means transparent.
   ]
+	#argument("stretch", types: (true,))[
+		By default, if both with and height are set, the graph will be stretched to fit in the bounding box. If you want to keep the aspect ratio, you can set this parameter to false. It then behaves like the css property `object-fit: contain`.
+	]
 ]
 
 = Math mode

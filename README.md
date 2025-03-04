@@ -71,6 +71,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.2
+
+- Fixed a bug in math detection
+- Added a math mode to change the math detection behavior
+- Upgraded the typst version to 0.13.0
+- Added a stretch mode to change the graph stretching behavior from `stretch` to `contain`
+
 ### 0.3.1
 
 - Updated graphviz version to 12.2.1
