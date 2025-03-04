@@ -21,6 +21,7 @@ module :
 	cp ./internals.typ ./diagraph/internals.typ
 	cp ./lib.typ ./diagraph/lib.typ
 	cp ./adjacency.typ ./diagraph/adjacency.typ
+	cp ./selector.typ ./diagraph/selector.typ
 	cp ./README.md ./diagraph/README.md
 	cp ./typst.toml ./diagraph/typst.toml
 	cp ./LICENSE ./diagraph/LICENSE
