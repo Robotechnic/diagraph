@@ -147,6 +147,97 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   ]
 ]
 
+= Math mode
+
+This module uses a custom graphviz parameter to control how the math mode is managed by the renderer. By default, a simple algorithm convert automatically all text to math mode. You can control this behavior for each node, edge and cluster by using a parameter to enable full math mode or disable it completely.
+
+#table(
+	columns: (1fr, 1fr, 1fr),
+	stroke: none,
+	table.hline(),
+	table.header("Object", "Label", "Math mode"),
+	table.hline(),
+	table.cell(rowspan: 2, "Node"), "label", "math",
+	"xlabel", "xmath",
+	table.hline(),
+	table.cell(rowspan: 4, "Edge"), "label", "lmath",
+	"xlabel", "lxmath",
+	"headlabel", "hmath",
+	"taillabel", "tmath",
+	table.hline(),
+	table.cell(rowspan: 1, "Cluster"), "label", "math",
+	table.hline()
+)
+
+== Default behavior
+
+By default, the algorithm detect the paterns that are likely to be math expressions. The following paterns are detected:
+- Single letters
+- Numbers
+- Greek letters
+- All of the above separated by a non letter or number character: an underscore, a space, a parenthesis, etc.
+
+#example(side-by-side: true, ````
+	#raw-render(```
+		graph {
+			alpha
+			a_1
+			"a^3_5"
+			"a + b"
+			"f(5)"
+			"5 beta_gamma'"
+		}
+	```, engine: "osage")
+````)
+
+#pagebreak()
+
+== No math mode
+
+This mode diable the math mode for the node, edge or cluster. The text is rendered as is.
+
+#example(side-by-side: true, ````
+	#raw-render(```
+		digraph G {
+			rankdir=LR
+			node[math=false]
+			alpha
+			a_1
+			"a^3_5"
+			"a + b"
+			"f(5)"
+			"beta_gamma"
+		}
+	```, engine: "osage")
+````)
+
+== Full math mode
+In this mode, all the text is considered as a typst math expression. So, any invalid math expression will cause an error.
+
+#example(````
+#raw-render(```
+	digraph {
+		node[math=true]
+		edge[lmath=true]
+		s[label="sum_(n=0)^3 n"]
+		s -> s1
+		s -> s2
+		s -> s3
+		s -> s4
+		{rank=same
+		s1[label="0"]
+		s2[label="1"]
+		s3[label="2"]
+		s4[label="3"]
+		s1 -> s2[label="0 + 1"]
+		s2 -> s3[label="1 + 2"]
+		s3 -> s4[label="3 + 3"]
+		}	
+		s4[xlabel="sum_(n=0)^3 n = 6"]
+	}
+```)
+````)
+
 = Adjacency list
 If you don't want to write the graph in dot format, you can use the adjacency list format. This format allow you to pass a matrix of edges values that represent the graph. 
 
