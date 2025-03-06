@@ -153,7 +153,7 @@
 /// Return
 /// - the label content depending on the overwrite method.
 /// - a boolean indicating if the label was overwritten.
-#let label-overwrite(label-type, label, overwrite-method, font-name, font-size) = {
+#let label-overwrite(label-type, label, overwrite-method, font-name, font-size, math_mode_name) = {
   let name = label.at("name")
   if type(overwrite-method) == dictionary and name in overwrite-method {
     return (overwrite-method.at(name), true)
@@ -168,7 +168,7 @@
 
   let label-content = label.at(label-type)
   if label-content != "" {
-    label-content = convert-label(label-content, label.at("math_mode"))
+    label-content = convert-label(label-content, label.at(math_mode_name))
     label-content = label-format(label.at("color"), font-name, font-size, label-content)
     return (label-content, true)
   }
@@ -184,7 +184,7 @@
   // panic(buffer-repr(encode-GetGraphInfo(overridden-labels)))
   let encoded-labels = plugin.get_labels(encode-GetGraphInfo(overridden-labels))
   let (graph-labels, _) = decode-GraphInfo(encoded-labels)
-  // panic(graph-labels)
+  //panic(graph-labels)
   (
     graph-labels
       .at("labels")
@@ -195,9 +195,9 @@
         }
         let font-name = encoded-label.at("font_name").split(",")
 
-        let (label, overwrite) = label-overwrite("label", encoded-label, labels, font-name, font-size)
+        let (label, overwrite) = label-overwrite("label", encoded-label, labels, font-name, font-size, "math_mode")
 
-        let (xlabel, xoverwrite) = label-overwrite("xlabel", encoded-label, xlabels, font-name, font-size)
+        let (xlabel, xoverwrite) = label-overwrite("xlabel", encoded-label, xlabels, font-name, font-size, "xlabel_math_mode")
 
         let edges-overwrite = if type(edges) == function {
           edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
@@ -222,7 +222,7 @@
         if encoded-label.at("font_size").pt() != 0 {
           font-size = encoded-label.at("font_size")
         }
-        let (label, overwrite) = label-overwrite("label", encoded-label, clusters, font-name, font-size)
+        let (label, overwrite) = label-overwrite("label", encoded-label, clusters, font-name, font-size, "math_mode")
         (
           overwrite: overwrite,
           label: label,
@@ -380,7 +380,7 @@
         edges,
         dot,
       )
-      // return [#repr(labels-infos)]
+      //return [#repr(labels-infos)]
       // return [#repr(clusters-labels-infos)]
       let labels-info-count = labels-infos.len()
 
