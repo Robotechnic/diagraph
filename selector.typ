@@ -1,3 +1,22 @@
+/// Skip the current block in the graphs string until the next block
+///
+/// - graphs (string): the content of the dot file
+/// - index (int): the index of the graph in the graphs string
+/// -> int: the index of the next block in the graphs string
+#let next-block-index(graphs, index) = {
+	assert(graphs.at(index) == "{")
+	let opened = 1
+	while opened > 0 {
+		index = index + 1
+		if graphs.at(index) == "{" {
+			opened = opened + 1
+		} else if graphs.at(index) == "}" {
+			opened = opened - 1
+		}
+	}
+	return index
+}
+
 /// Perform a knuth-morris-pratt search to find the index of the graph name in the graphs string
 ///
 /// - name (string): the name of the graph 
@@ -8,6 +27,11 @@
 	let j = base-index
 	let k = 0
 	while j < graphs.len() {
+		if graphs.at(j) == "{" {
+			j = next-block-index(graphs, j)
+			k = 0
+			continue
+		}
 		if name.at(k) == graphs.at(j) {
 			j = j + 1
 			k = k + 1
@@ -55,20 +79,6 @@
 #let next-char(graphs, index, char) = {
 	while graphs.at(index) != char {
 		index = index + 1
-	}
-	return index
-}
-
-#let next-block-index(graphs, index) = {
-	assert(graphs.at(index) == "{")
-	let opened = 1
-	while opened > 0 {
-		index = index + 1
-		if graphs.at(index) == "{" {
-			opened = opened + 1
-		} else if graphs.at(index) == "}" {
-			opened = opened - 1
-		}
 	}
 	return index
 }
