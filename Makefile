@@ -1,3 +1,5 @@
+VERSION := $(shell grep '^version' typst.toml | awk -F ' = ' '{print $$2}' | tr -d '"')
+
 wasm :
 	cd graphviz_interface; \
 	make -j16
@@ -11,7 +13,8 @@ format:
 
 link :
 	mkdir -p ~/.cache/typst/packages/preview/diagraph
-	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/0.3.2
+	rm -rf ~/.cache/typst/packages/preview/diagraph/$(VERSION)
+	ln -s "$(CURDIR)" ~/.cache/typst/packages/preview/diagraph/$(VERSION)
 
 module :
 	mkdir -p ./diagraph
