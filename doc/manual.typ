@@ -32,7 +32,8 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   arg("clip", true),
   arg("debug", false),
   arg("background", none),
-	arg("stretch", true)
+	arg("stretch", true),
+	arg("math-mode", auto)
 )[
   #argument("dot", types: ("string"))[
     The dot code to render.
@@ -54,11 +55,7 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
     	)
     ````)
   ]
-  \
-  \
-  \
-  \
-  \
+	
   #argument("xlabels", types: ((:), () => {}))[
     Nodes xlabels to overwrite.
 
@@ -149,9 +146,46 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
 	#argument("stretch", types: (true,))[
 		By default, if both with and height are set, the graph will be stretched to fit in the bounding box. If you want to keep the aspect ratio, you can set this parameter to false. It then behaves like the css property `object-fit: contain`.
 	]
+	#argument("math-mode", types: (auto, "math", "text"))[
+		The math mode to use for the labels. Can be `auto`, `"math"` or `"text"`. If set to `auto`, the mode will be determined by label content. In `"text"` mode, the label content will be parsed as a string. In `"math"` mode, the label content will be parsed as a math expression. This parameter acts globally on the graph. You can also set the math mode more precisely for each node, edge and cluster using the appropriate dot attribute (See @math-mode)
+
+		#example(````
+			#raw-render(```
+				digraph G {
+					rankdir=LR
+					alpha -> beta
+					beta -> "sum_(i=0)^n 1 / i"
+				}
+			```,
+			math-mode: auto
+			)
+		````)
+		#example(````
+			#raw-render(```
+				digraph G {
+					rankdir=LR
+					alpha -> beta
+					beta -> "sum_(i=0)^n 1 / i"
+				}
+			```,
+			math-mode: "math"
+			)
+		````)
+		#example(````
+			#raw-render(```
+				digraph G {
+					rankdir=LR
+					alpha -> beta
+					beta -> "sum_(i=0)^n 1 / i"
+				}
+			```,
+			math-mode: "text"
+			)
+		````)
+	]
 ]
 
-= Math mode
+= Math mode<math-mode>
 
 This module uses a custom graphviz parameter to control how the math mode is managed by the renderer. By default, a simple algorithm convert automatically all text to math mode. You can control this behavior for each node, edge and cluster by using a parameter to enable full math mode or disable it completely.
 
@@ -175,7 +209,7 @@ This module uses a custom graphviz parameter to control how the math mode is man
 
 == Default behavior
 
-By default, the algorithm detect the paterns that are likely to be math expressions. The following paterns are detected:
+By default, the algorithm detect the patterns that are likely to be math expressions. The following patterns are detected:
 - Single letters
 - Numbers
 - Greek letters

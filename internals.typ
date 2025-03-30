@@ -80,7 +80,7 @@
   }
 }
 
-#let edge-label-format(edge-overwrite, edge-label, color, font, fontsize, name) = {
+#let edge-label-format(math-mode, edge-overwrite, edge-label, color, font, fontsize, name) = {
   let overwrite-list = edge-overwrite.at(edge-label.at("to"), default: none)
   if overwrite-list != none {
     let index = edge-label.at("index")
@@ -107,10 +107,10 @@
   if label-content == "" {
     return ""
   }
-  label-format(color, font, fontsize, convert-label(label-content, edge-label.at(name + "_math_mode")))
+  label-format(color, font, fontsize, convert-label(label-content, math-mode == "math" or (edge-label.at(name + "_math_mode") and math-mode != "text")))
 }
 
-#let format-edge-labels(encoded-label, edge-overwrite) = {
+#let format-edge-labels(math-mode, encoded-label, edge-overwrite) = {
   let formatted-edge-labels = ()
   for edge-label in encoded-label.at("edges_infos") {
     let font-size = text.size
@@ -124,11 +124,12 @@
 
     formatted-edge-labels.push((
       native: "label" in edge-overwrite,
-      label: edge-label-format(edge-overwrite, edge-label, edge-label.at("color"), font-name, font-size, "label"),
+      label: edge-label-format(math-mode, edge-overwrite, edge-label, edge-label.at("color"), font-name, font-size, "label"),
       xnative: "xlabel" in edge-overwrite,
-      xlabel: edge-label-format(edge-overwrite, edge-label, edge-label.at("color"), font-name, font-size, "xlabel"),
+      xlabel: edge-label-format(math-mode, edge-overwrite, edge-label, edge-label.at("color"), font-name, font-size, "xlabel"),
       tailnative: "taillabel" in edge-overwrite,
       taillabel: edge-label-format(
+				math-mode,
         edge-overwrite,
         edge-label,
         edge-label.at("color"),
@@ -138,6 +139,7 @@
       ),
       headnative: "headlabel" in edge-overwrite,
       headlabel: edge-label-format(
+				math-mode,
         edge-overwrite,
         edge-label,
         edge-label.at("color"),
@@ -153,7 +155,7 @@
 /// Return
 /// - the label content depending on the overwrite method.
 /// - a boolean indicating if the label was overwritten.
-#let label-overwrite(label-type, label, overwrite-method, font-name, font-size, math_mode_name) = {
+#let label-overwrite(math-mode, label-type, label, overwrite-method, font-name, font-size, math-mode-name) = {
   let name = label.at("name")
   if type(overwrite-method) == dictionary and name in overwrite-method {
     return (overwrite-method.at(name), true)
@@ -168,7 +170,7 @@
 
   let label-content = label.at(label-type)
   if label-content != "" {
-    label-content = convert-label(label-content, label.at(math_mode_name))
+    label-content = convert-label(label-content, math-mode == "math" or (label.at(math-mode-name) and math-mode != "text"))
     label-content = label-format(label.at("color"), font-name, font-size, label-content)
     return (label-content, true)
   }
@@ -177,7 +179,7 @@
 }
 
 /// Get an array of evaluated labels from a graph.
-#let get-labels(labels, xlabels, clusters, edges, dot) = {
+#let get-labels(math-mode, labels, xlabels, clusters, edges, dot) = {
   let overridden-labels = (
     "dot": dot,
   )
@@ -195,9 +197,9 @@
         }
         let font-name = encoded-label.at("font_name").split(",")
 
-        let (label, overwrite) = label-overwrite("label", encoded-label, labels, font-name, font-size, "math_mode")
+        let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, labels, font-name, font-size, "math_mode")
 
-        let (xlabel, xoverwrite) = label-overwrite("xlabel", encoded-label, xlabels, font-name, font-size, "xlabel_math_mode")
+        let (xlabel, xoverwrite) = label-overwrite(math-mode, "xlabel", encoded-label, xlabels, font-name, font-size, "xlabel_math_mode")
 
         let edges-overwrite = if type(edges) == function {
           edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
@@ -205,7 +207,7 @@
           edges.at(encoded-label.at("name"), default: (:))
         }
         check-overwrite(encoded-label, edges-overwrite)
-        let edge-labels = format-edge-labels(encoded-label, edges-overwrite)
+        let edge-labels = format-edge-labels(math-mode, encoded-label, edges-overwrite)
         (
           overwrite: overwrite,
           label: label,
@@ -222,7 +224,7 @@
         if encoded-label.at("font_size").pt() != 0 {
           font-size = encoded-label.at("font_size")
         }
-        let (label, overwrite) = label-overwrite("label", encoded-label, clusters, font-name, font-size, "math_mode")
+        let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, clusters, font-name, font-size, "math_mode")
         (
           overwrite: overwrite,
           label: label,
@@ -351,6 +353,8 @@
 /// - clip (bool): Whether to hide parts of the graph that extend beyond its frame. Defaults to `true`.
 /// - debug (bool): Display a red rectangle around each label to help with debugging.
 /// - background (str): A color or gradient to fill the background with. If set to `none` (the default), the background will be transparent.
+/// - stretch (bool): if true, the render will be stretched to fit the width and height. Otherwise, it will keep it's aspect ratio.
+/// - math-mode (str): The math mode to use for the labels. Can be `auto`, `"math"` or `"text"`. If set to `auto`, the mode will be determined by label content. In `"text"` mode, the label content will be parsed as a string. In `"math"` mode, the label content will be parsed as a math expression.
 /// -> content: The rendered graph.
 #let render(
   dot,
@@ -365,6 +369,7 @@
   debug: false,
   background: none,
   stretch: true,
+	math-mode: auto
 ) = {
   set math.equation(numbering: none)
   if type(dot) != str {
@@ -374,6 +379,7 @@
   layout(((width: container-width, height: container-height)) => (
     context {
       let (labels-infos, clusters-labels-infos) = get-labels(
+				math-mode,
         labels,
         xlabels,
         clusters,
