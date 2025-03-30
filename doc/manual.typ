@@ -1,5 +1,5 @@
 #import "@preview/mantys:1.0.1": *
-#import "@preview/diagraph:0.3.2"
+#import "@preview/diagraph:0.3.3"
 
 #show: mantys(
   ..toml("../typst.toml"),
@@ -509,7 +509,7 @@ Those examples are here to demonstrate the capabilities of diagraph. For more in
 ````)
 
 #example(````
-#import "@preview/diagraph:0.3.2": *
+#import "@preview/diagraph:0.3.3": *
 
 #raw-render(```
 	graph {
