@@ -71,6 +71,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.3
+
+- Fixed a bug with math-mode in xlabel being ignored and set to the label math mode
+- Added a global math mode
+
 ### 0.3.2
 
 - Fixed a bug in math detection
