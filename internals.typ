@@ -355,6 +355,7 @@
 /// - background (str): A color or gradient to fill the background with. If set to `none` (the default), the background will be transparent.
 /// - stretch (bool): if true, the render will be stretched to fit the width and height. Otherwise, it will keep it's aspect ratio.
 /// - math-mode (str): The math mode to use for the labels. Can be `auto`, `"math"` or `"text"`. If set to `auto`, the mode will be determined by label content. In `"text"` mode, the label content will be parsed as a string. In `"math"` mode, the label content will be parsed as a math expression.
+/// - alt (str): A text describing the image. This parameter is directly passed to the `image` element as its `alt` attribute. See #link("https://typst.app/docs/reference/visualize/image/#parameters-alt")[documentation] for more information.
 /// -> content: The rendered graph.
 #let render(
   dot,
@@ -369,7 +370,8 @@
   debug: false,
   background: none,
   stretch: true,
-	math-mode: auto
+	math-mode: auto,
+  alt: none,
 ) = {
   set math.equation(numbering: none)
   if type(dot) != str {
@@ -418,7 +420,7 @@
       // Get SVG dimensions.
       let (width: svg-width, height: svg-height) = measure({
         set image(width: auto, height: auto)
-        image(bytes(output.at("svg")), format: "svg")
+        image(bytes(output.at("svg")), format: "svg", alt: alt)
       })
 
       let final-width = width
@@ -483,6 +485,7 @@
         format: "svg",
         width: svg-width,
         height: svg-height,
+        alt: alt,
       )
 
       let place-label(dx, dy, label) = {

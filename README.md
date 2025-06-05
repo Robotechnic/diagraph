@@ -71,6 +71,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.4
+
+- Added an `alt` parameter to the `render` and `raw-render` functions to specify an alternative text for the image.
+
+
 ### 0.3.3
 
 - Fixed a bug with math-mode in xlabel being ignored and set to the label math mode
