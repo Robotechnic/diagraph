@@ -422,11 +422,16 @@
         set image(width: auto, height: auto)
         image(bytes(output.at("svg")), format: "svg", alt: alt)
       })
+      if output.landscape {
+        // Swap width and height for landscape mode.
+        let temp = svg-width
+        svg-width = svg-height
+        svg-height = temp
+      }
 
       let final-width = width
       let final-height = height
-
-
+      
       // fill the container like css background contain
       if not stretch and width != auto and height != auto {
         let ratio = svg-width / svg-height
@@ -459,7 +464,8 @@
           let ratio = final-width / svg-width
           final-height = svg-height * ratio
         }
-      }
+      }      
+
       // Rescale the final image to the desired size.
       show: block.with(
         width: final-width,
@@ -468,7 +474,9 @@
         breakable: false,
       )
 
+      
       set align(top + left)
+
 
       show: scale.with(
         origin: top + left,
@@ -477,7 +485,17 @@
       )
 
       // Construct the graph and its labels.
-      show: block.with(width: svg-width, height: svg-height, fill: background)
+      show: block.with(
+        width: svg-width, 
+        height: svg-height, 
+        fill: background
+      )
+      show: rotate.with(if output.landscape { -90deg } else { 0deg })
+      if output.landscape {
+        let temp = svg-height
+        svg-height = svg-width
+        svg-width = temp
+      }
 
       // Display SVG.
       image(

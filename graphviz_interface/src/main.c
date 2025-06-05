@@ -770,6 +770,20 @@ int render(size_t buffer_len) {
     int index = 0;
     overwrite_cluster_labels(g, &renderInfo, &index);
 
+    char *landscape = agget(g, "landscape");
+    if (landscape && strcmp(landscape, "true") == 0) {
+        g_render.landscape = true;
+    } else {
+        g_render.landscape = false;
+    }
+    agset(g, "landscape", "false");
+
+    char* rotate = agget(g, "rotate");
+    if (rotate && strcmp(rotate, "90") == 0) {
+        g_render.landscape = true;
+        agset(g, "rotate", "0");
+    }
+
     // Layout graph.
     // FIXME: The call to `gvLayout` causes to reach an `unreachable` instruction if a (user-made)
     //  label uses invalid HTML tags, like <span>.
@@ -811,6 +825,7 @@ int render(size_t buffer_len) {
     get_label_coordinates(g, (float)pad, renderInfo.labels, g_render.labels);
     index = 0;
     get_cluster_label_coordinates(g, (float)pad, renderInfo.cluster_labels, g_render.cluster_labels, &index);
+
 
     gvFreeLayout(gvc, g);
     agclose(g);

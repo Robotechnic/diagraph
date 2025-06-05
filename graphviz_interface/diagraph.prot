@@ -121,6 +121,7 @@ struct ClusterCoordinates {
 
 protocol Typst graphInfo {
 	bool error;
+	bool landscape;
 	NodeCoordinates labels[];
 	ClusterCoordinates cluster_labels[];
 	string svg;
