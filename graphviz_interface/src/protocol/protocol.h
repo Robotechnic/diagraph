@@ -113,12 +113,16 @@ typedef struct EdgeLabelInfo_t {
     int index;
     char* label;
     bool label_math_mode;
+    bool label_html_mode;
     char* xlabel;
     bool xlabel_math_mode;
+    bool xlabel_html_mode;
     char* headlabel;
     bool headlabel_math_mode;
+    bool headlabel_html_mode;
     char* taillabel;
     bool taillabel_math_mode;
+    bool taillabel_html_mode;
     int color;
     char* font_name;
     float font_size;
@@ -129,8 +133,10 @@ typedef struct NodeLabelInfo_t {
     char* name;
     char* label;
     bool math_mode;
+    bool html_mode;
     char* xlabel;
     bool xlabel_math_mode;
+    bool xlabel_html_mode;
     int color;
     char* font_name;
     float font_size;
@@ -143,6 +149,7 @@ typedef struct ClusterLabelInfo_t {
     char* name;
     char* label;
     bool math_mode;
+    bool html_mode;
     int color;
     char* font_name;
     float font_size;
@@ -211,20 +218,30 @@ typedef struct ClusterCoordinates_t {
 } ClusterCoordinates;
 void free_ClusterCoordinates(ClusterCoordinates *s);
 
+typedef struct renderGraph_t {
+    float font_size;
+    char* dot;
+    struct SizedNodeLabel_t * labels;
+    size_t labels_len;
+    struct SizedClusterLabel_t * cluster_labels;
+    size_t cluster_labels_len;
+    char* engine;
+} renderGraph;
+void free_renderGraph(renderGraph *s);
+int decode_renderGraph(size_t buffer_len, renderGraph *out);
+
 typedef struct GetGraphInfo_t {
     char* dot;
 } GetGraphInfo;
 void free_GetGraphInfo(GetGraphInfo *s);
 int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
 
-typedef struct GraphInfo_t {
-    struct NodeLabelInfo_t * labels;
-    size_t labels_len;
-    struct ClusterLabelInfo_t * cluster_labels;
-    size_t cluster_labels_len;
-} GraphInfo;
-void free_GraphInfo(GraphInfo *s);
-int encode_GraphInfo(const GraphInfo *s);
+typedef struct Engines_t {
+    char* * engines;
+    size_t engines_len;
+} Engines;
+void free_Engines(Engines *s);
+int encode_Engines(const Engines *s);
 
 typedef struct graphInfo_t {
     bool error;
@@ -238,23 +255,13 @@ typedef struct graphInfo_t {
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);
 
-typedef struct renderGraph_t {
-    float font_size;
-    char* dot;
-    struct SizedNodeLabel_t * labels;
+typedef struct GraphInfo_t {
+    struct NodeLabelInfo_t * labels;
     size_t labels_len;
-    struct SizedClusterLabel_t * cluster_labels;
+    struct ClusterLabelInfo_t * cluster_labels;
     size_t cluster_labels_len;
-    char* engine;
-} renderGraph;
-void free_renderGraph(renderGraph *s);
-int decode_renderGraph(size_t buffer_len, renderGraph *out);
-
-typedef struct Engines_t {
-    char* * engines;
-    size_t engines_len;
-} Engines;
-void free_Engines(Engines *s);
-int encode_Engines(const Engines *s);
+} GraphInfo;
+void free_GraphInfo(GraphInfo *s);
+int encode_GraphInfo(const GraphInfo *s);
 
 #endif

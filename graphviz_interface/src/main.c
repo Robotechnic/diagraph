@@ -250,13 +250,29 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
 
     // Get node labels.
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
+        default_node_label_values(&nLabels->labels[label_index]);
         const char *name = agnameof(n);
         const char *label = agget(n, "label");
         if (aghtmlstr(label)) {
-            default_node_label_values(&nLabels->labels[label_index]);
-            nLabels->labels[label_index].name = malloc(sizeof(name) + 1);
+            size_t name_len = strlen(name);
+            nLabels->labels[label_index].html_mode = true;
+            nLabels->labels[label_index].name = malloc(name_len + 1);
+            if (!nLabels->labels[label_index].name) {
+                ERROR("Failed to allocate memory for node name");
+                return 1;
+            }
             strcpy(nLabels->labels[label_index].name, name);
-            nLabels->labels[label_index].name[strlen(name)] = '\0';
+            nLabels->labels[label_index].name[name_len] = '\0';
+
+            size_t label_len = strlen(label);
+            nLabels->labels[label_index].label = malloc(label_len+ 1);
+            if (!nLabels->labels[label_index].label) {
+                ERROR("Failed to allocate memory for node label");
+                free(nLabels->labels[label_index].name);
+                return 1;
+            }
+            strcpy(nLabels->labels[label_index].label, label);
+            nLabels->labels[label_index].label[label_len] = '\0';
         } else {
 
             if (process_node_label(n, &nLabels->labels[label_index], name, label) ||
@@ -890,5 +906,22 @@ int engine_list() {
         return 1;
     }
     free_Engines(&engines);
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int convert_color(const char *color) {
+    if (!color) {
+        ERROR("Color is null");
+        return 1;
+    }
+    int color_int = color_to_int(color);
+    if (color_int == -1) {
+        ERROR("Failed to convert color");
+        return 1;
+    }
+    char color_str[11];
+    snprintf(color_str, sizeof(color_str), "#%08x", color_int);
+    wasm_minimal_protocol_send_result_to_host((uint8_t *)color_str, strlen(color_str));
     return 0;
 }

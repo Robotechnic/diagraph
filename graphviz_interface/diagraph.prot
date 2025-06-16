@@ -7,15 +7,19 @@ struct EdgeLabelInfo {
 	int index;
 	string label;
 	bool label_math_mode;
+	bool label_html_mode;
 
 	string xlabel;
 	bool xlabel_math_mode;
+	bool xlabel_html_mode;
 	
 	string headlabel;
 	bool headlabel_math_mode;
+	bool headlabel_html_mode;
 	
 	string taillabel;
 	bool taillabel_math_mode;
+	bool taillabel_html_mode;
 
 	int color;
 	string font_name;
@@ -27,9 +31,11 @@ struct NodeLabelInfo {
 	
 	string label;
 	bool math_mode;
+	bool html_mode;
  
  	string xlabel;
 	bool xlabel_math_mode;
+	bool xlabel_html_mode;
 
 	int color;
 	string font_name;
@@ -42,6 +48,7 @@ struct ClusterLabelInfo {
 	string name;
 	string label;
 	bool math_mode;
+	bool html_mode;
 
 	int color;
 	string font_name;

@@ -1,4 +1,4 @@
-#import "internals.typ": render, engine-list
+#import "src/internals.typ": render, engine-list
 #import "adjacency.typ": adjacency
 #import "selector.typ": select-graph
 

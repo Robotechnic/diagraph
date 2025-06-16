@@ -94,7 +94,7 @@ void free_EdgeLabelInfo(EdgeLabelInfo *s) {
     }
 }
 size_t EdgeLabelInfo_size(const void *s){
-	return string_size(((EdgeLabelInfo*)s)->to) + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->label) + 1 + string_size(((EdgeLabelInfo*)s)->xlabel) + 1 + string_size(((EdgeLabelInfo*)s)->headlabel) + 1 + string_size(((EdgeLabelInfo*)s)->taillabel) + 1 + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->font_name) + TYPST_INT_SIZE;
+	return string_size(((EdgeLabelInfo*)s)->to) + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->label) + 1 + 1 + string_size(((EdgeLabelInfo*)s)->xlabel) + 1 + 1 + string_size(((EdgeLabelInfo*)s)->headlabel) + 1 + 1 + string_size(((EdgeLabelInfo*)s)->taillabel) + 1 + 1 + TYPST_INT_SIZE + string_size(((EdgeLabelInfo*)s)->font_name) + TYPST_INT_SIZE;
 }
 int encode_EdgeLabelInfo(const EdgeLabelInfo *s, uint8_t *__input_buffer, size_t *buffer_len, size_t *buffer_offset) {
     size_t __buffer_offset = 0;    size_t s_size = EdgeLabelInfo_size(s);
@@ -107,12 +107,16 @@ int encode_EdgeLabelInfo(const EdgeLabelInfo *s, uint8_t *__input_buffer, size_t
     INT_PACK(s->index)
     STR_PACK(s->label)
     CHAR_PACK(s->label_math_mode)
+    CHAR_PACK(s->label_html_mode)
     STR_PACK(s->xlabel)
     CHAR_PACK(s->xlabel_math_mode)
+    CHAR_PACK(s->xlabel_html_mode)
     STR_PACK(s->headlabel)
     CHAR_PACK(s->headlabel_math_mode)
+    CHAR_PACK(s->headlabel_html_mode)
     STR_PACK(s->taillabel)
     CHAR_PACK(s->taillabel_math_mode)
+    CHAR_PACK(s->taillabel_html_mode)
     INT_PACK(s->color)
     STR_PACK(s->font_name)
     FLOAT_PACK(s->font_size)
@@ -139,7 +143,7 @@ void free_NodeLabelInfo(NodeLabelInfo *s) {
     free(s->edges_infos);
 }
 size_t NodeLabelInfo_size(const void *s){
-	return string_size(((NodeLabelInfo*)s)->name) + string_size(((NodeLabelInfo*)s)->label) + 1 + string_size(((NodeLabelInfo*)s)->xlabel) + 1 + TYPST_INT_SIZE + string_size(((NodeLabelInfo*)s)->font_name) + TYPST_INT_SIZE + TYPST_INT_SIZE + list_size(((NodeLabelInfo*)s)->edges_infos, ((NodeLabelInfo*)s)->edges_infos_len, EdgeLabelInfo_size, sizeof(*((NodeLabelInfo*)s)->edges_infos));
+	return string_size(((NodeLabelInfo*)s)->name) + string_size(((NodeLabelInfo*)s)->label) + 1 + 1 + string_size(((NodeLabelInfo*)s)->xlabel) + 1 + 1 + TYPST_INT_SIZE + string_size(((NodeLabelInfo*)s)->font_name) + TYPST_INT_SIZE + TYPST_INT_SIZE + list_size(((NodeLabelInfo*)s)->edges_infos, ((NodeLabelInfo*)s)->edges_infos_len, EdgeLabelInfo_size, sizeof(*((NodeLabelInfo*)s)->edges_infos));
 }
 int encode_NodeLabelInfo(const NodeLabelInfo *s, uint8_t *__input_buffer, size_t *buffer_len, size_t *buffer_offset) {
     size_t __buffer_offset = 0;    size_t s_size = NodeLabelInfo_size(s);
@@ -151,8 +155,10 @@ int encode_NodeLabelInfo(const NodeLabelInfo *s, uint8_t *__input_buffer, size_t
     STR_PACK(s->name)
     STR_PACK(s->label)
     CHAR_PACK(s->math_mode)
+    CHAR_PACK(s->html_mode)
     STR_PACK(s->xlabel)
     CHAR_PACK(s->xlabel_math_mode)
+    CHAR_PACK(s->xlabel_html_mode)
     INT_PACK(s->color)
     STR_PACK(s->font_name)
     FLOAT_PACK(s->font_size)
@@ -178,7 +184,7 @@ void free_ClusterLabelInfo(ClusterLabelInfo *s) {
     }
 }
 size_t ClusterLabelInfo_size(const void *s){
-	return string_size(((ClusterLabelInfo*)s)->name) + string_size(((ClusterLabelInfo*)s)->label) + 1 + TYPST_INT_SIZE + string_size(((ClusterLabelInfo*)s)->font_name) + TYPST_INT_SIZE;
+	return string_size(((ClusterLabelInfo*)s)->name) + string_size(((ClusterLabelInfo*)s)->label) + 1 + 1 + TYPST_INT_SIZE + string_size(((ClusterLabelInfo*)s)->font_name) + TYPST_INT_SIZE;
 }
 int encode_ClusterLabelInfo(const ClusterLabelInfo *s, uint8_t *__input_buffer, size_t *buffer_len, size_t *buffer_offset) {
     size_t __buffer_offset = 0;    size_t s_size = ClusterLabelInfo_size(s);
@@ -190,6 +196,7 @@ int encode_ClusterLabelInfo(const ClusterLabelInfo *s, uint8_t *__input_buffer, 
     STR_PACK(s->name)
     STR_PACK(s->label)
     CHAR_PACK(s->math_mode)
+    CHAR_PACK(s->html_mode)
     INT_PACK(s->color)
     STR_PACK(s->font_name)
     FLOAT_PACK(s->font_size)
@@ -332,93 +339,6 @@ int encode_ClusterCoordinates(const ClusterCoordinates *s, uint8_t *__input_buff
     *buffer_offset += __buffer_offset;
     return 0;
 }
-void free_GetGraphInfo(GetGraphInfo *s) {
-    if (s->dot) {
-        free(s->dot);
-    }
-}
-int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out) {
-    INIT_BUFFER_UNPACK(buffer_len)
-    int err;
-    (void)err;
-    NEXT_STR(out->dot)
-    FREE_BUFFER()
-    return 0;
-}
-void free_GraphInfo(GraphInfo *s) {
-    for (size_t i = 0; i < s->labels_len; i++) {
-    free_NodeLabelInfo(&s->labels[i]);
-    }
-    free(s->labels);
-    for (size_t i = 0; i < s->cluster_labels_len; i++) {
-    free_ClusterLabelInfo(&s->cluster_labels[i]);
-    }
-    free(s->cluster_labels);
-}
-size_t GraphInfo_size(const void *s){
-	return TYPST_INT_SIZE + list_size(((GraphInfo*)s)->labels, ((GraphInfo*)s)->labels_len, NodeLabelInfo_size, sizeof(*((GraphInfo*)s)->labels)) + TYPST_INT_SIZE + list_size(((GraphInfo*)s)->cluster_labels, ((GraphInfo*)s)->cluster_labels_len, ClusterLabelInfo_size, sizeof(*((GraphInfo*)s)->cluster_labels));
-}
-int encode_GraphInfo(const GraphInfo *s) {
-    size_t buffer_len = GraphInfo_size(s);
-    INIT_BUFFER_PACK(buffer_len)
-    int err;
-	(void)err;
-    INT_PACK(s->labels_len)
-    for (size_t i = 0; i < s->labels_len; i++) {
-        if ((err = encode_NodeLabelInfo(&s->labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-    INT_PACK(s->cluster_labels_len)
-    for (size_t i = 0; i < s->cluster_labels_len; i++) {
-        if ((err = encode_ClusterLabelInfo(&s->cluster_labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-
-    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
-    return 0;
-}
-void free_graphInfo(graphInfo *s) {
-    for (size_t i = 0; i < s->labels_len; i++) {
-    free_NodeCoordinates(&s->labels[i]);
-    }
-    free(s->labels);
-    for (size_t i = 0; i < s->cluster_labels_len; i++) {
-    free_ClusterCoordinates(&s->cluster_labels[i]);
-    }
-    free(s->cluster_labels);
-    if (s->svg) {
-        free(s->svg);
-    }
-}
-size_t graphInfo_size(const void *s){
-	return 1 + 1 + TYPST_INT_SIZE + list_size(((graphInfo*)s)->labels, ((graphInfo*)s)->labels_len, NodeCoordinates_size, sizeof(*((graphInfo*)s)->labels)) + TYPST_INT_SIZE + list_size(((graphInfo*)s)->cluster_labels, ((graphInfo*)s)->cluster_labels_len, ClusterCoordinates_size, sizeof(*((graphInfo*)s)->cluster_labels)) + string_size(((graphInfo*)s)->svg);
-}
-int encode_graphInfo(const graphInfo *s) {
-    size_t buffer_len = graphInfo_size(s);
-    INIT_BUFFER_PACK(buffer_len)
-    int err;
-	(void)err;
-    CHAR_PACK(s->error)
-    CHAR_PACK(s->landscape)
-    INT_PACK(s->labels_len)
-    for (size_t i = 0; i < s->labels_len; i++) {
-        if ((err = encode_NodeCoordinates(&s->labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-    INT_PACK(s->cluster_labels_len)
-    for (size_t i = 0; i < s->cluster_labels_len; i++) {
-        if ((err = encode_ClusterCoordinates(&s->cluster_labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
-            return err;
-        }
-    }
-    STR_PACK(s->svg)
-
-    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
-    return 0;
-}
 void free_renderGraph(renderGraph *s) {
     if (s->dot) {
         free(s->dot);
@@ -469,6 +389,19 @@ int decode_renderGraph(size_t buffer_len, renderGraph *out) {
     FREE_BUFFER()
     return 0;
 }
+void free_GetGraphInfo(GetGraphInfo *s) {
+    if (s->dot) {
+        free(s->dot);
+    }
+}
+int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out) {
+    INIT_BUFFER_UNPACK(buffer_len)
+    int err;
+    (void)err;
+    NEXT_STR(out->dot)
+    FREE_BUFFER()
+    return 0;
+}
 void free_Engines(Engines *s) {
     for (size_t i = 0; i < s->engines_len; i++) {
     if (s->engines[i]) {
@@ -488,6 +421,80 @@ int encode_Engines(const Engines *s) {
     INT_PACK(s->engines_len)
     for (size_t i = 0; i < s->engines_len; i++) {
     STR_PACK(s->engines[i])
+    }
+
+    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
+    return 0;
+}
+void free_graphInfo(graphInfo *s) {
+    for (size_t i = 0; i < s->labels_len; i++) {
+    free_NodeCoordinates(&s->labels[i]);
+    }
+    free(s->labels);
+    for (size_t i = 0; i < s->cluster_labels_len; i++) {
+    free_ClusterCoordinates(&s->cluster_labels[i]);
+    }
+    free(s->cluster_labels);
+    if (s->svg) {
+        free(s->svg);
+    }
+}
+size_t graphInfo_size(const void *s){
+	return 1 + 1 + TYPST_INT_SIZE + list_size(((graphInfo*)s)->labels, ((graphInfo*)s)->labels_len, NodeCoordinates_size, sizeof(*((graphInfo*)s)->labels)) + TYPST_INT_SIZE + list_size(((graphInfo*)s)->cluster_labels, ((graphInfo*)s)->cluster_labels_len, ClusterCoordinates_size, sizeof(*((graphInfo*)s)->cluster_labels)) + string_size(((graphInfo*)s)->svg);
+}
+int encode_graphInfo(const graphInfo *s) {
+    size_t buffer_len = graphInfo_size(s);
+    INIT_BUFFER_PACK(buffer_len)
+    int err;
+	(void)err;
+    CHAR_PACK(s->error)
+    CHAR_PACK(s->landscape)
+    INT_PACK(s->labels_len)
+    for (size_t i = 0; i < s->labels_len; i++) {
+        if ((err = encode_NodeCoordinates(&s->labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
+    }
+    INT_PACK(s->cluster_labels_len)
+    for (size_t i = 0; i < s->cluster_labels_len; i++) {
+        if ((err = encode_ClusterCoordinates(&s->cluster_labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
+    }
+    STR_PACK(s->svg)
+
+    wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
+    return 0;
+}
+void free_GraphInfo(GraphInfo *s) {
+    for (size_t i = 0; i < s->labels_len; i++) {
+    free_NodeLabelInfo(&s->labels[i]);
+    }
+    free(s->labels);
+    for (size_t i = 0; i < s->cluster_labels_len; i++) {
+    free_ClusterLabelInfo(&s->cluster_labels[i]);
+    }
+    free(s->cluster_labels);
+}
+size_t GraphInfo_size(const void *s){
+	return TYPST_INT_SIZE + list_size(((GraphInfo*)s)->labels, ((GraphInfo*)s)->labels_len, NodeLabelInfo_size, sizeof(*((GraphInfo*)s)->labels)) + TYPST_INT_SIZE + list_size(((GraphInfo*)s)->cluster_labels, ((GraphInfo*)s)->cluster_labels_len, ClusterLabelInfo_size, sizeof(*((GraphInfo*)s)->cluster_labels));
+}
+int encode_GraphInfo(const GraphInfo *s) {
+    size_t buffer_len = GraphInfo_size(s);
+    INIT_BUFFER_PACK(buffer_len)
+    int err;
+	(void)err;
+    INT_PACK(s->labels_len)
+    for (size_t i = 0; i < s->labels_len; i++) {
+        if ((err = encode_NodeLabelInfo(&s->labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
+    }
+    INT_PACK(s->cluster_labels_len)
+    for (size_t i = 0; i < s->cluster_labels_len; i++) {
+        if ((err = encode_ClusterLabelInfo(&s->cluster_labels[i], __input_buffer + __buffer_offset, &buffer_len, &__buffer_offset))) {
+            return err;
+        }
     }
 
     wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);

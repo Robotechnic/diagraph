@@ -191,17 +191,25 @@
   offset += size
   let (f_label_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_label_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
   let (f_xlabel, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_xlabel_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_xlabel_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_headlabel, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_headlabel_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_headlabel_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
   let (f_taillabel, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_taillabel_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_taillabel_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_color, size) = decode-int(bytes.slice(offset, bytes.len()))
   offset += size
@@ -214,12 +222,16 @@
     index: f_index,
     label: f_label,
     label_math_mode: f_label_math_mode,
+    label_html_mode: f_label_html_mode,
     xlabel: f_xlabel,
     xlabel_math_mode: f_xlabel_math_mode,
+    xlabel_html_mode: f_xlabel_html_mode,
     headlabel: f_headlabel,
     headlabel_math_mode: f_headlabel_math_mode,
+    headlabel_html_mode: f_headlabel_html_mode,
     taillabel: f_taillabel,
     taillabel_math_mode: f_taillabel_math_mode,
+    taillabel_html_mode: f_taillabel_html_mode,
     color: f_color,
     font_name: f_font_name,
     font_size: f_font_size,
@@ -233,9 +245,13 @@
   offset += size
   let (f_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
   let (f_xlabel, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_xlabel_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_xlabel_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_color, size) = decode-int(bytes.slice(offset, bytes.len()))
   offset += size
@@ -249,8 +265,10 @@
     name: f_name,
     label: f_label,
     math_mode: f_math_mode,
+    html_mode: f_html_mode,
     xlabel: f_xlabel,
     xlabel_math_mode: f_xlabel_math_mode,
+    xlabel_html_mode: f_xlabel_html_mode,
     color: f_color,
     font_name: f_font_name,
     font_size: f_font_size,
@@ -265,6 +283,8 @@
   offset += size
   let (f_math_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_html_mode, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
   let (f_color, size) = decode-int(bytes.slice(offset, bytes.len()))
   offset += size
   let (f_font_name, size) = decode-string(bytes.slice(offset, bytes.len()))
@@ -275,6 +295,7 @@
     name: f_name,
     label: f_label,
     math_mode: f_math_mode,
+    html_mode: f_html_mode,
     color: f_color,
     font_name: f_font_name,
     font_size: f_font_size,
@@ -349,18 +370,18 @@
     y: f_y,
   ), offset)
 }
+#let encode-renderGraph(value) = {
+  encode-point(value.at("font_size")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedNodeLabel) + encode-list(value.at("cluster_labels"), encode-SizedClusterLabel) + encode-string(value.at("engine"))
+}
 #let encode-GetGraphInfo(value) = {
   encode-string(value.at("dot"))
 }
-#let decode-GraphInfo(bytes) = {
+#let decode-Engines(bytes) = {
   let offset = 0
-  let (f_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NodeLabelInfo)
-  offset += size
-  let (f_cluster_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-ClusterLabelInfo)
+  let (f_engines, size) = decode-list(bytes.slice(offset, bytes.len()), decode-string)
   offset += size
   ((
-    labels: f_labels,
-    cluster_labels: f_cluster_labels,
+    engines: f_engines,
   ), offset)
 }
 #let decode-graphInfo(bytes) = {
@@ -383,14 +404,14 @@
     svg: f_svg,
   ), offset)
 }
-#let encode-renderGraph(value) = {
-  encode-point(value.at("font_size")) + encode-string(value.at("dot")) + encode-list(value.at("labels"), encode-SizedNodeLabel) + encode-list(value.at("cluster_labels"), encode-SizedClusterLabel) + encode-string(value.at("engine"))
-}
-#let decode-Engines(bytes) = {
+#let decode-GraphInfo(bytes) = {
   let offset = 0
-  let (f_engines, size) = decode-list(bytes.slice(offset, bytes.len()), decode-string)
+  let (f_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-NodeLabelInfo)
+  offset += size
+  let (f_cluster_labels, size) = decode-list(bytes.slice(offset, bytes.len()), decode-ClusterLabelInfo)
   offset += size
   ((
-    engines: f_engines,
+    labels: f_labels,
+    cluster_labels: f_cluster_labels,
   ), offset)
 }

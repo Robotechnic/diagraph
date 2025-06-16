@@ -57,7 +57,7 @@ int hsv_to_rgb(float h, float s, float v) {
  * @param name the name of the color in x11 colors list
  * @return int the color in rgba format
  */
-int name_to_rgb(char *name) {
+int name_to_rgb(const char *name) {
     size_t color_table_len = sizeof(colors) / sizeof(colors[0]);
 
     for (int i = 0; i < color_table_len; i++) {
@@ -79,7 +79,7 @@ int name_to_rgb(char *name) {
  * @param name a string in the format "#rrggbb"
  * @return int the color in rgba format
  */
-int hex_to_rgb(char *name) {
+int hex_to_rgb(const char *name) {
     int r, g, b;
     if (sscanf(name, "#%02x%02x%02x", &r, &g, &b) != 3) {
         return DEFAULT_COLOR;
@@ -93,7 +93,7 @@ int hex_to_rgb(char *name) {
  * @param name a string in the format "#rgb"
  * @return int the color in rgba format
  */
-int shortend_hex_to_rgb(char *name) {
+int shortend_hex_to_rgb(const char *name) {
     int r, g, b;
     if (sscanf(name, "#%01x%01x%01x", &r, &g, &b) != 3) {
         return DEFAULT_COLOR;
@@ -107,7 +107,7 @@ int shortend_hex_to_rgb(char *name) {
  * @param name a string in the format "#rrggbbaa"
  * @return int the color in rgba format
  */
-int hex_to_rgba(char *name) {
+int hex_to_rgba(const char *name) {
     int r, g, b, a;
     if (sscanf(name, "#%02x%02x%02x%02x", &r, &g, &b, &a) != 4) {
         return DEFAULT_COLOR;
@@ -121,7 +121,7 @@ int hex_to_rgba(char *name) {
  * @param hsv a string in the format "h s v" or "h s v a"
  * @return int the color in rgba format
  */
-int hsv_to_int(char *hsv) {
+int hsv_to_int(const char *hsv) {
     float h, s, v, a;
     int scanned = sscanf(hsv, "%f %f %f %f", &h, &s, &v, &a);
     int rgb = hsv_to_rgb(h, s, v);
@@ -133,7 +133,7 @@ int hsv_to_int(char *hsv) {
     return DEFAULT_COLOR;
 }
 
-int color_to_int(char *color) {
+int color_to_int(const char *color) {
     if (color == NULL) {
         return DEFAULT_COLOR;
     }

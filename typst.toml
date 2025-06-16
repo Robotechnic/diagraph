@@ -1,6 +1,6 @@
 [package]
 name = "diagraph"
-version = "0.3.4"
+version = "0.3.5"
 entrypoint = "lib.typ"
 authors = ["Robotechnic <@Robotechnic>", "Malo <@MDLC01>"]
 license = "MIT"

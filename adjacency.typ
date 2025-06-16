@@ -1,4 +1,4 @@
-#import "internals.typ": render
+#import "src/internals.typ": render
 
 #let inches = (
   "width",

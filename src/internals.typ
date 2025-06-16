@@ -1,5 +1,6 @@
-#import "graphviz_interface/protocol.typ": *
-#let plugin = plugin("graphviz_interface/diagraph.wasm")
+#import "../graphviz_interface/protocol.typ": *
+#import "html_processing.typ": html-to-content
+#let plugin = plugin("../graphviz_interface/diagraph.wasm")
 
 
 /// Converts a string containing escape sequences to content.
@@ -155,7 +156,7 @@
 /// Return
 /// - the label content depending on the overwrite method.
 /// - a boolean indicating if the label was overwritten.
-#let label-overwrite(math-mode, label-type, label, overwrite-method, font-name, font-size, math-mode-name) = {
+#let label-overwrite(math-mode, label-type, label, overwrite-method, font-name, font-size, math-mode-name, html-mode-name) = {
   let name = label.at("name")
   if type(overwrite-method) == dictionary and name in overwrite-method {
     return (overwrite-method.at(name), true)
@@ -168,11 +169,20 @@
     }
   }
 
-  let label-content = label.at(label-type)
-  if label-content != "" {
+  if not label.at(html-mode-name) {
+    let label-content = label.at(label-type)
     label-content = convert-label(label-content, math-mode == "math" or (label.at(math-mode-name) and math-mode != "text"))
     label-content = label-format(label.at("color"), font-name, font-size, label-content)
     return (label-content, true)
+  } else {
+    let label-content = label.at(label-type)
+    if label-content == "" {
+      return ("", false)
+    }
+    let html-content = html-to-content(label-content)
+    if html-content != none {
+      return (align(center, html-content), true)
+    }
   }
 
   return ("", false)
@@ -197,9 +207,9 @@
         }
         let font-name = encoded-label.at("font_name").split(",")
 
-        let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, labels, font-name, font-size, "math_mode")
+        let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, labels, font-name, font-size, "math_mode", "html_mode")
 
-        let (xlabel, xoverwrite) = label-overwrite(math-mode, "xlabel", encoded-label, xlabels, font-name, font-size, "xlabel_math_mode")
+        let (xlabel, xoverwrite) = label-overwrite(math-mode, "xlabel", encoded-label, xlabels, font-name, font-size, "xlabel_math_mode", "xlabel_html_mode")
 
         let edges-overwrite = if type(edges) == function {
           edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
@@ -224,7 +234,7 @@
         if encoded-label.at("font_size").pt() != 0 {
           font-size = encoded-label.at("font_size")
         }
-        let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, clusters, font-name, font-size, "math_mode")
+        let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, clusters, font-name, font-size, "math_mode", "html_mode")
         (
           overwrite: overwrite,
           label: label,
