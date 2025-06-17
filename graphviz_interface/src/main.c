@@ -70,7 +70,8 @@ void default_node_label_values(NodeLabelInfo *label) {
  * @return int 0 on success, 1 on failure
  */
 int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name, const char *label) {
-    if (strncmp(ND_shape(n)->name, "point", 5) == 0) {
+    if (strncmp(agget(n, "shape"), "point", 5) == 0) {
+        ERROR("Node shape is 'point', no label will be set");
         label_infos->label = NULL;
         label_infos->math_mode = false;
     } else {
