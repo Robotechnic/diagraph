@@ -786,20 +786,25 @@ int render(size_t buffer_len) {
     int index = 0;
     overwrite_cluster_labels(g, &renderInfo, &index);
 
-    char *landscape = agget(g, "landscape");
-    if (landscape && strcmp(landscape, "true") == 0) {
-        g_render.landscape = true;
-    } else {
-        g_render.landscape = false;
-    }
-    agset(g, "landscape", "false");
-
     char* rotate = agget(g, "rotate");
-    if (rotate && strcmp(rotate, "90") == 0) {
+    if (!rotate || rotate[0] == '\0') {
+        char *orientation = agget(g, "orientation");
+        if (orientation && orientation[0] == 'l' || orientation[0] == 'L') {
+            g_render.landscape = true;
+            agset(g, "orientation", "\0");
+        }
+        char *landscape = agget(g, "landscape");
+        if (landscape && strcmp(landscape, "true") == 0) {
+            g_render.landscape = true;
+        } else {
+            g_render.landscape = false;
+        }
+        agset(g, "landscape", "false");
+    } else if (strcmp(rotate, "90") == 0) {
         g_render.landscape = true;
         agset(g, "rotate", "0");
     }
-
+    
     // Layout graph.
     // FIXME: The call to `gvLayout` causes to reach an `unreachable` instruction if a (user-made)
     //  label uses invalid HTML tags, like <span>.
