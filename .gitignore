@@ -74,7 +74,7 @@ graphviz_interface/CMakeLists.txt
 
 images/*.typ
 
-tests
+experiments
 adjacency.pdf
 graphviz_interface/test1.c
 graphviz_interface/test1
