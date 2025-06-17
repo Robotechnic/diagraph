@@ -63,7 +63,7 @@ int name_to_rgb(const char *name) {
     for (int i = 0; i < color_table_len; i++) {
         int result = strcmp(name, colors[i].name);
         if (result == 0) {
-            return colors[i].rgb << 8 | 0xff;
+            return (colors[i].rgb << 8) | 0xff; 
         } else if (result < 0) {
             // colors are sorted in alphabetical order, so if we pass a color after the one we are looking
             // for, we can break the loop

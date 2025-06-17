@@ -36,18 +36,31 @@
   result + align(center, row)
 }
 
-/// Convert a number to a string with a fixed number of digits.
-/// The number is padded with zeros on the left if necessary.
-#let int-to-string(n, digits, base: 10) = {
-  let n-str = str(n, base: base)
-  let n-len = n-str.len()
-  let zeros = "0" * (digits - n-len)
-  zeros + n-str
+/// Convert a number to a hex string
+#let int-to-hex(n, digits) = {
+  assert(type(n) == int, message: "The number must be an integer")
+  assert(digits > 0, message: "The number of digits must be greater than 0")
+  
+  if (n < 0) {
+    n += 0x100000000 // Convert to unsigned 32-bit integer
+  }
+
+  let result = ""
+  for i in range(digits) {
+    let digit = calc.rem(n, 16)
+    n = calc.quo(n, 16)
+    result = if digit < 10 {
+      str(digit) + result
+    } else {
+      str.from-unicode(str.to-unicode("a") + digit - 10) + result
+    }
+  }
+  result
 }
 
 /// Return a buffer in readable format.
 #let buffer-repr(buffer) = [
-  #repr(array(buffer).map(x => "0x" + int-to-string(x, 2, base: 16)).join(", "))
+  #repr(array(buffer).map(x => "0x" + int-to-hex(x, 2)).join(", "))
 ]
 
 /// COnvert a string to math or text mode
@@ -67,7 +80,7 @@
   if label == "" {
     return ""
   }
-  set text(fill: rgb(int-to-string(color, 8, base: 16)), bottom-edge: "bounds")
+  set text(fill: rgb(int-to-hex(color, 8)), bottom-edge: "bounds")
   set text(size: fontsize) if fontsize.pt() != 0
   set text(font: font) if font != ("",)
   text(label)
@@ -121,7 +134,7 @@
     let font-name = edge-label.at("font_name").split(",")
     let font-color = edge-label.at("color")
 
-    // panic(edge-label, edge-overwrite)
+   //panic(edge-label, edge-overwrite)
 
     formatted-edge-labels.push((
       native: "label" in edge-overwrite,
@@ -210,7 +223,7 @@
         let (label, overwrite) = label-overwrite(math-mode, "label", encoded-label, labels, font-name, font-size, "math_mode", "html_mode")
 
         let (xlabel, xoverwrite) = label-overwrite(math-mode, "xlabel", encoded-label, xlabels, font-name, font-size, "xlabel_math_mode", "xlabel_html_mode")
-
+        //panic(graph-labels)
         let edges-overwrite = if type(edges) == function {
           edges(encoded-label.at("name"), encoded-label.at("edges_infos").map(edge => edge.at("to")))
         } else {

@@ -14,8 +14,8 @@
   for byte in array(bytes.slice(0,4)) {
     result = result * 256 + byte
   }
-  if (result > 2147483647) { // the number is negative
-    result = 2147483647 - result + 2147483647
+  if (result > 0x7FFFFFFF) { // the number is negative
+    result = result - 0x100000000
   }
   (result, 4)
 }
