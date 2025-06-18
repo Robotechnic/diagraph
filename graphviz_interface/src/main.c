@@ -36,13 +36,6 @@ int vizErrorf(char *str) {
 }
 
 /**
- * @return the total number nodes labels
- */
-int get_total_node_label_count(graph_t *g) {
-    return agnnodes(g);
-}
-
-/**
  * @brief Write an error message to the host.
  *
  * @param message the message to write
@@ -452,7 +445,7 @@ int get_labels(size_t buffer_len) {
     agattr(g, AGNODE, "xlabel", "");
 
     GraphInfo nLabels = {0};
-    nLabels.labels_len = get_total_node_label_count(g);
+    nLabels.labels_len = agnnodes(g);
     nLabels.labels = malloc(nLabels.labels_len * sizeof(NodeLabelInfo));
     if (!nLabels.labels) {
         ERROR("Failed to allocate memory for native labels");
@@ -769,7 +762,8 @@ int render(size_t buffer_len) {
 
     // Passing a graph sets the value for the graph.
     agattr(g, AGRAPH, "bgcolor", "transparent");
-    agset(g, "margin", "0");
+    agattr(g, AGRAPH, "margin", "0");
+    
     agset(g, "size", NULL);
 
     {
@@ -780,7 +774,7 @@ int render(size_t buffer_len) {
         agattr(g, AGEDGE, "fontsize", font_size_string);
     }
 
-    DEBUG("Total label count: %d\n", get_total_node_label_count(g));
+    DEBUG("Total label count: %d\n", agnnodes(g));
 
     // overwrite labels with invisible labels that have specific dimensions.
     overwrite_labels(g, &renderInfo);
