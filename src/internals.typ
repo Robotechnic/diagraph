@@ -182,8 +182,11 @@
     }
   }
 
+  let label-content = label.at(label-type)
+  if label-content == "" {
+    return ("", false)
+  }
   if not label.at(html-mode-name) {
-    let label-content = label.at(label-type)
     label-content = convert-label(label-content, math-mode == "math" or (label.at(math-mode-name) and math-mode != "text"))
     label-content = label-format(label.at("color"), font-name, font-size, label-content)
     return (label-content, true)
