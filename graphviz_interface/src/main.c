@@ -442,7 +442,7 @@ int get_labels(size_t buffer_len) {
         return 1;
     }
 
-    agattr(g, AGNODE, "xlabel", "");
+    agattr_text(g, AGNODE, "xlabel", "");
 
     GraphInfo nLabels = {0};
     nLabels.labels_len = agnnodes(g);
@@ -491,7 +491,7 @@ int get_labels(size_t buffer_len) {
  */
 char *create_label_for_dimension(graph_t *g, double width, double height) {
     if (width < 1e-5 && height < 1e-5) {
-        return agstrdup(g, "");
+        return agstrdup_text(g, "");
     }
     char label[2048];
     snprintf(label, sizeof(label),
@@ -513,30 +513,30 @@ void overwrite_labels(graph_t *g, const renderGraph *renderInfo) {
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
         if (renderInfo->labels[label_index].overwrite) {
-            agset(n, "label",
-                  create_label_for_dimension(g, renderInfo->labels[label_index].width,
-                                             renderInfo->labels[label_index].height));
+            agset_html(n, "label",
+                       create_label_for_dimension(g, renderInfo->labels[label_index].width,
+                                                  renderInfo->labels[label_index].height));
         }
         if (renderInfo->labels[label_index].xoverwrite) {
-            agset(n, "xlabel",
-                  create_label_for_dimension(g, renderInfo->labels[label_index].xwidth,
-                                             renderInfo->labels[label_index].xheight));
+            agset_html(n, "xlabel",
+                       create_label_for_dimension(g, renderInfo->labels[label_index].xwidth,
+                                                  renderInfo->labels[label_index].xheight));
         }
         int edge_label_index = 0;
         for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
             SizedEdgeLabel *edges_infos = &renderInfo->labels[label_index].edges_size[edge_label_index];
             if (edges_infos->overwrite) {
-                agset(e, "label", create_label_for_dimension(g, edges_infos->width, edges_infos->height));
+                agset_html(e, "label", create_label_for_dimension(g, edges_infos->width, edges_infos->height));
             }
             if (edges_infos->xoverwrite) {
-                agset(e, "xlabel", create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight));
+                agset_html(e, "xlabel", create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight));
             }
             if (edges_infos->headoverwrite) {
-                agset(e, "headlabel",
+                agset_html(e, "headlabel",
                       create_label_for_dimension(g, edges_infos->headwidth, edges_infos->headheight));
             }
             if (edges_infos->tailoverwrite) {
-                agset(e, "taillabel",
+                agset_html(e, "taillabel",
                       create_label_for_dimension(g, edges_infos->tailwidth, edges_infos->tailheight));
             }
             edge_label_index++;
@@ -556,7 +556,7 @@ void overwrite_labels(graph_t *g, const renderGraph *renderInfo) {
 void overwrite_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *label_index) {
     for (Agraph_t *sg = agfstsubg(g); sg; sg = agnxtsubg(sg)) {
         if (agget(sg, "margin") == NULL) {
-            agset(sg, "margin", "8");
+            agset_text(sg, "margin", "8");
         }
 
         const char *name = agnameof(sg);
@@ -565,7 +565,7 @@ void overwrite_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *la
             overwrite_cluster_labels(sg, renderInfo, label_index);
             continue;
         }
-        agset(sg, "label",
+        agset_html(sg, "label",
               create_label_for_dimension(g, renderInfo->cluster_labels[*label_index].width,
                                          renderInfo->cluster_labels[*label_index].height));
 
@@ -752,26 +752,26 @@ int render(size_t buffer_len) {
         return 0;
     }
 
-    agattr(g, AGRAPH, "label", "");
-    agattr(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
-    agattr(g, AGNODE, "xlabel", "");
-    agattr(g, AGEDGE, "label", "");
-    agattr(g, AGEDGE, "xlabel", "");
-    agattr(g, AGEDGE, "taillabel", "");
-    agattr(g, AGEDGE, "headlabel", "");
+    agattr_text(g, AGRAPH, "label", "");
+    agattr_text(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
+    agattr_text(g, AGNODE, "xlabel", "");
+    agattr_text(g, AGEDGE, "label", "");
+    agattr_text(g, AGEDGE, "xlabel", "");
+    agattr_text(g, AGEDGE, "taillabel", "");
+    agattr_text(g, AGEDGE, "headlabel", "");
 
     // Passing a graph sets the value for the graph.
-    agattr(g, AGRAPH, "bgcolor", "transparent");
-    agattr(g, AGRAPH, "margin", "0");
+    agattr_text(g, AGRAPH, "bgcolor", "transparent");
+    agattr_text(g, AGRAPH, "margin", "0");
     
-    agset(g, "size", NULL);
+    agset_text(g, "size", NULL);
 
     {
         char font_size_string[128];
         snprintf(font_size_string, 128, "%fpt", renderInfo.font_size);
-        agattr(g, AGRAPH, "fontsize", font_size_string);
-        agattr(g, AGNODE, "fontsize", font_size_string);
-        agattr(g, AGEDGE, "fontsize", font_size_string);
+        agattr_text(g, AGRAPH, "fontsize", font_size_string);
+        agattr_text(g, AGNODE, "fontsize", font_size_string);
+        agattr_text(g, AGEDGE, "fontsize", font_size_string);
     }
 
     DEBUG("Total label count: %d\n", agnnodes(g));
@@ -786,7 +786,7 @@ int render(size_t buffer_len) {
         char *orientation = agget(g, "orientation");
         if (orientation && orientation[0] == 'l' || orientation[0] == 'L') {
             g_render.landscape = true;
-            agset(g, "orientation", "\0");
+            agset_text(g, "orientation", "\0");
         }
         char *landscape = agget(g, "landscape");
         if (landscape && strcmp(landscape, "true") == 0) {
@@ -794,10 +794,10 @@ int render(size_t buffer_len) {
         } else {
             g_render.landscape = false;
         }
-        agset(g, "landscape", "false");
+        agset_text(g, "landscape", "false");
     } else if (strcmp(rotate, "90") == 0) {
         g_render.landscape = true;
-        agset(g, "rotate", "0");
+        agset_text(g, "rotate", "0");
     }
     
     // Layout graph.
@@ -815,7 +815,7 @@ int render(size_t buffer_len) {
     }
 
     // Render SVG.
-    unsigned int svg_chunk_size;
+    size_t svg_chunk_size;
     err = gvRenderData(gvc, g, "svg", &g_render.svg, &svg_chunk_size);
     if (err == -1) {
         free_renderGraph(&renderInfo);

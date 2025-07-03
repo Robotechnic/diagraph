@@ -71,6 +71,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.5
+
+- Added edges personalisation in the `adjacency` fuction
+- Updated graphviz version to 13.1.0
+
 ### 0.3.4
 
 - Added an `alt` parameter to the `render` and `raw-render` functions to specify an alternative text for the image
