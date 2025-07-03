@@ -1,4 +1,4 @@
-#import "src/internals.typ": render
+#import "internals.typ": render
 
 #let inches = (
   "width",
@@ -111,7 +111,17 @@
             } else {
               " -- "
             }
-            str(edge.at(0)) + ";"
+            str(edge.at(0))
+            if type(edge.at(1)) == dictionary {
+              let _ = edge.at(1).remove("label", default: "")
+              _ = edge.at(1).remove("xlabel", default: "")
+              _ = edge.at(1).remove("headlabel", default: "")
+              _ = edge.at(1).remove("taillabel", default: "")
+              "["
+                dict-to-graph-args(edge.at(1), sep: ",")
+              "]"
+            }
+            ";"
           }
         })
         .join("")
@@ -183,7 +193,11 @@
         let edge-id = int(edge)
         let label = adjacency.at(id).at(edge-id)
         if label != none {
-          result.insert(edge, [#label])
+          if type(label) == dictionary {
+            label
+          } else if type(label) == str {
+            result.insert(edge, [#label])
+          }
         }
       }
       result
