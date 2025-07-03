@@ -1,5 +1,5 @@
 #import "@preview/mantys:1.0.1": *
-#import "@preview/diagraph:0.3.4"
+#import "@preview/diagraph:0.3.5"
 
 #show: mantys(
   ..toml("../typst.toml"),
@@ -301,6 +301,19 @@ If you don't want to write the graph in dot format, you can use the adjacency li
 				rankdir: "LR"
 			)
 		````)
+
+		If the value is a dictionary, then the keys are the edge labels and attributes. The labels are the usual graphviz labels (i.e `label`, `xlabel`, `headlabel`, `taillabel`).
+
+		#example(```
+			#adjacency(
+				(
+					(none, (headlabel: "B", color: "red", style: "dashed"), "C"),
+					("D", none, (headlabel: "F", color: "blue", style: "dashed")),
+					((headlabel: "G", color: "green", style: "dashed"), "H", none),
+				),
+				rankdir: "LR",
+			)
+		```)
 	]
 	#argument("directed", types: (true))[
 		Whether the graph is directed or not.
