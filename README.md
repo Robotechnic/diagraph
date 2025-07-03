@@ -32,7 +32,7 @@ Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
   ```
 )
 ````
-![raw-render](https://raw.githubusercontent.com/Robotechnic/diagraph/main/images/raw-render1.png)
+![raw-render](https://raw.githubusercontent.com/Robotechnic/diagraph/main/tests/simplegraph/ref/1.png)
 
 For more information about the Graphviz Dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 

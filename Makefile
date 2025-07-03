@@ -19,12 +19,13 @@ link :
 module :
 	mkdir -p ./diagraph
 	mkdir -p ./diagraph/graphviz_interface
+	mkdir -p ./diagraph/src
 	cp ./graphviz_interface/diagraph.wasm ./diagraph/graphviz_interface/diagraph.wasm
 	cp ./graphviz_interface/protocol.typ ./diagraph/graphviz_interface/protocol.typ
-	cp ./internals.typ ./diagraph/internals.typ
+	cp ./src/internals.typ ./diagraph/src/internals.typ
 	cp ./lib.typ ./diagraph/lib.typ
-	cp ./adjacency.typ ./diagraph/adjacency.typ
-	cp ./selector.typ ./diagraph/selector.typ
+	cp ./src/adjacency.typ ./diagraph/src/adjacency.typ
+	cp ./src/selector.typ ./diagraph/src/selector.typ
 	cp ./README.md ./diagraph/README.md
 	cp ./typst.toml ./diagraph/typst.toml
 	cp ./LICENSE ./diagraph/LICENSE
