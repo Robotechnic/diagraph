@@ -1,6 +1,6 @@
 #import "src/internals.typ": render, engine-list
-#import "adjacency.typ": adjacency
-#import "selector.typ": select-graph
+#import "src/adjacency.typ": adjacency
+#import "src/selector.typ": select-graph
 
 /// Renders a graph with Graphviz.
 ///
