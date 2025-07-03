@@ -195,7 +195,7 @@
         if label != none {
           if type(label) == dictionary {
             label
-          } else if type(label) == str {
+          } else {
             result.insert(edge, [#label])
           }
         }
