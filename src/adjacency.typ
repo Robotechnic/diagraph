@@ -118,7 +118,7 @@
               _ = edge.at(1).remove("headlabel", default: "")
               _ = edge.at(1).remove("taillabel", default: "")
               "["
-                dict-to-graph-args(edge.at(1), sep: ",")
+              dict-to-graph-args(edge.at(1), sep: ",")
               "]"
             }
             ";"
@@ -149,10 +149,7 @@
     }
       + "{"
       + dict-to-graph-args(graph-params)
-      + create-nodes(
-        0,
-        adjacency.len(),
-      )
+      + create-nodes(0, adjacency.len())
       + ";"
       + create-clusters(clusters)
       + create-attributes(vertex-labels)
@@ -193,11 +190,11 @@
         let edge-id = int(edge)
         let label = adjacency.at(id).at(edge-id)
         if label != none {
-          if type(label) == dictionary {
+          result.insert(edge, if type(label) == dictionary {
             label
           } else {
-            result.insert(edge, [#label])
-          }
+            [#label]
+          })
         }
       }
       result
