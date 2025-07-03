@@ -73,7 +73,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 0.3.5
 
-- Added edges personalisation in the `adjacency` fuction
+- Added edges personalization in the `adjacency` function
 - Updated graphviz version to 13.1.0
 
 ### 0.3.4
