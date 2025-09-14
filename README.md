@@ -2,7 +2,7 @@
 
 A simple Graphviz binding for Typst using the WebAssembly plugin system.
 
-> [!INFO]
+> [!NOTE]
 > If you want to access the layouts engines without having to use dot language, there is now a new plugin called [diagraph-layout](https://github.com/Robotechnic/diagraph-layout). This plugin is more low level and doesn't comes with a renderer.
 
 ## Usage
