@@ -10,7 +10,7 @@ A simple Graphviz binding for Typst using the WebAssembly plugin system.
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/diagraph:0.3.3": *
+#import "@preview/diagraph:0.3.6": *
 ```
 <!--END-->
 
@@ -70,6 +70,12 @@ This package also uses a protocol generator to generate the wasm interface. You 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Changelog
+
+### 0.3.6
+
+- Fixed #56 caused by uninitialized html struct member of cluster labels
+- Fixed #36 caused by an invalid free on error
+- Fixed an invalid memory access caused by the math mode detection
 
 ### 0.3.5
 
