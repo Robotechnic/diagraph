@@ -63,6 +63,10 @@
   #repr(array(buffer).map(x => "0x" + int-to-hex(x, 2)).join(", "))
 ]
 
+#let buffer-panic-repr(buffer) = {
+  array(buffer).map(x => "0x" + int-to-hex(x, 2)).join(", ")
+}
+
 /// COnvert a string to math or text mode
 #let convert-label(label, math-mode) = {
   if label == "" {
@@ -209,10 +213,10 @@
   let overridden-labels = (
     "dot": dot,
   )
-  // panic(buffer-repr(encode-GetGraphInfo(overridden-labels)))
+  // panic(buffer-panic-repr(encode-GetGraphInfo(overridden-labels)))
   let encoded-labels = plugin.get_labels(encode-GetGraphInfo(overridden-labels))
   let (graph-labels, _) = decode-GraphInfo(encoded-labels)
-  //panic(graph-labels)
+  // panic(graph-labels)
   (
     graph-labels
       .at("labels")
@@ -414,7 +418,7 @@
         edges,
         dot,
       )
-      //return [#repr(labels-infos)]
+      // return [#repr(labels-infos)]
       // return [#repr(clusters-labels-infos)]
       let labels-info-count = labels-infos.len()
 

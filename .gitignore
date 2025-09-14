@@ -78,3 +78,5 @@ experiments
 adjacency.pdf
 graphviz_interface/test1.c
 graphviz_interface/test1
+graphviz_interface/dlopen.supp
+/test.typ

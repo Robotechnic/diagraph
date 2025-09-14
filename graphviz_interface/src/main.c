@@ -121,7 +121,6 @@ int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name
         strcpy(label_infos->label, label);
         label_infos->label[len] = '\0';
         label_infos->math_mode = node_math_mode(n, label, "math");
-        DEBUG("Node %s: label='%s' math_mode=%d\n", name, label_infos->label, label_infos->math_mode);
     }
     label_infos->name = malloc(strlen(name) + 1);
     if (!label_infos->name) {
@@ -363,6 +362,8 @@ void process_cluster_font_name(Agraph_t *g, ClusterLabelInfo *label_infos) {
 }
 
 int process_cluster_label(Agraph_t *sg, const char *name, const char *label, ClusterLabelInfo *label_infos) {
+    label_infos->html_mode = false;
+    DEBUG("Processing cluster %s with label %s\n", name, label ? label : "NULL");
     label_infos->name = malloc(strlen(name) + 1);
     if (!label_infos->name) {
         ERROR("Failed to allocate memory for cluster name");
@@ -370,6 +371,7 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
     }
     strcpy(label_infos->name, name);
     label_infos->name[strlen(name)] = '\0';
+
     if (label == NULL) {
         label_infos->label = NULL;
         label_infos->math_mode = false;
@@ -435,6 +437,12 @@ int get_cluster_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *sgLabe
         } else if (process_cluster_label(sg, name, label, &sgLabels->cluster_labels[*label_index])) {
             return 1;
         }
+        DEBUG("Cluster %s: label='%s' math_mode=%d html_mode=%d font_name='%s' font_size=%f color=%d\n",
+              sgLabels->cluster_labels[*label_index].name,
+              sgLabels->cluster_labels[*label_index].label ? sgLabels->cluster_labels[*label_index].label : "NULL",
+              sgLabels->cluster_labels[*label_index].math_mode, sgLabels->cluster_labels[*label_index].html_mode,
+              sgLabels->cluster_labels[*label_index].font_name ? sgLabels->cluster_labels[*label_index].font_name : "NULL",
+              sgLabels->cluster_labels[*label_index].font_size, sgLabels->cluster_labels[*label_index].color);
         (*label_index)++;
         get_cluster_labels(sg, labels, sgLabels, label_index);
     }
