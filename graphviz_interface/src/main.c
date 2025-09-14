@@ -83,7 +83,6 @@ int safe_strcmp(const char *s1, const char *s2) {
     return strcmp(s1, s2);
 }
 
-
 bool node_math_mode(void *obj, const char *label, const char *math_attribute) {
     char *math = agget(obj, math_attribute);
     bool math_true = safe_strcmp(math, "true") == 0;
@@ -221,7 +220,7 @@ int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
         }
         strcpy(*label, l);
         (*label)[strlen(l)] = '\0';
-		char label[] = {name[0], 'm', 'a', 't', 'h', '\0'};
+        char label[] = {name[0], 'm', 'a', 't', 'h', '\0'};
         *math_mode = node_math_mode(e, l, label);
     }
     return 0;
@@ -299,7 +298,7 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
             nLabels->labels[label_index].name[name_len] = '\0';
 
             size_t label_len = strlen(label);
-            nLabels->labels[label_index].label = malloc(label_len+ 1);
+            nLabels->labels[label_index].label = malloc(label_len + 1);
             if (!nLabels->labels[label_index].label) {
                 ERROR("Failed to allocate memory for node label");
                 free(nLabels->labels[label_index].name);
@@ -319,7 +318,8 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
             nLabels->labels[label_index].color = color_to_int(agget(n, "fontcolor"));
         }
 
-        DEBUG("Node %s: label='%s' math_mode=%d html_mode=%d xlabel='%s' xlabel_math_mode=%d xlabel_html_mode=%d "
+        DEBUG("Node %s: label='%s' math_mode=%d html_mode=%d xlabel='%s' xlabel_math_mode=%d "
+              "xlabel_html_mode=%d "
               "font_name='%s' font_size=%f color=%d\n",
               nLabels->labels[label_index].name,
               nLabels->labels[label_index].label ? nLabels->labels[label_index].label : "NULL",
@@ -439,9 +439,13 @@ int get_cluster_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *sgLabe
         }
         DEBUG("Cluster %s: label='%s' math_mode=%d html_mode=%d font_name='%s' font_size=%f color=%d\n",
               sgLabels->cluster_labels[*label_index].name,
-              sgLabels->cluster_labels[*label_index].label ? sgLabels->cluster_labels[*label_index].label : "NULL",
-              sgLabels->cluster_labels[*label_index].math_mode, sgLabels->cluster_labels[*label_index].html_mode,
-              sgLabels->cluster_labels[*label_index].font_name ? sgLabels->cluster_labels[*label_index].font_name : "NULL",
+              sgLabels->cluster_labels[*label_index].label ? sgLabels->cluster_labels[*label_index].label
+                                                           : "NULL",
+              sgLabels->cluster_labels[*label_index].math_mode,
+              sgLabels->cluster_labels[*label_index].html_mode,
+              sgLabels->cluster_labels[*label_index].font_name
+                  ? sgLabels->cluster_labels[*label_index].font_name
+                  : "NULL",
               sgLabels->cluster_labels[*label_index].font_size, sgLabels->cluster_labels[*label_index].color);
         (*label_index)++;
         get_cluster_labels(sg, labels, sgLabels, label_index);
@@ -586,18 +590,20 @@ void overwrite_labels(graph_t *g, const renderGraph *renderInfo) {
         for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
             SizedEdgeLabel *edges_infos = &renderInfo->labels[label_index].edges_size[edge_label_index];
             if (edges_infos->overwrite) {
-                agset_html(e, "label", create_label_for_dimension(g, edges_infos->width, edges_infos->height));
+                agset_html(e, "label",
+                           create_label_for_dimension(g, edges_infos->width, edges_infos->height));
             }
             if (edges_infos->xoverwrite) {
-                agset_html(e, "xlabel", create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight));
+                agset_html(e, "xlabel",
+                           create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight));
             }
             if (edges_infos->headoverwrite) {
                 agset_html(e, "headlabel",
-                      create_label_for_dimension(g, edges_infos->headwidth, edges_infos->headheight));
+                           create_label_for_dimension(g, edges_infos->headwidth, edges_infos->headheight));
             }
             if (edges_infos->tailoverwrite) {
                 agset_html(e, "taillabel",
-                      create_label_for_dimension(g, edges_infos->tailwidth, edges_infos->tailheight));
+                           create_label_for_dimension(g, edges_infos->tailwidth, edges_infos->tailheight));
             }
             edge_label_index++;
         }
@@ -626,8 +632,8 @@ void overwrite_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *la
             continue;
         }
         agset_html(sg, "label",
-              create_label_for_dimension(g, renderInfo->cluster_labels[*label_index].width,
-                                         renderInfo->cluster_labels[*label_index].height));
+                   create_label_for_dimension(g, renderInfo->cluster_labels[*label_index].width,
+                                              renderInfo->cluster_labels[*label_index].height));
 
         (*label_index)++;
         overwrite_cluster_labels(sg, renderInfo, label_index);
@@ -772,17 +778,18 @@ int render(size_t buffer_len) {
 
     g_render.labels_len = renderInfo.labels_len;
     if (g_render.labels_len > 0) {
-        g_render.labels = malloc(g_render.labels_len * sizeof(NodeLabelInfo));
+        g_render.labels = calloc(g_render.labels_len, sizeof(NodeLabelInfo));
         if (!g_render.labels) {
             ERROR("Failed to allocate memory for native labels");
             free_renderGraph(&renderInfo);
+            free_graphInfo(&g_render);
             return 1;
         }
     }
 
     g_render.cluster_labels_len = renderInfo.cluster_labels_len;
     if (g_render.cluster_labels_len > 0) {
-        g_render.cluster_labels = malloc(g_render.cluster_labels_len * sizeof(ClusterLabelInfo));
+        g_render.cluster_labels = calloc(g_render.cluster_labels_len, sizeof(ClusterLabelInfo));
         if (!g_render.cluster_labels) {
             ERROR("Failed to allocate memory for cluster labels");
             free_renderGraph(&renderInfo);
@@ -823,7 +830,7 @@ int render(size_t buffer_len) {
     // Passing a graph sets the value for the graph.
     agattr_text(g, AGRAPH, "bgcolor", "transparent");
     agattr_text(g, AGRAPH, "margin", "0");
-    
+
     agset_text(g, "size", NULL);
 
     {
@@ -841,10 +848,10 @@ int render(size_t buffer_len) {
     int index = 0;
     overwrite_cluster_labels(g, &renderInfo, &index);
 
-    char* rotate = agget(g, "rotate");
+    char *rotate = agget(g, "rotate");
     if (!rotate || rotate[0] == '\0') {
         char *orientation = agget(g, "orientation");
-        if (orientation && orientation[0] == 'l' || orientation[0] == 'L') {
+        if (orientation && (orientation[0] == 'l' || orientation[0] == 'L')) {
             g_render.landscape = true;
             agset_text(g, "orientation", "\0");
         }
@@ -859,7 +866,8 @@ int render(size_t buffer_len) {
         g_render.landscape = true;
         agset_text(g, "rotate", "0");
     }
-    
+
+    DEBUG("Using engine: %s\n", renderInfo.engine);
     // Layout graph.
     // FIXME: The call to `gvLayout` causes to reach an `unreachable` instruction if a (user-made)
     //  label uses invalid HTML tags, like <span>.
@@ -900,7 +908,6 @@ int render(size_t buffer_len) {
     get_label_coordinates(g, (float)pad, renderInfo.labels, g_render.labels);
     index = 0;
     get_cluster_label_coordinates(g, (float)pad, renderInfo.cluster_labels, g_render.cluster_labels, &index);
-
 
     gvFreeLayout(gvc, g);
     agclose(g);

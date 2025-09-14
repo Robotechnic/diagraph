@@ -431,7 +431,7 @@
       )
 
       // return [#repr(encoded-data)]
-      // return [#buffer-repr(encode-renderGraph(encoded-data))]
+      // panic(buffer-panic-repr(encode-renderGraph(encoded-data)))
 
       let output = plugin.render(encode-renderGraph(encoded-data))
 
