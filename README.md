@@ -76,6 +76,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Fixed #56 caused by uninitialized html struct member of cluster labels
 - Fixed #36 caused by an invalid free on error
 - Fixed an invalid memory access caused by the math mode detection
+- Fixed the margin of subgraphs clusters being set to 0
 
 ### 0.3.5
 
