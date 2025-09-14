@@ -819,20 +819,15 @@ int render(size_t buffer_len) {
         return 1;
     }
 
+    // Global default attributes.
     agattr_text(g, AGRAPH, "label", "");
+    agattr_text(g, AGRAPH, "bgcolor", "transparent");
     agattr_text(g, AGRAPH, "pad", "0.0555"); // 4pt, Graphviz default
     agattr_text(g, AGNODE, "xlabel", "");
     agattr_text(g, AGEDGE, "label", "");
     agattr_text(g, AGEDGE, "xlabel", "");
     agattr_text(g, AGEDGE, "taillabel", "");
     agattr_text(g, AGEDGE, "headlabel", "");
-
-    // Passing a graph sets the value for the graph.
-    agattr_text(g, AGRAPH, "bgcolor", "transparent");
-    agattr_text(g, AGRAPH, "margin", "0");
-
-    agset_text(g, "size", NULL);
-
     {
         char font_size_string[128];
         snprintf(font_size_string, 128, "%fpt", renderInfo.font_size);
@@ -840,6 +835,10 @@ int render(size_t buffer_len) {
         agattr_text(g, AGNODE, "fontsize", font_size_string);
         agattr_text(g, AGEDGE, "fontsize", font_size_string);
     }
+
+    // Set graph attributes.
+    agset_text(g, "margin", "0");
+    agset_text(g, "size", NULL);
 
     DEBUG("Total label count: %d\n", agnnodes(g));
 
