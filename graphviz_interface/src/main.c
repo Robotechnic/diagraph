@@ -3,11 +3,18 @@
 #define PACKAGE_VERSION "2.47.0"
 #define DEBUG(...) printf(__VA_ARGS__)
 #define ERROR(str) printf("Error: %s\n", str)
+#define DEBUG_BLOCK(block)                                                                                   \
+    do {                                                                                                     \
+        block                                                                                                \
+    } while (0)
 #else
 #define DEBUG(...)
+#define DEBUG_BLOCK(block)
 #define ERROR(str) write_error_message(str)
 #include "protocol/plugin.h"
 #endif
+
+#define GRAPHVIZ_ERROR wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff))
 
 /// Show debug boxes around labels and cluster labels.
 // #define SHOW_DEBUG_BOXES
@@ -23,12 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MATH_MODE(obj, label, math_attribute) \
-	(is_math(label) || strcmp(agget(obj, math_attribute), "true") == 0) && strcmp(agget(obj, math_attribute), "false") != 0
-
 char errBuff[1024];
 int vizErrorf(char *str) {
-    const char *intro = "\1Diagraph error: ";
+    const char *intro = "Diagraph error: ";
     size_t intro_len = strlen(intro);
     strncpy(errBuff + intro_len, str, sizeof(errBuff) - intro_len);
     memcpy(errBuff, intro, intro_len);
@@ -53,6 +57,40 @@ void default_node_label_values(NodeLabelInfo *label) {
     memset(label, 0, sizeof(NodeLabelInfo));
 }
 
+int safe_strncmp(const char *s1, const char *s2, size_t n) {
+    if (s1 == NULL && s2 == NULL) {
+        return 0;
+    }
+    if (s1 == NULL) {
+        return -1;
+    }
+    if (s2 == NULL) {
+        return 1;
+    }
+    return strncmp(s1, s2, n);
+}
+
+int safe_strcmp(const char *s1, const char *s2) {
+    if (s1 == NULL && s2 == NULL) {
+        return 0;
+    }
+    if (s1 == NULL) {
+        return -1;
+    }
+    if (s2 == NULL) {
+        return 1;
+    }
+    return strcmp(s1, s2);
+}
+
+
+bool node_math_mode(void *obj, const char *label, const char *math_attribute) {
+    char *math = agget(obj, math_attribute);
+    bool math_true = safe_strcmp(math, "true") == 0;
+    bool math_false = safe_strcmp(math, "false") == 0;
+    return (is_math(label) || math_true) && !math_false;
+}
+
 /**
  * @brief Extract labels, font names, color and font sizes from a node.
  *
@@ -63,14 +101,14 @@ void default_node_label_values(NodeLabelInfo *label) {
  * @return int 0 on success, 1 on failure
  */
 int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name, const char *label) {
-    if (strncmp(agget(n, "shape"), "point", 5) == 0) {
+    if (safe_strncmp(agget(n, "shape"), "point", 5) == 0) {
         ERROR("Node shape is 'point', no label will be set");
         label_infos->label = NULL;
         label_infos->math_mode = false;
     } else {
         // If there is no explicitly set label for a node, so Graphviz intuitively sets its
         // "label" attribute to "\\N".
-        bool has_label = strcmp(label, "\\N") != 0;
+        bool has_label = safe_strcmp(label, "\\N") != 0;
         if (!has_label) {
             label = name;
         }
@@ -82,7 +120,8 @@ int process_node_label(Agnode_t *n, NodeLabelInfo *label_infos, const char *name
         }
         strcpy(label_infos->label, label);
         label_infos->label[len] = '\0';
-        label_infos->math_mode = MATH_MODE(n, label, "math");
+        label_infos->math_mode = node_math_mode(n, label, "math");
+        DEBUG("Node %s: label='%s' math_mode=%d\n", name, label_infos->label, label_infos->math_mode);
     }
     label_infos->name = malloc(strlen(name) + 1);
     if (!label_infos->name) {
@@ -162,7 +201,7 @@ int process_xlabel_label(Agnode_t *n, NodeLabelInfo *label_infos) {
         }
         strcpy(label_infos->xlabel, xlabel);
         label_infos->xlabel[strlen(xlabel)] = '\0';
-        label_infos->xlabel_math_mode = MATH_MODE(n, xlabel, "xmath");
+        label_infos->xlabel_math_mode = node_math_mode(n, xlabel, "xmath");
     } else {
         label_infos->xlabel = NULL;
         label_infos->xlabel_math_mode = false;
@@ -184,7 +223,7 @@ int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
         strcpy(*label, l);
         (*label)[strlen(l)] = '\0';
 		char label[] = {name[0], 'm', 'a', 't', 'h', '\0'};
-        *math_mode = MATH_MODE(e, l, label);
+        *math_mode = node_math_mode(e, l, label);
     }
     return 0;
 }
@@ -220,7 +259,7 @@ int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_
         (*labels)[i].to = malloc(strlen(to) + 1);
         strcpy((*labels)[i].to, to);
         (*labels)[i].to[strlen(to)] = '\0';
-        if (i > 0 && strcmp((*labels)[i].to, (*labels)[i - 1].to) == 0) {
+        if (i > 0 && safe_strcmp((*labels)[i].to, (*labels)[i - 1].to) == 0) {
             (*labels)[i].index = (*labels)[i - 1].index + 1;
         } else {
             (*labels)[i].index = 0;
@@ -247,7 +286,9 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
         default_node_label_values(&nLabels->labels[label_index]);
         const char *name = agnameof(n);
         const char *label = agget(n, "label");
+        DEBUG("Processing node %s with label %s\n", name, label ? label : "NULL");
         if (aghtmlstr(label)) {
+            DEBUG("Node %s: HTML label detected\n", name);
             size_t name_len = strlen(name);
             nLabels->labels[label_index].html_mode = true;
             nLabels->labels[label_index].name = malloc(name_len + 1);
@@ -268,7 +309,7 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
             strcpy(nLabels->labels[label_index].label, label);
             nLabels->labels[label_index].label[label_len] = '\0';
         } else {
-
+            DEBUG("Node %s: Text label detected\n", name);
             if (process_node_label(n, &nLabels->labels[label_index], name, label) ||
                 process_xlabel_label(n, &nLabels->labels[label_index])) {
                 return 1;
@@ -279,6 +320,15 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
             nLabels->labels[label_index].color = color_to_int(agget(n, "fontcolor"));
         }
 
+        DEBUG("Node %s: label='%s' math_mode=%d html_mode=%d xlabel='%s' xlabel_math_mode=%d xlabel_html_mode=%d "
+              "font_name='%s' font_size=%f color=%d\n",
+              nLabels->labels[label_index].name,
+              nLabels->labels[label_index].label ? nLabels->labels[label_index].label : "NULL",
+              nLabels->labels[label_index].math_mode, nLabels->labels[label_index].html_mode,
+              nLabels->labels[label_index].xlabel ? nLabels->labels[label_index].xlabel : "NULL",
+              nLabels->labels[label_index].xlabel_math_mode, nLabels->labels[label_index].xlabel_html_mode,
+              nLabels->labels[label_index].font_name ? nLabels->labels[label_index].font_name : "NULL",
+              nLabels->labels[label_index].font_size, nLabels->labels[label_index].color);
         get_node_edges_labels(g, n, &nLabels->labels[label_index].edges_infos,
                               &nLabels->labels[label_index].edges_infos_len);
 
@@ -331,7 +381,7 @@ int process_cluster_label(Agraph_t *sg, const char *name, const char *label, Clu
         }
         strcpy(label_infos->label, label);
         label_infos->label[strlen(label)] = '\0';
-        label_infos->math_mode = MATH_MODE(sg, label, "math");
+        label_infos->math_mode = node_math_mode(sg, label, "math");
     }
     label_infos->color = color_to_int(agget(sg, "fontcolor"));
     const char *fontsize = agget(sg, "fontsize");
@@ -374,7 +424,7 @@ int get_cluster_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *sgLabe
     for (Agraph_t *sg = agfstsubg(g); sg; sg = agnxtsubg(sg)) {
         const char *name = agnameof(sg);
         // the name must be "cluster_([0-9]+)"
-        if (strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
+        if (safe_strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
             get_cluster_labels(sg, labels, sgLabels, label_index);
             continue;
         }
@@ -438,7 +488,7 @@ int get_labels(size_t buffer_len) {
         gvFinalize(gvc);
         gvFreeContext(gvc);
 
-        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
+        GRAPHVIZ_ERROR;
         return 1;
     }
 
@@ -454,6 +504,7 @@ int get_labels(size_t buffer_len) {
         gvFreeContext(gvc);
         return 1;
     }
+    DEBUG("Init done\n");
 
     int index = 0;
     err = get_nodes_labels(g, &labels, &nLabels) || get_cluster_labels(g, &labels, &nLabels, &index);
@@ -468,6 +519,7 @@ int get_labels(size_t buffer_len) {
         return 1;
     }
 
+    DEBUG("Encoding labels\n");
     if ((err = encode_GraphInfo(&nLabels))) {
         if (err == 1) {
             ERROR("Failed to allocate memory for native labels");
@@ -561,7 +613,7 @@ void overwrite_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *la
 
         const char *name = agnameof(sg);
         // the name must be "cluster_([0-9]+)"
-        if (strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
+        if (safe_strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
             overwrite_cluster_labels(sg, renderInfo, label_index);
             continue;
         }
@@ -669,7 +721,7 @@ void get_cluster_label_coordinates(Agraph_t *g, float pad, const SizedClusterLab
     for (Agraph_t *sg = agfstsubg(g); sg; sg = agnxtsubg(sg)) {
         const char *name = agnameof(sg);
         // the name must be "cluster_([0-9]+)"
-        if (strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
+        if (safe_strncmp(name, "cluster_", 8) != 0 || strlen(name) < 9) {
             get_cluster_label_coordinates(sg, pad, labels, output, index);
             continue;
         }
@@ -748,8 +800,8 @@ int render(size_t buffer_len) {
         free_graphInfo(&g_render);
         gvFinalize(gvc);
         gvFreeContext(gvc);
-        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
-        return 0;
+        GRAPHVIZ_ERROR;
+        return 1;
     }
 
     agattr_text(g, AGRAPH, "label", "");
@@ -789,13 +841,13 @@ int render(size_t buffer_len) {
             agset_text(g, "orientation", "\0");
         }
         char *landscape = agget(g, "landscape");
-        if (landscape && strcmp(landscape, "true") == 0) {
+        if (safe_strcmp(landscape, "true") == 0) {
             g_render.landscape = true;
         } else {
             g_render.landscape = false;
         }
         agset_text(g, "landscape", "false");
-    } else if (strcmp(rotate, "90") == 0) {
+    } else if (safe_strcmp(rotate, "90") == 0) {
         g_render.landscape = true;
         agset_text(g, "rotate", "0");
     }
@@ -809,9 +861,8 @@ int render(size_t buffer_len) {
         gvFinalize(gvc);
         gvFreeContext(gvc);
         free(g);
-
-        wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff));
-        return 0;
+        GRAPHVIZ_ERROR;
+        return 1;
     }
 
     // Render SVG.
@@ -823,7 +874,7 @@ int render(size_t buffer_len) {
         agclose(g);
         gvFinalize(gvc);
         gvFreeContext(gvc);
-        ERROR("\0Diagraph error: failed to render graph to svg\0");
+        ERROR("Diagraph error: failed to render graph to svg\0");
         return 1;
     }
 
