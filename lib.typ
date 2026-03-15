@@ -14,3 +14,5 @@
   assert(raw.has("text"), message: "`raw-render` expects a `raw` element")
   return render(raw.text, ..args)
 }
+
+#let name = "graphviz"
