@@ -46,3 +46,6 @@ wasi-stub:
 
 manual: wasm
 	typst compile --root . ./doc/manual.typ
+
+test: wasm
+	tt run -F -j15
