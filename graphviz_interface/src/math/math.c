@@ -31,14 +31,22 @@ bool is_number(char c) {
     return '0' <= c && c <= '9';
 }
 
+char *left_trim(const char *str) {
+    while (*str == ' ') {
+        str++;
+    }
+    return (char *)str;
+}
+
 bool is_math(const char *name) {
+    name = left_trim(name);
     if (name[0] == ' ' && name[1] == '\0') {
         return false;
     }
     bool was_identifier_character = false;
     size_t identifier_length = 0;
     size_t len = strlen(name);
-    if (len == 0) {
+    if (len == 0 || name[0] == '_' || name[0] == '^') {
         return false;
     }
     for (int i = 0; i < len; i++) {
