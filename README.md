@@ -74,6 +74,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### 0.3.7
+
+- Updated graphviz version to 14.1.4 and libexpat to 2.7.5
+
 ### 0.3.6
 
 - Fixed #56 caused by uninitialized html struct member of cluster labels

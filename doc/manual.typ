@@ -255,7 +255,7 @@ In this mode, all the text is considered as a typst math expression. So, any inv
 #example(````
 #raw-render(```
 	digraph {
-		node[math=true]
+		node[math=true, xmath=true]
 		edge[lmath=true]
 		s[label="sum_(n=0)^3 n"]
 		s -> s1

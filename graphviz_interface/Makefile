@@ -62,10 +62,10 @@ $(INSTALLDIR):
 # download and extract graphviz source
 $(SRCDIR): | graphviz-src.tar.gz
 	mkdir -p $(SRCDIR)
-	tar xvzf graphviz-src.tar.gz -C $(SRCDIR) --strip=1
+	tar xzf graphviz-src.tar.gz -C $(SRCDIR) --strip=1
 
 graphviz-src.tar.gz:
-	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/13.1.0/graphviz-13.1.0.tar.gz" -o graphviz-src.tar.gz
+	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/14.1.4/graphviz-14.1.4.tar.gz" -o graphviz-src.tar.gz
 
 # download and extract expat source
 $(EPSRCDIR) $(EPSRCDIR)/configure: | libexpat-src.tar.xz
@@ -73,4 +73,4 @@ $(EPSRCDIR) $(EPSRCDIR)/configure: | libexpat-src.tar.xz
 	tar xf libexpat-src.tar.xz -C $(EPSRCDIR) --strip=1
 
 libexpat-src.tar.xz:
-	curl -L "https://github.com/libexpat/libexpat/releases/download/R_2_6_4/expat-2.6.4.tar.xz" -o libexpat-src.tar.xz
+	curl -L "https://github.com/libexpat/libexpat/releases/download/R_2_7_5/expat-2.7.5.tar.xz" -o libexpat-src.tar.xz

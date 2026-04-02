@@ -15,6 +15,7 @@
 PROTOCOL_FUNCTION void wasm_minimal_protocol_send_result_to_host(const uint8_t *ptr, size_t len);
 PROTOCOL_FUNCTION void wasm_minimal_protocol_write_args_to_buffer(uint8_t *ptr);
 
+typedef size_t (*size_function)(const void*);
 
 #define TYPST_INT_SIZE 4
 
@@ -218,6 +219,25 @@ typedef struct ClusterCoordinates_t {
 } ClusterCoordinates;
 void free_ClusterCoordinates(ClusterCoordinates *s);
 
+typedef struct Engines_t {
+    char* * engines;
+    size_t engines_len;
+} Engines;
+void free_Engines(Engines *s);
+int encode_Engines(const Engines *s);
+
+typedef struct graphInfo_t {
+    bool error;
+    bool landscape;
+    struct NodeCoordinates_t * labels;
+    size_t labels_len;
+    struct ClusterCoordinates_t * cluster_labels;
+    size_t cluster_labels_len;
+    char* svg;
+} graphInfo;
+void free_graphInfo(graphInfo *s);
+int encode_graphInfo(const graphInfo *s);
+
 typedef struct GraphInfo_t {
     struct NodeLabelInfo_t * labels;
     size_t labels_len;
@@ -226,19 +246,6 @@ typedef struct GraphInfo_t {
 } GraphInfo;
 void free_GraphInfo(GraphInfo *s);
 int encode_GraphInfo(const GraphInfo *s);
-
-typedef struct GetGraphInfo_t {
-    char* dot;
-} GetGraphInfo;
-void free_GetGraphInfo(GetGraphInfo *s);
-int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
-
-typedef struct Engines_t {
-    char* * engines;
-    size_t engines_len;
-} Engines;
-void free_Engines(Engines *s);
-int encode_Engines(const Engines *s);
 
 typedef struct renderGraph_t {
     float font_size;
@@ -252,16 +259,10 @@ typedef struct renderGraph_t {
 void free_renderGraph(renderGraph *s);
 int decode_renderGraph(size_t buffer_len, renderGraph *out);
 
-typedef struct graphInfo_t {
-    bool error;
-    bool landscape;
-    struct NodeCoordinates_t * labels;
-    size_t labels_len;
-    struct ClusterCoordinates_t * cluster_labels;
-    size_t cluster_labels_len;
-    char* svg;
-} graphInfo;
-void free_graphInfo(graphInfo *s);
-int encode_graphInfo(const graphInfo *s);
+typedef struct GetGraphInfo_t {
+    char* dot;
+} GetGraphInfo;
+void free_GetGraphInfo(GetGraphInfo *s);
+int decode_GetGraphInfo(size_t buffer_len, GetGraphInfo *out);
 
 #endif
