@@ -49,3 +49,10 @@ manual: wasm
 
 test: wasm
 	tt run -F -j15
+
+bump-version:
+	@read -p "Enter new version: " new_version; \
+	sed -i "s/^version = .*/version = \"$$new_version\"/" typst.toml; \
+	sed -i "s/\/[0-9]\+\.[0-9]\+\.[0-9]\+/\/$$new_version/" README.md; \
+	sed -i "s/:[0-9]\+\.[0-9]\+\.[0-9]\+/:$$new_version/" README.md; \
+	echo "Version updated to $$new_version"
