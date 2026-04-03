@@ -562,6 +562,8 @@ char *create_label_for_dimension(graph_t *g, double width, double height) {
              "<TABLE "
 #ifndef SHOW_DEBUG_BOXES
              "BORDER=\"0\" "
+#else
+             "COLOR=\"orange\" "
 #endif
              "FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
              "HEIGHT=\"%lf\"><TR><TD></TD></TR></TABLE>",
@@ -577,33 +579,39 @@ void overwrite_labels(graph_t *g, const renderGraph *renderInfo) {
 
     for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
         if (renderInfo->labels[label_index].overwrite) {
-            agset_html(n, "label",
-                       create_label_for_dimension(g, renderInfo->labels[label_index].width,
-                                                  renderInfo->labels[label_index].height));
+            char *label = create_label_for_dimension(g, renderInfo->labels[label_index].width,
+                                               renderInfo->labels[label_index].height);
+            agset_html(n, "label", label);
+            agstrfree(g, label, true);
         }
         if (renderInfo->labels[label_index].xoverwrite) {
-            agset_html(n, "xlabel",
-                       create_label_for_dimension(g, renderInfo->labels[label_index].xwidth,
-                                                  renderInfo->labels[label_index].xheight));
+            char *xlabel = create_label_for_dimension(g, renderInfo->labels[label_index].xwidth,
+                                                renderInfo->labels[label_index].xheight);
+            agset_html(n, "xlabel", xlabel);
+            agstrfree(g, xlabel, true);
         }
         int edge_label_index = 0;
         for (Agedge_t *e = agfstout(g, n); e; e = agnxtout(g, e)) {
             SizedEdgeLabel *edges_infos = &renderInfo->labels[label_index].edges_size[edge_label_index];
             if (edges_infos->overwrite) {
-                agset_html(e, "label",
-                           create_label_for_dimension(g, edges_infos->width, edges_infos->height));
+                char *label = create_label_for_dimension(g, edges_infos->width, edges_infos->height);
+                agset_html(e, "label", label);
+                agstrfree(g, label, true);
             }
             if (edges_infos->xoverwrite) {
-                agset_html(e, "xlabel",
-                           create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight));
+                char *xlabel = create_label_for_dimension(g, edges_infos->xwidth, edges_infos->xheight);
+                agset_html(e, "xlabel", xlabel);
+                agstrfree(g, xlabel, true);
             }
             if (edges_infos->headoverwrite) {
-                agset_html(e, "headlabel",
-                           create_label_for_dimension(g, edges_infos->headwidth, edges_infos->headheight));
+                char *headlabel = create_label_for_dimension(g, edges_infos->headwidth, edges_infos->headheight);
+                agset_html(e, "headlabel", headlabel);
+                agstrfree(g, headlabel, true);
             }
             if (edges_infos->tailoverwrite) {
-                agset_html(e, "taillabel",
-                           create_label_for_dimension(g, edges_infos->tailwidth, edges_infos->tailheight));
+                char *taillabel = create_label_for_dimension(g, edges_infos->tailwidth, edges_infos->tailheight);
+                agset_html(e, "taillabel", taillabel);
+                agstrfree(g, taillabel, true);
             }
             edge_label_index++;
         }
@@ -631,9 +639,10 @@ void overwrite_cluster_labels(graph_t *g, const renderGraph *renderInfo, int *la
             overwrite_cluster_labels(sg, renderInfo, label_index);
             continue;
         }
-        agset_html(sg, "label",
-                   create_label_for_dimension(g, renderInfo->cluster_labels[*label_index].width,
-                                              renderInfo->cluster_labels[*label_index].height));
+        char *sg_label = create_label_for_dimension(g, renderInfo->cluster_labels[*label_index].width,
+                                            renderInfo->cluster_labels[*label_index].height);
+        agset_html(sg, "label", sg_label);
+        agstrfree(g, sg_label, true);
 
         (*label_index)++;
         overwrite_cluster_labels(sg, renderInfo, label_index);
@@ -907,6 +916,10 @@ int render(size_t buffer_len) {
     get_label_coordinates(g, (float)pad, renderInfo.labels, g_render.labels);
     index = 0;
     get_cluster_label_coordinates(g, (float)pad, renderInfo.cluster_labels, g_render.cluster_labels, &index);
+
+    DEBUG_BLOCK({
+        gvRender(gvc, g, "dot", stdout);
+    });
 
     gvFreeLayout(gvc, g);
     agclose(g);
