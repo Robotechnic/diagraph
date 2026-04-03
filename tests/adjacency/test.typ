@@ -6,7 +6,7 @@
 #adjacency(
   vertex-labels: ($alpha$, $beta$, $gamma$),
   (
-    ([1], move(dx: 25pt, dy: -5pt)[lala], none),
+    ([1], [lala], none),
     ($4x$, none, none),
     (none, 1, 13 / 4),
   ),
