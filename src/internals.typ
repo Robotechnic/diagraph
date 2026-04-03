@@ -286,7 +286,7 @@
 
 /// Encodes the dimensions of labels into bytes.
 #let encode-label-dimensions(labels, overridden-labels, overridden-xlabels) = {
-  let edges-margin = 5pt
+  let edges-margin = 8pt
   labels.map(label => {
     let edges-size = label
       .at("edges_infos")
