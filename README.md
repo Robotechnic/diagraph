@@ -18,7 +18,7 @@ A simple Graphviz binding for Typst using the WebAssembly plugin system.
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/diagraph:0.3.6": *
+#import "@preview/diagraph:0.3.7": *
 ```
 <!--END-->
 
