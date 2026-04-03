@@ -77,6 +77,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 0.3.7
 
 - Updated graphviz version to 14.1.4 and libexpat to 2.7.5
+- Fixed #58 caused by a bug in the math mode detection
+- Fixed the edges label padding
+- Fixed small memory management issues
 
 ### 0.3.6
 
