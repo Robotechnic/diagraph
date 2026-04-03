@@ -46,7 +46,7 @@ For more information about the Graphviz Dot language, you can check the [officia
 
 ### Advanced usage
 
-Check the [manual](https://raw.githubusercontent.com/Robotechnic/diagraph/main/doc/manual.pdf) for more information about the plugin.
+Check the [manual](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.7/doc/manual.pdf) for more information about the plugin.
 
 <!--EXCLUDE-->
 ## Build
