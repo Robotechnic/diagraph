@@ -237,6 +237,10 @@ int copy_label(Agedge_t *e, char *name, char **label, bool *math_mode) {
  */
 int get_node_edges_labels(graph_t *g, Agnode_t *n, EdgeLabelInfo **labels, size_t *len) {
     *len = agdegree(g, n, false, true);
+    if (*len == 0) {
+        *labels = NULL;
+        return 0;
+    }
     *labels = malloc(*len * sizeof(EdgeLabelInfo));
     if (!*labels) {
         ERROR("Failed to allocate memory for edge labels");
@@ -328,8 +332,10 @@ int get_nodes_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *nLabels)
               nLabels->labels[label_index].xlabel_math_mode, nLabels->labels[label_index].xlabel_html_mode,
               nLabels->labels[label_index].font_name ? nLabels->labels[label_index].font_name : "NULL",
               nLabels->labels[label_index].font_size, nLabels->labels[label_index].color);
-        get_node_edges_labels(g, n, &nLabels->labels[label_index].edges_infos,
-                              &nLabels->labels[label_index].edges_infos_len);
+        if (get_node_edges_labels(g, n, &nLabels->labels[label_index].edges_infos,
+                              &nLabels->labels[label_index].edges_infos_len)) {
+            return 1;
+        }
 
         label_index++;
     }
@@ -490,6 +496,7 @@ int get_labels(size_t buffer_len) {
     GVC_t *gvc = gvContextPlugins(lt_preloaded_symbols, false);
 #endif
     if (!gvc) {
+        free_GetGraphInfo(&labels);
         ERROR("Failed to create Graphviz context");
         return 1;
     }
@@ -513,7 +520,6 @@ int get_labels(size_t buffer_len) {
         ERROR("Failed to allocate memory for native labels");
         free_GetGraphInfo(&labels);
         gvFinalize(gvc);
-        gvFreeContext(gvc);
         return 1;
     }
     DEBUG("Init done\n");
@@ -884,7 +890,7 @@ int render(size_t buffer_len) {
         free_graphInfo(&g_render);
         gvFinalize(gvc);
         gvFreeContext(gvc);
-        free(g);
+        agclose(g);
         GRAPHVIZ_ERROR;
         return 1;
     }
@@ -981,9 +987,13 @@ int engine_list() {
     engines.engines = engines_list;
     if (encode_Engines(&engines)) {
         ERROR("Failed to encode engines list");
+        gvFinalize(gvc);
+        gvFreeContext(gvc);
         return 1;
     }
     free_Engines(&engines);
+    gvFinalize(gvc);
+    gvFreeContext(gvc);
     return 0;
 }
 
