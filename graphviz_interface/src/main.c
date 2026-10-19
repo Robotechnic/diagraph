@@ -998,16 +998,16 @@ int engine_list() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-int convert_color(const char *color) {
+int convert_color(size_t buffer_len) {
+    char *color = malloc(buffer_len + 1);
     if (!color) {
-        ERROR("Color is null");
+        ERROR("Failed to allocate memory for color");
         return 1;
     }
-    int color_int = color_to_int(color);
-    if (color_int == -1) {
-        ERROR("Failed to convert color");
-        return 1;
-    }
+    wasm_minimal_protocol_write_args_to_buffer((uint8_t *)color);
+    color[buffer_len] = '\0';
+    unsigned int color_int = (unsigned int)color_to_int(color);
+    free(color);
     char color_str[11];
     snprintf(color_str, sizeof(color_str), "#%08x", color_int);
     wasm_minimal_protocol_send_result_to_host((uint8_t *)color_str, strlen(color_str));

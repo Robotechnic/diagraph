@@ -12,7 +12,7 @@
 }
 
 #let font-content(attr, content) = {
-	set text(fill: rgb(plugin.convert_color(attr.at("color")))) if "color" in attr
+	set text(fill: rgb(str(plugin.convert_color(bytes(attr.at("color")))))) if "color" in attr
 	set text(size: int(attr.at("point-size")) * 1pt) if "point-size" in attr 
 	set text(font: attr.at("face"))	if "face" in attr 
 	
