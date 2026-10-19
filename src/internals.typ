@@ -386,6 +386,7 @@
 /// - stretch (bool): if true, the render will be stretched to fit the width and height. Otherwise, it will keep it's aspect ratio.
 /// - math-mode (str): The math mode to use for the labels. Can be `auto`, `"math"` or `"text"`. If set to `auto`, the mode will be determined by label content. In `"text"` mode, the label content will be parsed as a string. In `"math"` mode, the label content will be parsed as a math expression.
 /// - alt (str): A text describing the image. This parameter is directly passed to the `image` element as its `alt` attribute. See #link("https://typst.app/docs/reference/visualize/image/#parameters-alt")[documentation] for more information.
+/// - fail-on (str): If set to `"error"`, any Graphviz error fails the compilation. If set to `"warning"`, any Graphviz warning or error does. The error lists Graphviz's messages. If set to `none` (the default), only the errors that keep Graphviz from drawing the graph fail the compilation.
 /// -> content: The rendered graph.
 #let render(
   dot,
@@ -402,11 +403,16 @@
   stretch: true,
 	math-mode: auto,
   alt: none,
+  fail-on: none,
 ) = {
   set math.equation(numbering: none)
   if type(dot) != str {
     panic("The dot code must be a string")
   }
+  assert(
+    fail-on in (none, "error", "warning"),
+    message: "fail-on must be none, \"error\" or \"warning\", not " + repr(fail-on),
+  )
 
   layout(((width: container-width, height: container-height)) => (
     context {
@@ -444,6 +450,12 @@
       }
 
       let output = decode-graphInfo(output).at(0)
+      let failed = if fail-on == "warning" {
+        output.messages != ""
+      } else {
+        fail-on == "error" and output.messages_include_errors
+      }
+      assert(not failed, message: "Diagraph error:\n" + output.messages)
 
       // return [#repr(output)]
 

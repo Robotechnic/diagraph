@@ -33,7 +33,8 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
   arg("debug", false),
   arg("background", none),
 	arg("stretch", true),
-	arg("math-mode", auto)
+	arg("math-mode", auto),
+	arg("fail-on", none)
 )[
   #argument("dot", types: ("string"))[
     The dot code to render.
@@ -182,6 +183,9 @@ To draw a graph you have two options: #cmd[raw-render] and #cmd[render]. #cmd[ra
 			math-mode: "text"
 			)
 		````)
+	]
+	#argument("fail-on", types: (none, "error", "warning"))[
+		If set to `"error"`, any Graphviz error fails the compilation. If set to `"warning"`, any Graphviz warning or error does. The error lists Graphviz's messages. By default, only the errors that keep Graphviz from drawing the graph fail the compilation, although other errors and warnings can mean that the drawing differs from the dot code, for example that a node was moved out of its cluster.
 	]
 ]
 

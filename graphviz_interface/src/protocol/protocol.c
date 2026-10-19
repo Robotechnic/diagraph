@@ -407,6 +407,9 @@ void free_graphInfo(graphInfo *s) {
     if (s->svg) {
         free(s->svg);
     }
+    if (s->messages) {
+        free(s->messages);
+    }
 }
 size_t graphInfo_size(const void *s) {
     return 1 + 1 + TYPST_INT_SIZE +
@@ -415,7 +418,7 @@ size_t graphInfo_size(const void *s) {
            TYPST_INT_SIZE +
            list_size(((graphInfo *)s)->cluster_labels, ((graphInfo *)s)->cluster_labels_len,
                      ClusterCoordinates_size, sizeof(*((graphInfo *)s)->cluster_labels)) +
-           string_size(((graphInfo *)s)->svg);
+           string_size(((graphInfo *)s)->svg) + string_size(((graphInfo *)s)->messages) + 1;
 }
 int encode_graphInfo(const graphInfo *s) {
     size_t buffer_len = graphInfo_size(s);
@@ -439,6 +442,8 @@ int encode_graphInfo(const graphInfo *s) {
         }
     }
     STR_PACK(s->svg)
+    STR_PACK(s->messages)
+    CHAR_PACK(s->messages_include_errors)
 
     wasm_minimal_protocol_send_result_to_host(__input_buffer, buffer_len);
     return 0;

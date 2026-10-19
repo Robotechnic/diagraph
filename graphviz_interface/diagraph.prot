@@ -132,6 +132,8 @@ protocol Typst graphInfo {
 	NodeCoordinates labels[];
 	ClusterCoordinates cluster_labels[];
 	string svg;
+	string messages;
+	bool messages_include_errors;
 }
 
 // Protocol to get the list of available engines
