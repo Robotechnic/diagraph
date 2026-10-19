@@ -556,12 +556,25 @@ int get_labels(size_t buffer_len) {
     return 0;
 }
 
+/// The size of a placeholder with a dimension under 1pt. Graphviz reads WIDTH and HEIGHT as whole points and
+/// ignores a fixed size with a zero dimension, making the placeholder as large as the table's content. With the
+/// default spacing and padding of 2pt on each side, that was 8pt in each dimension, which the empty labels of
+/// unlabeled clusters, for example, rely on.
+#define SUB_POINT_PLACEHOLDER_SIZE_PT 8
+
 /**
  * Creates and returns a Graphviz label that has the specified dimensions.
+ *
+ * Graphviz warns when the content of a fixed size table needs more room than the table has, so the table has
+ * no spacing or padding: its empty cell needs no room at all.
  */
 char *create_label_for_dimension(graph_t *g, double width, double height) {
     if (width < 1e-5 && height < 1e-5) {
         return agstrdup_text(g, "");
+    }
+    if (width < 1 || height < 1) {
+        width = fmax(width, SUB_POINT_PLACEHOLDER_SIZE_PT);
+        height = fmax(height, SUB_POINT_PLACEHOLDER_SIZE_PT);
     }
     char label[2048];
     snprintf(label, sizeof(label),
@@ -571,7 +584,7 @@ char *create_label_for_dimension(graph_t *g, double width, double height) {
 #else
              "COLOR=\"orange\" "
 #endif
-             "FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
+             "CELLSPACING=\"0\" CELLPADDING=\"0\" FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
              "HEIGHT=\"%lf\"><TR><TD></TD></TR></TABLE>",
              width, height);
     return agstrdup_html(g, label);
