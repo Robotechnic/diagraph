@@ -1,7 +1,7 @@
 
 [![Typst package link](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FRobotechnic%2Fdiagraph%2Frefs%2Fheads%2Fmain%2Ftypst.toml&query=%24.package.version&prefix=v&logo=typst&label=package&color=239DAD)](https://typst.app/universe/package/diagraph)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.7/LICENSE)
-[![User Manual](https://img.shields.io/badge/manual-.pdf-purple)](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.7/doc/manual.pdf)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.8/LICENSE)
+[![User Manual](https://img.shields.io/badge/manual-.pdf-purple)](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.8/doc/manual.pdf)
 
 # diagraph
 
@@ -18,7 +18,7 @@ A simple Graphviz binding for Typst using the WebAssembly plugin system.
 This plugin is quite simple to use, you just need to import it:
 
 ```typ
-#import "@preview/diagraph:0.3.7": *
+#import "@preview/diagraph:0.3.8": *
 ```
 <!--END-->
 
@@ -40,13 +40,13 @@ Alternatively, you can use `raw-render` to pass a `raw` instead of a string:
   ```
 )
 ````
-![raw-render example](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.7/tests/simplegraph/ref/1.png)
+![raw-render example](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.8/tests/simplegraph/ref/1.png)
 
 For more information about the Graphviz Dot language, you can check the [official documentation](https://graphviz.org/documentation/).
 
 ### Advanced usage
 
-Check the [manual](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.7/doc/manual.pdf) for more information about the plugin.
+Check the [manual](https://raw.githubusercontent.com/Robotechnic/diagraph/0.3.8/doc/manual.pdf) for more information about the plugin.
 
 <!--EXCLUDE-->
 ## Build
@@ -78,6 +78,12 @@ This package also uses a protocol generator to generate the wasm interface. You 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Changelog
+
+### 0.3.8
+
+- Fix an issue with html font color
+- Add a way to control how the render act regarding graphviz internal rendering warnings and errors
+- Bump graphviz version to 16.1.0
 
 ### 0.3.7
 

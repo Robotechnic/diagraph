@@ -526,7 +526,7 @@ Those examples are here to demonstrate the capabilities of diagraph. For more in
 ````)
 
 #example(````
-#import "@preview/diagraph:0.3.3": *
+#import "@preview/diagraph:0.3.8": *
 
 #raw-render(```
 	graph {
