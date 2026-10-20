@@ -7,7 +7,7 @@ SOURCES=src/main.c $(wildcard src/*/*.c)
 INSTALLDIR=$(shell pwd)/install
 SRCDIR=$(shell pwd)/graphiz-src
 EPSRCDIR=$(shell pwd)/expat-src
-CFLAGS = -O2 --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1 -Wall -Wno-logical-op-parentheses
+CFLAGS = -O2 --no-entry -sERROR_ON_UNDEFINED_SYMBOLS=0 -sFILESYSTEM=0 -sASSERTIONS=0 -sEXPORT_KEEPALIVE=1 -sDEFAULT_TO_CXX=1 -Wall -Wno-logical-op-parentheses
 INCLUDE_FLAGS = -I"src" -I"$(INSTALLDIR)/include" -I"$(INSTALLDIR)/include/graphviz" -L"$(INSTALLDIR)/lib" -L"$(INSTALLDIR)/lib/graphviz" -lgvplugin_dot_layout -lgvplugin_neato_layout -lgvplugin_core -lgvc -lpathplan -lcgraph -lxdot -lcdt -lexpat -lm
 GRAPHVIZ_INFO_INCLUDE=-include "$(SRCDIR)/graphviz_version.h"
 INCLUDE_FLAGS += $(GRAPHVIZ_INFO_INCLUDE)
@@ -65,7 +65,7 @@ $(SRCDIR): | graphviz-src.tar.gz
 	tar xzf graphviz-src.tar.gz -C $(SRCDIR) --strip=1
 
 graphviz-src.tar.gz:
-	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/14.1.4/graphviz-14.1.4.tar.gz" -o graphviz-src.tar.gz
+	curl "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.1.0/graphviz-16.1.0.tar.gz" -o graphviz-src.tar.gz
 
 # download and extract expat source
 $(EPSRCDIR) $(EPSRCDIR)/configure: | libexpat-src.tar.xz
