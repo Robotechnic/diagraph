@@ -410,12 +410,18 @@
   offset += size
   let (f_svg, size) = decode-string(bytes.slice(offset, bytes.len()))
   offset += size
+  let (f_messages, size) = decode-string(bytes.slice(offset, bytes.len()))
+  offset += size
+  let (f_messages_include_errors, size) = decode-bool(bytes.slice(offset, bytes.len()))
+  offset += size
   ((
     error: f_error,
     landscape: f_landscape,
     labels: f_labels,
     cluster_labels: f_cluster_labels,
     svg: f_svg,
+    messages: f_messages,
+    messages_include_errors: f_messages_include_errors,
   ), offset)
 }
 #let decode-GraphInfo(bytes) = {

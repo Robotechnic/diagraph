@@ -232,6 +232,8 @@ typedef struct graphInfo_t {
     struct ClusterCoordinates_t *cluster_labels;
     size_t cluster_labels_len;
     char *svg;
+    char *messages;
+    bool messages_include_errors;
 } graphInfo;
 void free_graphInfo(graphInfo *s);
 int encode_graphInfo(const graphInfo *s);

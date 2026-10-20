@@ -14,8 +14,6 @@
 #include "protocol/plugin.h"
 #endif
 
-#define GRAPHVIZ_ERROR wasm_minimal_protocol_send_result_to_host((uint8_t *)errBuff, strlen(errBuff))
-
 /// Show debug boxes around labels and cluster labels.
 // #define SHOW_DEBUG_BOXES
 
@@ -30,15 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char errBuff[1024];
-int vizErrorf(char *str) {
-    const char *intro = "Diagraph error: ";
-    size_t intro_len = strlen(intro);
-    strncpy(errBuff + intro_len, str, sizeof(errBuff) - intro_len);
-    memcpy(errBuff, intro, intro_len);
-    return 0;
-}
-
 /**
  * @brief Write an error message to the host.
  *
@@ -46,6 +35,80 @@ int vizErrorf(char *str) {
  */
 void write_error_message(char *message) {
     wasm_minimal_protocol_send_result_to_host((uint8_t *)message, strlen(message));
+}
+
+/// The warnings and errors Graphviz reported since the last call to `start_collecting_graphviz_messages`, or
+/// NULL if it reported none.
+static char *graphviz_messages = NULL;
+static size_t graphviz_messages_len = 0;
+static size_t graphviz_messages_capacity = 0;
+
+/**
+ * @brief Append part of a message from Graphviz to `graphviz_messages`. Text that does not fit in memory is
+ * dropped.
+ *
+ * Graphviz calls this several times for each message: with its level ("Error" or "Warning"), with ": " and
+ * with its text.
+ *
+ * @param str the part of the message
+ * @return int always 0
+ */
+int collect_graphviz_message(char *str) {
+    size_t str_len = strlen(str);
+    size_t required_capacity = graphviz_messages_len + str_len + 1;
+    if (required_capacity > graphviz_messages_capacity) {
+        size_t new_capacity = 2 * required_capacity;
+        char *new_messages = realloc(graphviz_messages, new_capacity);
+        if (!new_messages) {
+            return 0;
+        }
+        graphviz_messages = new_messages;
+        graphviz_messages_capacity = new_capacity;
+    }
+    memcpy(graphviz_messages + graphviz_messages_len, str, str_len + 1);
+    graphviz_messages_len += str_len;
+    return 0;
+}
+
+/**
+ * @brief Collect the warnings and errors Graphviz reports from now on in `graphviz_messages`, and the level of
+ * the most severe one in `agerrors()`.
+ *
+ * Some errors, like a failed dot layout, are only reported this way and not through return codes.
+ */
+void start_collecting_graphviz_messages(void) {
+    free(graphviz_messages);
+    graphviz_messages = NULL;
+    graphviz_messages_len = 0;
+    graphviz_messages_capacity = 0;
+    agreseterrors();
+    agseterr(AGWARN);
+    agseterrf(collect_graphviz_message);
+}
+
+/**
+ * @brief Return the warnings and errors Graphviz reported since the last call to
+ * `start_collecting_graphviz_messages`.
+ */
+const char *collected_graphviz_messages(void) {
+    return graphviz_messages ? graphviz_messages : "";
+}
+
+/**
+ * @brief Write the warnings and errors Graphviz reported to the host as an error.
+ */
+void write_graphviz_messages_as_error(void) {
+    const char *intro = "Diagraph error:\n";
+    size_t intro_len = strlen(intro);
+    char *error = malloc(intro_len + graphviz_messages_len + 1);
+    if (!error) {
+        ERROR("Diagraph error: failed to allocate memory for Graphviz's messages");
+        return;
+    }
+    memcpy(error, intro, intro_len);
+    memcpy(error + intro_len, collected_graphviz_messages(), graphviz_messages_len + 1);
+    write_error_message(error);
+    free(error);
 }
 
 /**
@@ -473,9 +536,7 @@ int get_cluster_labels(graph_t *g, const GetGraphInfo *labels, GraphInfo *sgLabe
  */
 EMSCRIPTEN_KEEPALIVE
 int get_labels(size_t buffer_len) {
-    // Set error report to custom function. Lets us get error messages from Graphviz.
-    agseterr(AGERR);
-    agseterrf(vizErrorf);
+    start_collecting_graphviz_messages();
 
     GetGraphInfo labels = {0};
     int err;
@@ -507,7 +568,7 @@ int get_labels(size_t buffer_len) {
         gvFinalize(gvc);
         gvFreeContext(gvc);
 
-        GRAPHVIZ_ERROR;
+        write_graphviz_messages_as_error();
         return 1;
     }
 
@@ -556,12 +617,25 @@ int get_labels(size_t buffer_len) {
     return 0;
 }
 
+/// The size of a placeholder with a dimension under 1pt. Graphviz reads WIDTH and HEIGHT as whole points and
+/// ignores a fixed size with a zero dimension, making the placeholder as large as the table's content. With the
+/// default spacing and padding of 2pt on each side, that was 8pt in each dimension, which the empty labels of
+/// unlabeled clusters, for example, rely on.
+#define SUB_POINT_PLACEHOLDER_SIZE_PT 8
+
 /**
  * Creates and returns a Graphviz label that has the specified dimensions.
+ *
+ * Graphviz warns when the content of a fixed size table needs more room than the table has, so the table has
+ * no spacing or padding: its empty cell needs no room at all.
  */
 char *create_label_for_dimension(graph_t *g, double width, double height) {
     if (width < 1e-5 && height < 1e-5) {
         return agstrdup_text(g, "");
+    }
+    if (width < 1 || height < 1) {
+        width = fmax(width, SUB_POINT_PLACEHOLDER_SIZE_PT);
+        height = fmax(height, SUB_POINT_PLACEHOLDER_SIZE_PT);
     }
     char label[2048];
     snprintf(label, sizeof(label),
@@ -571,7 +645,7 @@ char *create_label_for_dimension(graph_t *g, double width, double height) {
 #else
              "COLOR=\"orange\" "
 #endif
-             "FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
+             "CELLSPACING=\"0\" CELLPADDING=\"0\" FIXEDSIZE=\"true\" WIDTH=\"%lf\" "
              "HEIGHT=\"%lf\"><TR><TD></TD></TR></TABLE>",
              width, height);
     return agstrdup_html(g, label);
@@ -770,9 +844,7 @@ void get_cluster_label_coordinates(Agraph_t *g, float pad, const SizedClusterLab
  */
 EMSCRIPTEN_KEEPALIVE
 int render(size_t buffer_len) {
-    // Set error report to custom function. Lets us get error messages from Graphviz.
-    agseterr(AGERR);
-    agseterrf(vizErrorf);
+    start_collecting_graphviz_messages();
 
     renderGraph renderInfo = {0}; // input data
     graphInfo g_render = {0};     // output data
@@ -830,7 +902,7 @@ int render(size_t buffer_len) {
         free_graphInfo(&g_render);
         gvFinalize(gvc);
         gvFreeContext(gvc);
-        GRAPHVIZ_ERROR;
+        write_graphviz_messages_as_error();
         return 1;
     }
 
@@ -891,7 +963,7 @@ int render(size_t buffer_len) {
         gvFinalize(gvc);
         gvFreeContext(gvc);
         agclose(g);
-        GRAPHVIZ_ERROR;
+        write_graphviz_messages_as_error();
         return 1;
     }
 
@@ -934,6 +1006,8 @@ int render(size_t buffer_len) {
     free_renderGraph(&renderInfo);
 
     // Generate output.
+    g_render.messages = strdup(collected_graphviz_messages());
+    g_render.messages_include_errors = agerrors() >= AGERR;
     if ((err = encode_graphInfo(&g_render))) {
         free_graphInfo(&g_render);
 
